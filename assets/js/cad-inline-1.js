@@ -22,12 +22,159 @@ function fit(){map.setAttribute('viewBox',home.join(' '));}
 function zoom(scale,cx,cy){var b=map.viewBox.baseVal;cx=(cx===undefined?b.x+b.width/2:cx);cy=(cy===undefined?b.y+b.height/2:cy);var w=b.width*scale,h=b.height*scale;map.setAttribute('viewBox',[(cx-(cx-b.x)*scale),(cy-(cy-b.y)*scale),w,h].join(' '));}
 document.getElementById('zoomIn').addEventListener('click',function(){zoom(.75);});document.getElementById('zoomOut').addEventListener('click',function(){zoom(1.3333);});document.getElementById('fit').addEventListener('click',fit);
 function point(clientX,clientY){var r=map.getBoundingClientRect(),vb=map.viewBox.baseVal;var ratio=Math.min(r.width/vb.width,r.height/vb.height),drawW=vb.width*ratio,drawH=vb.height*ratio;var ox=r.left+(r.width-drawW)/2,oy=r.top+(r.height-drawH)/2;return{x:vb.x+(clientX-ox)/ratio,y:vb.y+(clientY-oy)/ratio};}
+// V11.8.4: CAD annotations must not be part of the low-resolution
+// composited map texture during pinch/drag. Render CAD labels in a separate
+// lightweight SVG using an exact vector viewBox on every animation frame.
+// This layer is visual only; original label nodes remain the data source.
+function makeLiveCadLabels(){
+  var NS='http://www.w3.org/2000/svg';
+  var live=document.createElementNS(NS,'svg');
+  live.id='cadLiveLabels';live.setAttribute('aria-hidden','true');
+  live.setAttribute('focusable','false');
+  live.setAttribute('preserveAspectRatio',map.getAttribute('preserveAspectRatio')||'xMidYMid meet');
+  live.setAttribute('viewBox',map.getAttribute('viewBox'));
+  var pairLayers=[],pairTexts=[];
+  function copyTextParts(src,dst){
+    Array.prototype.forEach.call(src.children,function(child){
+      if(child.localName==='text'){
+        var copy=child.cloneNode(true);copy.removeAttribute('id');
+        dst.appendChild(copy);pairTexts.push([child,copy]);
+      }else if(child.querySelector&&child.querySelector('text')){
+        var copyGroup=child.cloneNode(false);copyGroup.removeAttribute('id');
+        // Never clone source event handlers or focusable targets.
+        copyGroup.removeAttribute('tabindex');copyGroup.removeAttribute('role');
+        dst.appendChild(copyGroup);copyTextParts(child,copyGroup);
+      }
+    });
+  }
+  Array.prototype.forEach.call(map.querySelectorAll('.cad-layer'),function(layer){
+    if(!layer.querySelector('text'))return;
+    var copy=layer.cloneNode(false);copy.removeAttribute('id');
+    copy.removeAttribute('tabindex');copy.removeAttribute('role');
+    copyTextParts(layer,copy);
+    if(copy.childNodes.length){live.appendChild(copy);pairLayers.push([layer,copy]);}
+  });
+  box.appendChild(live);
+  function syncLayers(){
+    pairLayers.forEach(function(pair){
+      pair[1].style.display=getComputedStyle(pair[0]).display==='none'?'none':'';
+    });
+  }
+  function syncSizes(){
+    pairTexts.forEach(function(pair){
+      var size=pair[0].getAttribute('font-size');
+      if(size!==null)pair[1].setAttribute('font-size',size);
+    });
+  }
+  function setViewBox(v){live.setAttribute('viewBox',Array.isArray(v)?v.join(' '):v);}
+  // Cover fit/zoom buttons and other modules which change the SVG viewBox.
+  var observer=new MutationObserver(function(){
+    if(!navGesture)setViewBox(map.getAttribute('viewBox'));
+  });
+  observer.observe(map,{attributes:true,attributeFilter:['viewBox']});
+  window.addEventListener('hw-layer-change',syncLayers);
+  var scaleInput=document.getElementById('labelScale');
+  if(scaleInput)scaleInput.addEventListener('input',function(){requestAnimationFrame(syncSizes);});
+  syncLayers();syncSizes();
+  return{updateView:setViewBox,syncLayers:syncLayers,syncSizes:syncSizes,
+    count:pairTexts.length,layerCount:pairLayers.length};
+}
+var liveCadLabels=null;
 box.addEventListener('wheel',function(e){e.preventDefault();var p=point(e.clientX,e.clientY);zoom(e.deltaY<0?.86:1.16,p.x,p.y);},{passive:false});
-var drag=null,touches={};function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
-box.addEventListener('pointerdown',function(e){if(e.pointerType==='mouse'&&e.button!==0)return;box.setPointerCapture(e.pointerId);touches[e.pointerId]={x:e.clientX,y:e.clientY};if(Object.keys(touches).length===1){drag={x:e.clientX,y:e.clientY,box:[map.viewBox.baseVal.x,map.viewBox.baseVal.y,map.viewBox.baseVal.width,map.viewBox.baseVal.height],start:Date.now()};box.classList.add('dragging');}else drag=null;});
-box.addEventListener('pointermove',function(e){if(!touches[e.pointerId])return;var before=Object.assign({},touches[e.pointerId]);touches[e.pointerId]={x:e.clientX,y:e.clientY};if(Object.keys(touches).length===2){var vals=Object.keys(touches).map(function(k){return touches[k]});var oldVals=vals.map(function(v){return {x:v.x,y:v.y};});var key=Object.keys(touches).indexOf(String(e.pointerId));oldVals[key]=before;var d0=distance(oldVals[0],oldVals[1]),d1=distance(vals[0],vals[1]);if(d1>5&&d0>5){var center=point((vals[0].x+vals[1].x)/2,(vals[0].y+vals[1].y)/2);zoom(d0/d1,center.x,center.y);}return;}
-if(!drag)return;var current=map.viewBox.baseVal,r=map.getBoundingClientRect();var rscale=Math.min(r.width/current.width,r.height/current.height);var dx=(e.clientX-drag.x)/rscale,dy=(e.clientY-drag.y)/rscale;map.setAttribute('viewBox',[drag.box[0]-dx,drag.box[1]-dy,drag.box[2],drag.box[3]].join(' '));});
-function up(e){if(touches[e.pointerId])delete touches[e.pointerId];drag=null;box.classList.remove('dragging');}box.addEventListener('pointerup',up);box.addEventListener('pointercancel',up);
+// V11.8.3: composite mobile pan/pinch instead of re-rasterizing all CAD SVG nodes
+// for every pointermove. Commit one exact SVG viewBox only when the gesture ends
+// or when the pointer count changes. Other modules continue to use #plan viewBox.
+var activePointers=new Map(),navGesture=null,navFrame=0,navVisual={x:0,y:0,scale:1};
+var navStats={moves:0,frames:0,commits:0};
+liveCadLabels=makeLiveCadLabels();
+function navDistance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+function navPoints(){return Array.from(activePointers.values());}
+function navBegin(){
+  if(!activePointers.size)return;
+  var vb=map.viewBox.baseVal, r=box.getBoundingClientRect(), pts=navPoints();
+  var x=pts.reduce(function(n,p){return n+p.x-r.left;},0)/pts.length;
+  var y=pts.reduce(function(n,p){return n+p.y-r.top;},0)/pts.length;
+  navGesture={box:[vb.x,vb.y,vb.width,vb.height],width:r.width,height:r.height,left:r.left,top:r.top,
+    count:pts.length,x:x,y:y,dist:pts.length>1?navDistance(pts[0],pts[1]):0};
+  navVisual={x:0,y:0,scale:1};
+  map.style.transformOrigin='0 0';
+  map.style.willChange='transform';
+  box.classList.add('dragging');
+}
+function navCompute(){
+  if(!navGesture)return;
+  var pts=navPoints(),n=pts.length;
+  if(n!==navGesture.count)return;
+  var cx=pts.reduce(function(sum,p){return sum+p.x-navGesture.left;},0)/n;
+  var cy=pts.reduce(function(sum,p){return sum+p.y-navGesture.top;},0)/n;
+  var factor=1;
+  if(n===2&&navGesture.dist>5){
+    // Bound a single pinch gesture, preventing 0-width viewBoxes/overflow.
+    factor=Math.max(.20,Math.min(6,navDistance(pts[0],pts[1])/navGesture.dist));
+  }
+  navVisual={x:cx-factor*navGesture.x,y:cy-factor*navGesture.y,scale:factor};
+}
+function navViewBox(v){
+  if(!navGesture)return null;
+  var b=navGesture.box,rw=navGesture.width,rh=navGesture.height;
+  var k=Math.min(rw/b[2],rh/b[3]);
+  if(!(k>0&&Number.isFinite(v.scale)&&v.scale>0))return null;
+  var padX=(rw-b[2]*k)/2,padY=(rh-b[3]*k)/2;
+  var x=b[0]+((1-v.scale)*padX-v.x)/(v.scale*k);
+  var y=b[1]+((1-v.scale)*padY-v.y)/(v.scale*k);
+  var w=b[2]/v.scale,h=b[3]/v.scale;
+  return [x,y,w,h].every(Number.isFinite)?[x,y,w,h]:null;
+}
+function navPaint(){
+  navFrame=0;
+  if(!navGesture)return;
+  navStats.frames++;
+  var v=navVisual;
+  map.style.transform='translate3d('+v.x+'px,'+v.y+'px,0) scale('+v.scale+')';
+  var labelView=navViewBox(v);
+  if(labelView&&liveCadLabels)liveCadLabels.updateView(labelView);
+}
+function navSchedule(){if(!navFrame)navFrame=requestAnimationFrame(navPaint);}
+function navCommit(){
+  if(!navGesture)return;
+  if(navFrame){cancelAnimationFrame(navFrame);navFrame=0;}
+  var v=navVisual;
+  var newView=navViewBox(v);
+  if(newView){
+    if(Math.abs(v.x)+Math.abs(v.y)+Math.abs(v.scale-1)>0.005){
+      map.setAttribute('viewBox',newView.join(' '));navStats.commits++;
+    }
+    if(liveCadLabels)liveCadLabels.updateView(map.getAttribute('viewBox'));
+  }
+  map.style.transform='';map.style.willChange='';navGesture=null;
+}
+box.addEventListener('pointerdown',function(e){
+  if(e.pointerType==='mouse'&&e.altKey&&e.target.closest?.('[data-eq-device]'))return;
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  if(navGesture)navCommit();
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  try{box.setPointerCapture(e.pointerId);}catch(err){}
+  navBegin();
+});
+box.addEventListener('pointermove',function(e){
+  if(!activePointers.has(e.pointerId))return;
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  navStats.moves++;
+  navCompute();navSchedule();
+},{passive:true});
+function navUp(e){
+  if(!activePointers.has(e.pointerId))return;
+  // Include the final pointer coordinate, including low-frequency browsers.
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  navCompute();navCommit();
+  activePointers.delete(e.pointerId);
+  try{if(box.hasPointerCapture(e.pointerId))box.releasePointerCapture(e.pointerId);}catch(err){}
+  if(activePointers.size)navBegin();else box.classList.remove('dragging');
+}
+box.addEventListener('pointerup',navUp);
+box.addEventListener('pointercancel',navUp);
+window.addEventListener('blur',function(){navCommit();activePointers.clear();box.classList.remove('dragging');});
+window.HWNavPerformance={stats:function(){return Object.assign({},navStats);},active:function(){return !!navGesture;},labels:function(){return liveCadLabels?{count:liveCadLabels.count,layers:liveCadLabels.layerCount}:null;}};
 map.addEventListener('click',function(e){var cur=e.target;while(cur&&cur!==map){if(cur.hasAttribute&&cur.hasAttribute('data-info')){document.getElementById('info').firstChild.textContent='所選圖層：'+cur.getAttribute('data-info');return;}cur=cur.parentNode;}});
 document.getElementById('menuOpen').addEventListener('click',function(){document.getElementById('side').classList.toggle('open');});document.querySelector('.viewer').addEventListener('click',function(e){if(window.innerWidth<761&&document.getElementById('side').classList.contains('open'))document.getElementById('side').classList.remove('open');});
 

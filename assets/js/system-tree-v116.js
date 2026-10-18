@@ -19,7 +19,7 @@ const launch=el('button','v116-launch','▤ 全場系統架構・棟舍子系統
 // Keep it inside the existing compact equipment sidebar, not above the map.
 const start=$('v95Start'),sidebar=$('v83EquipPanel');if(start)start.after(launch);else sidebar?.prepend(launch);
 const mobilebar=document.querySelector('.mobilebar');let mobileBtn=null;
-if(mobilebar){mobileBtn=el('button','v116-mobile','系統架構');mobileBtn.type='button';mobileBtn.id='v116MobileLaunch';mobilebar.append(mobileBtn);}
+if(mobilebar){mobileBtn=el('button','v116-mobile','系統');mobileBtn.type='button';mobileBtn.id='v116MobileLaunch';mobileBtn.title='開啟全場母子系統架構';mobileBtn.setAttribute('aria-label','開啟全場母子系統架構');mobilebar.append(mobileBtn);}
 const get=()=>HW.getData(),nodes=()=>get().systemNodes||[],nameOf=id=>nodes().find(s=>s.id===id)?.name||'已移除',groupName=id=>groups.find(g=>g.id===id)?.label||id;
 function message(s,bad=false){$('v116Message').textContent=s||'';$('v116Message').dataset.error=bad?'true':'false';}
 function open(){priorFocus=document.activeElement;HW.setWorkspace('equipment');visible=true;root.hidden=false;render();root.querySelector('.v116-window').focus();if(window.innerWidth<=760)$('side')?.classList.remove('open');}

@@ -14,7 +14,7 @@
   const g=ev.target.closest&&ev.target.closest('[data-stall-id]');if(!g)return;
   const status=window.HWEquipment?.getAction?.();if(status?.action)return;
   // V11.7.1: a stall is interactive only in explicitly selected inspect mode.
-  if(!window.HWStallNavigation?.isInspectMode?.())return;
+  if(window.HWStallNavigation?.handlesTap)return; // V11.8.5 handles genuine taps on pointerup; don't double-open.
   clear();active=g;g.classList.add('v105-stall-focus');
   const id=g.getAttribute('data-stall-id');if(window.HWStallNavigation?.showStall){window.HWStallNavigation.showStall(id,g);return;}if(window.HWStallLinks?.handleStallClick){window.HWStallLinks.handleStallClick(id,g);return;}const boar=id==='BOAR-HEAT-01';
   const title=boar?'公豬巡情欄（1頭）':id.startsWith('G-')?'女豬育成欄（每欄10頭）':id.startsWith('MAT-')?'配種母豬夾欄':'妊娠舍夾欄';

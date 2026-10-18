@@ -22,3 +22,12 @@
 
 /* Reserve the compact mobile card area instead of letting old floating shortcuts cover its actions. */
 body.v1171-card-open .v114-fab,body.v1171-card-open .v113-fab{display:none!important}
+
+/* V11.8.3 prevent narrow mobile mode toggle from compressing into vertical text. */
+.viewer .toolbar #v1172ModeToggle{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 64px!important;width:64px!important;min-width:64px!important;height:36px!important;white-space:nowrap!important;writing-mode:horizontal-tb!important;padding:0 4px!important;}
+
+/* V11.8.5: automatic tap vs pan — no persistent drag/query mode control. */
+#v1172ModeToggle,.v1172-mode-fallback{display:none!important}
+#plan [data-stall-id]{cursor:pointer}
+#plan .v82-equip{cursor:pointer}
+#plan .v82-equip.is-selected{filter:drop-shadow(0 0 .08px #91fce9)}

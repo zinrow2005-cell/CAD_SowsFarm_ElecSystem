@@ -1,0 +1,44 @@
+{
+  "version": "V11.8.2",
+  "checks": {
+    "desktop": {
+      "total": 19,
+      "passed": 19,
+      "errors": 0
+    },
+    "mobile": {
+      "total": 19,
+      "passed": 19,
+      "errors": 0
+    },
+    "tablet": {
+      "total": 19,
+      "passed": 19,
+      "errors": 0
+    }
+  },
+  "modalChecks": "8 x 3",
+  "icons": {
+    "count": 59,
+    "groups": {
+      "water": 15,
+      "electric": 12,
+      "ventilation": 11,
+      "feed": 13,
+      "equipment": 8
+    },
+    "symbolCount": 56,
+    "fallbackCount": 3,
+    "issues": [],
+    "duplicateIds": []
+  },
+  "scriptCount": 36,
+  "referenceCount": 58,
+  "narrowMobileWidths": [
+    320,
+    360,
+    390,
+    414
+  ],
+  "notes": "Local Chromium simulated browser, not actual Safari/GitHub"
+}

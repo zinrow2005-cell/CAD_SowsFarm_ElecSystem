@@ -1,5 +1,5 @@
 {
-  "version": "V10.8",
+  "version": "V11.8.1",
   "zone": "妊娠舍 B 棟左下方",
   "mode": "設備配置（不顯示施工進度）",
   "upperBoarPen": {
@@ -24,9 +24,15 @@
     "function": "收集、抽取、檢修"
   },
   "symbolPosition": {
-    "svgX": 1.7,
-    "svgY": 71.3,
-    "indicativeOnly": true,
+    "svgX": 3.921,
+    "svgY": 73.0448,
+    "formerLeftTwoPenPositions": {
+      "x0": 3.3,
+      "x1": 4.542,
+      "y0": 72.0848,
+      "y1": 74.0048
+    },
+    "alignedWith": "妊娠B第三排夾欄; B-R3-001 now starts at the former B-R1-003 boundary",
     "dimensionsVerified": false
   },
   "scope": {
@@ -35,5 +41,5 @@
     "pregnancyBCrates": 244,
     "independentBoarPens": 2
   },
-  "note": "資料描述預計長期設備配置，並非現況安裝盤點或施工安全認證。"
+  "note": "第三排B3有80個母豬夾欄，與B1/B2前兩格同位置的左側兩格預留給下層污水池與池上公豬欄；上層公豬欄單獨計數1頭，現場安裝狀態不在圖面顯示。"
 }

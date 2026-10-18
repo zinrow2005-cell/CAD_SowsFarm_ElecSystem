@@ -16,3 +16,31 @@
 @media(max-width:900px) and (min-width:761px){.quickbar{gap:5px;max-width:calc(100% - 150px)}.quick-title{display:none}.toolbar{right:8px}}
 @media(max-width:760px){.quickbar{top:8px;left:9px;right:9px;max-width:none;gap:11px;padding:9px 10px;justify-content:space-around}.quick-title{display:none}.quickbar label{font-size:12px}.toolbar{top:64px;right:12px}.side{z-index:10}.stat{max-width:95%;bottom:10px}}
 @media(max-width:370px){.quickbar{gap:4px}.quickbar label{font-size:11px}}
+
+/* V11.8.2: Keep every mobile quick action legible at narrow widths. */
+@media(max-width:760px){
+ .mobilebar{gap:5px;padding:0 7px;min-width:0}
+ .mobilebar button{flex:0 0 auto;white-space:nowrap;padding:7px 6px;font-size:12px;line-height:1.2;min-height:36px}
+ .mobilebar strong{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:1.3}
+}
+@media(max-width:360px){
+ .mobilebar{gap:4px;padding:0 5px}
+ .mobilebar button{font-size:11px;padding:6px 5px}
+ .mobilebar strong{font-size:10px}
+}
+
+/* V11.8.3: keep touch gestures controlled by the CAD viewer. */
+#canvas {touch-action:none; overscroll-behavior:contain;}
+#plan {transform-origin:0 0;}
+
+/* V11.8.4: live vector CAD annotations, independent from the composited map.
+   Original label nodes remain for indexing / downloads but never render twice. */
+.mapwrap{isolation:isolate}
+#plan .cad-layer text{visibility:hidden!important}
+#cadLiveLabels{position:absolute;inset:0;width:100%;height:100%;display:block;
+  pointer-events:none;touch-action:none;user-select:none;overflow:hidden;z-index:1}
+#cadLiveLabels text{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+  paint-order:normal!important;stroke:none!important;
+  text-rendering:geometricPrecision}
+#cadLiveLabels .cad-layer[data-category="area"] text{font-weight:600}
+#cadLiveLabels .cad-layer[data-category="building"] text{font-weight:750}

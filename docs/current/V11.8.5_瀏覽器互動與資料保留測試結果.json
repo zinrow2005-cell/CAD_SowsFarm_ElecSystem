@@ -1,0 +1,29 @@
+{
+  "version": "V11.8.5",
+  "qa": "Chromium embedded full project - mock localStorage",
+  "scenarios": {
+    "desktop": "pass",
+    "mobile_touch": "pass",
+    "tablet_touch": "pass",
+    "native_mouse_drag_from_device": "pass",
+    "native_mouse_click_device": "pass",
+    "native_mouse_click_stall": "pass",
+    "native_mobile_touch_tap_stall": "pass",
+    "selection_raised_above_siblings": "pass",
+    "dragged_device_physical_anchor_unchanged": "pass",
+    "dragged_device_visual_anchor_unchanged": "pass",
+    "dragged_stall_no_card": "pass",
+    "keyboard_js_syntax": "pass",
+    "cad_svg_unchanged": "pass",
+    "six_dxf_unchanged": "pass"
+  },
+  "layers": 155,
+  "stalls": 587,
+  "notes": [
+    "No dedicated drag/inspect mode button; ordinary pan is default at all positions in browsing.",
+    "Administrator Alt+mouse drag is explicitly reserved for advanced device relocation.",
+    "Photo storage IndexedDB and GitHub deployment not exercised in this test.",
+    "iPhone/iPad physical Safari performance requires verification."
+  ],
+  "tooling": "Playwright Chromium full app inlined; real mouse and touchscreen.tap, plus synthetic pointer gesture tests."
+}
