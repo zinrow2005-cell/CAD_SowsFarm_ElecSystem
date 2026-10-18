@@ -1,0 +1,13 @@
+/* Independent true CAD coordinates and icon display-position controls */
+.v101-locate[hidden],.v101-save-alert[hidden]{display:none!important}
+.v101-locate{margin:12px 0 0;padding:12px;border:1px solid #3f7680;border-radius:12px;background:#102d3a;line-height:1.5;color:#dceff0}
+.v101-title{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}.v101-title small{font-size:11px;color:#a8c3c8}
+.v101-coordinates{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px 0}
+.v101-coordinates>div{padding:8px;border-radius:8px;background:#17394a;display:flex;flex-direction:column;gap:4px;min-width:0}
+.v101-coordinates span{font-size:11px;color:#b2cbcf}.v101-coordinates strong{font-size:13px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.v101-locate-buttons{display:flex;flex-wrap:wrap;gap:6px}.v101-locate-buttons button,.v101-save-alert button{border:1px solid #68abb5;background:#214b58;color:#e6faf6;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;min-height:34px}
+.v101-help{display:block;font-size:11px;color:#b5cacf;margin-top:8px}
+.v101-save-alert{position:fixed;z-index:99999;left:50%;bottom:16px;transform:translateX(-50%);width:min(94vw,690px);background:#432d27;border:2px solid #ffc27b;box-shadow:0 8px 30px #0009;color:#fff3e1;border-radius:12px;padding:13px;display:flex;gap:7px;flex-direction:column;line-height:1.55}
+.v101-save-alert strong{font-size:14px}.v101-save-alert>div{display:flex;gap:7px;flex-wrap:wrap}.v101-save-alert button{background:#6b4334;border-color:#eec192}
+#plan .v101-anchor-link{pointer-events:none}
+@media(max-width:760px){.v101-locate{padding:10px}.v101-save-alert{bottom:65px}.v101-save-alert button{flex:1;min-width:90px}.v101-coordinates{grid-template-columns:1fr 1fr}}

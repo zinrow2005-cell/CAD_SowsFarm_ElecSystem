@@ -1,0 +1,90 @@
+/* V8.2 additive UI. Original CAD SVG and V8.1 controls remain untouched. */
+.v82-rolebar{margin:12px 0 14px;padding:10px;border:1px solid #2e5669;border-radius:13px;background:#0a2030}
+.v82-rolebar .role-title{display:flex;gap:6px;align-items:center;justify-content:space-between;font-size:12px;color:#a7cedd;margin:0 1px 9px}
+.v82-role-row{display:flex;gap:8px}.role-switch{width:50%;border:1px solid #3c6279;border-radius:9px;background:#193b50;color:#d7e9f0;padding:9px 5px;font-size:13px}.role-switch.is-active{background:#166258;border-color:#59dbbe;color:white;box-shadow:inset 0 0 0 1px #65dbbb44}
+.role-help{margin:9px 1px 1px;font-size:11px;line-height:1.55;color:#9db5c5}
+.v82-title{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.v82-title .count{font-size:11px;color:#75dac8;background:#143e4c;border-radius:99px;padding:3px 9px}
+.equipment-layer-row{display:flex;justify-content:space-between;align-items:center;border:1px solid #294b62;background:#102e40;padding:9px 10px;margin:6px 0;border-radius:11px;font-size:13px;gap:6px;cursor:pointer}
+.equipment-layer-row input{accent-color:#65d4c0;width:17px;height:17px;margin:0}
+.layer-name{display:flex;gap:10px;align-items:center}.layer-name .swatch{height:12px;width:12px;border-radius:4px;display:inline-block}
+.layer-count{color:#83a9bb;font-size:11px;margin-left:auto}
+.eqquick{position:absolute;z-index:4;left:16px;top:68px;display:flex;align-items:center;gap:6px;padding:6px 8px;background:#102a3bf2;border:1px solid #355871;border-radius:11px;max-width:calc(100% - 170px);flex-wrap:wrap;box-shadow:0 2px 8px #0004}
+.eqquick label{display:flex;gap:4px;align-items:center;font-size:11px;white-space:nowrap;cursor:pointer}.eqquick input{accent-color:#65d4c0;margin:0}
+.v82-input,.v82-select,.v82-area{display:block;width:100%;border:1px solid #3d6476;border-radius:9px;background:#092335;color:#ebf8ff;font-size:13px;padding:10px;margin-top:5px;outline:none}
+.v82-input:focus,.v82-select:focus,.v82-area:focus{border-color:#66d7c5;box-shadow:0 0 0 2px #66d7c51e}
+.v82-area{resize:vertical;min-height:60px}
+.v82-label{display:block;color:#adc6d6;font-size:11px;margin:10px 0 3px}
+.v82-btn{border:1px solid #3d6476;background:#19394b;color:#e3f3f8;padding:9px 11px;border-radius:9px;font-size:12px;cursor:pointer;min-height:35px}
+.v82-btn.primary{background:#1e8c75;border-color:#47c8ac;font-weight:750;color:#fff}
+.v82-btn.danger{background:#4b2932;border-color:#8a4e59;color:#ffdce3}
+.v82-btn:disabled{opacity:.38;cursor:not-allowed}
+.v82-btn.active{border-color:#b7ed96;background:#2a604b}
+.v82-group{padding:12px 11px;border:1px solid #30566d;border-radius:12px;background:#102d3e;margin:10px 0 8px}
+.v82-group h3{font-size:13px;margin:0 0 9px;color:#e9fcfd}
+.v82-hint{font-size:11px;color:#96b7c7;line-height:1.65;margin:8px 0}
+.v82-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.v82-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.v82-toggle{display:flex;gap:8px;align-items:center;margin:6px 0;font-size:12px;color:#d4e7eb;cursor:pointer}
+.v82-toggle input{accent-color:#63d4bc}
+.equipment-list{display:flex;flex-direction:column;max-height:270px;overflow:auto;gap:6px;margin:8px 0}
+.equipment-list-item{border:1px solid #30566d;background:#142d40;border-radius:10px;padding:10px;display:flex;gap:8px;align-items:center;cursor:pointer;color:#e5f6f9;text-align:left;font-size:12px;width:100%}
+.equipment-list-item:hover,.equipment-list-item.active{border-color:#67d8bc;background:#1b4751}
+.equipment-list-item .itemicon{font-weight:800;border-radius:8px;display:flex;align-items:center;justify-content:center;width:29px;height:29px;flex:none;color:#052c34}
+.equipment-list-item .minor{display:block;font-size:10px;color:#9eb9c6;margin-top:3px}
+.v82-empty{font-size:12px;color:#9bb7c9;padding:12px;border:1px dashed #466779;border-radius:10px;line-height:1.7}
+#eqDetails{position:absolute;z-index:7;bottom:20px;right:17px;min-width:220px;width:min(325px,calc(100% - 32px));max-height:50%;overflow:auto;background:#112f40f5;border:1px solid #63aab5;border-radius:16px;box-shadow:0 10px 34px #000a;padding:15px;color:#e5f5fa;font-size:13px;line-height:1.6}
+#eqDetails h3{font-size:15px;margin:0 24px 5px 0}#eqDetails .muted{font-size:11px;color:#add1da}
+#eqDetails .close{float:right;background:#254a5a;border:1px solid #496b7c;color:white;border-radius:8px;padding:3px 9px}
+#eqEditor[hidden],#eqRouteEditor[hidden],#eqDetails[hidden],#eqAdmin[hidden],#eqPlaceTip[hidden]{display:none!important}
+#eqPlaceTip{position:absolute;top:124px;left:16px;z-index:5;border:1px solid #54cdb4;border-radius:10px;padding:9px 12px;background:#12403fed;color:#defef8;font-size:12px;max-width:65%;pointer-events:none}
+#plan .v82-equip text{stroke:none!important;paint-order:normal!important;pointer-events:none;font-weight:800}
+#plan .v82-equip{cursor:pointer;touch-action:none}
+#plan .v82-equip .ring{stroke-width:.14;stroke:#eafaff}
+#plan .v82-equip.is-selected .ring{stroke:#e2f89c;stroke-width:.3;filter:drop-shadow(0 0 2px #bffa87)}
+#plan .v82-equip .hit{fill:transparent;stroke:none;pointer-events:all}
+#plan #eqRoutes .routehit{stroke:transparent;stroke-width:1.1;fill:none;pointer-events:stroke;cursor:pointer}
+#plan #eqRoutes .route-line{fill:none;stroke-width:.19;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
+#plan #eqRoutes .selected-route{stroke-width:.3;filter:drop-shadow(0 0 2px #fff)}
+#plan #eqPreview{pointer-events:none}
+#plan .v82-equip .equip-label{font-size:.68px;text-anchor:middle;fill:#eaf8ff;stroke:#082032!important;stroke-width:.075!important;paint-order:stroke fill!important}
+.v82-status{font-size:11px;margin:9px 0;color:#b9d2e1;line-height:1.6}
+#eqInfoLabel{font-size:11px;line-height:1.4;color:#c9ece9}
+@media(max-width:760px){.eqquick{top:59px;left:9px;right:9px;max-width:none;justify-content:space-around;gap:5px}.eqquick label{font-size:11px}.toolbar{top:105px;right:12px}#eqPlaceTip{top:157px;left:9px;max-width:66%}#eqDetails{bottom:77px;right:9px;width:min(300px,calc(100% - 18px));max-height:38%}.stat{max-width:calc(100% - 18px)}.side{padding-bottom:52px}}
+@media(max-width:390px){.eqquick{padding:7px 5px;gap:3px}.eqquick label{font-size:10px}}
+
+/* V8.3 — independent CAD basics and user-authored equipment workbench. */
+.v83-workspace-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;margin:12px 0 14px;border-radius:14px;background:#071b2a;border:1px solid #29485c}
+.v83-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:57px;border:1px solid transparent;border-radius:10px;background:transparent;color:#93b1c3;font-size:12px;font-weight:750;padding:7px 3px;line-height:1.3;transition:none}
+.v83-tab.active{background:#20605c;border-color:#5ebfbb;color:#f4fffc;box-shadow:0 2px 12px #0004}
+.v83-tab:focus-visible{outline:2px solid #c0faeb;outline-offset:2px}
+.v83-tab-icon{font-size:16px;line-height:1}
+.v83-workspace-panel{padding-bottom:10px}
+.v83-workspace-panel[hidden],#v83BaseQuick[hidden],#v83EquipmentQuick[hidden],#eqOpenEditor[hidden]{display:none!important}
+.v83-panel-head{display:flex;flex-direction:column;gap:5px;border-left:3px solid #74d7c1;background:#112f3f;border-radius:7px;padding:12px 11px;margin:0 0 10px}
+.v83-panel-head strong{font-size:14px;color:#e4fcf6}
+.v83-panel-head small{font-size:11px;color:#a6c7d4;line-height:1.65}
+#v83EquipPanel .section,#v83BasePanel .section{margin-top:20px}
+.v83-library{border-color:#376b72;background:linear-gradient(135deg,#103a47,#102939)}
+.v83-custom-types{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.v83-type-item{display:flex;align-items:center;gap:6px;background:#0b2738;border:1px solid #335b68;border-radius:10px;padding:6px}
+.v83-type-symbol{display:flex;align-items:center;justify-content:center;border-radius:8px;min-width:29px;height:29px;font-size:12px;color:#082432;font-weight:900}
+.v83-type-text{min-width:0;flex:1;font-size:12px;font-weight:750;overflow-wrap:anywhere}
+.v83-type-text small{display:block;font-weight:400;font-size:10px;color:#9bc4cd}
+.v83-type-item .v82-btn{padding:6px 8px;min-height:30px;font-size:11px}
+.v83-spec-header{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:17px;font-size:12px;color:#c5e5e5}
+.v83-spec-header .v82-btn{padding:5px 8px;min-height:30px}
+.v83-fields{display:flex;flex-direction:column;gap:6px;margin-top:7px}
+.v83-field-row{display:grid;grid-template-columns: minmax(60px, .82fr) minmax(72px,1fr) 31px;gap:5px;align-items:center}
+.v83-field-row .v82-input{margin:0;min-width:0;padding:8px 6px;font-size:12px}
+.v83-field-row .v82-btn{padding:0;min-height:32px;height:34px}
+#eqOpenEditor{display:block;margin:10px 0 0}
+@media (max-width:760px){
+.v83-workspace-tabs{margin:9px 0 12px}
+.v83-tab{min-height:54px;font-size:12px}
+.v83-panel-head{margin-top:2px}
+.eqquick{top:8px;left:9px;right:9px;max-width:none;gap:5px;justify-content:space-around}
+.toolbar{top:64px!important;right:12px}
+#eqPlaceTip{top:112px}
+#eqDetails{max-height:46%;bottom:78px}
+}

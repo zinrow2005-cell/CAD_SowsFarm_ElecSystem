@@ -1,0 +1,61 @@
+/* V9.6 device record: compact, task-oriented, accessible on desktop and touch. */
+.v84-editor-drawer:has(#v96Record:not([hidden])){width:min(488px,calc(100% - 24px));padding:16px;scrollbar-width:thin}
+.v96-record[hidden],.v96-section[hidden],.v96-quick[hidden],.v96-read[hidden],.v96-advanced[hidden]{display:none!important}
+.v96-record{display:flex;flex-direction:column;gap:0;color:#eaf6fc}
+.v96-summary{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:13px 2px 14px}
+.v96-name{flex:1;min-width:180px;display:flex;flex-direction:column;gap:5px}
+.v96-name strong{font-size:17px;line-height:1.35;overflow-wrap:anywhere}
+.v96-name small{font-size:11px;color:#a6c4d3}
+.v96-status{padding:5px 9px;border-radius:99px;background:#264359;border:1px solid #456779;font-size:11px;white-space:nowrap}
+.v96-status.installed{color:#9ce6bf;border-color:#367e62;background:#153b34}
+.v96-status.maintenance{color:#ffd5a0;border-color:#806246;background:#473523}
+.v96-badges{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px}
+.v96-badges span{color:#c2d6df;font-size:10px;padding:4px 7px;border:1px solid #3d5d6d;border-radius:7px;background:#132f40}
+.v96-tabs{position:sticky;top:54px;z-index:2;background:#0e2b3c;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:8px 0;border-bottom:1px solid #35586a}
+.v96-tab{border:1px solid #395c6b;color:#b8d5e0;border-radius:10px;padding:11px 5px;min-height:43px;background:#152f40;font-size:12px;font-weight:650;white-space:nowrap}
+.v96-tab.active{color:#f6fffa;background:#1f695b;border-color:#71d9c1}
+.v96-tab:focus-visible,.v96-action:focus-visible,.v96-photo-tile:focus-visible{outline:2px solid #a4f1de;outline-offset:2px}
+.v96-section{padding:14px 0 9px;min-height:170px}
+.v96-section-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 12px;color:#d8f3ed}
+.v96-section-head b{font-size:13px}.v96-section-head span{font-size:11px;color:#98b8c9}
+.v96-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.v96-fields label{font-size:11px;color:#b8d2df;display:flex;flex-direction:column;gap:5px}
+.v96-fields .v96-full{grid-column:1/-1}
+.v96-fields input,.v96-fields select,.v96-fields textarea{font:inherit;font-size:13px;min-width:0;width:100%;background:#0d2332;border:1px solid #466879;border-radius:9px;color:#eef8fb;min-height:40px;padding:9px;resize:vertical}
+.v96-note{font-size:11px;line-height:1.75;color:#9fc0ce;margin:3px 0 13px}
+.v96-advanced{border:1px solid #395f71;border-radius:12px;overflow:hidden;margin:16px 0 7px;background:#102b3b}
+.v96-advanced summary{font-size:12px;padding:14px 12px;cursor:pointer;color:#c8e4ed;font-weight:600;list-style:revert;margin:0;border:0}
+.v96-advanced #eqEditor{padding:0 8px 9px;margin:0}
+.v96-read-row{display:grid;grid-template-columns:85px 1fr;gap:6px;border-bottom:1px solid #2b5061;padding:11px 4px;align-items:start}
+.v96-read-row span{font-size:11px;color:#9bb8c5}.v96-read-row strong{font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:550}
+.v96-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.v96-photo-tile{display:flex;flex-direction:column;gap:7px;min-width:0;border:1px solid #3e6978;border-radius:12px;background:#153549;color:#e7f8f9;padding:7px;text-align:left}
+.v96-photo-tile strong{font-size:11px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}.v96-photo-tile small{color:#a7c9d6;font-size:10px}
+.v96-photo-image{display:grid;place-items:center;aspect-ratio:4/3;width:100%;border-radius:9px;overflow:hidden;background:#0c2431}
+.v96-photo-image img{width:100%;height:100%;object-fit:cover}.v96-photo-fallback{font-size:11px;color:#83aabb;padding:8px;text-align:center}
+.v96-action{border-radius:10px;background:#1a3d4f;border:1px solid #467384;color:#e5f8fb;min-height:43px;padding:10px 12px;font-size:12px;font-weight:650;cursor:pointer}
+.v96-action.v96-primary{background:#176b5c;border-color:#61c6ad;color:#fafffe}
+#v96ManagePhotos{width:100%}.v96-link-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.v96-connections{display:flex;flex-direction:column;gap:10px}
+.v96-link-card{padding:12px;border:1px solid #3e6476;border-radius:12px;background:#123043}
+.v96-link-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.v96-link-heading strong{font-size:12px;overflow-wrap:anywhere}.v96-link-state{border-radius:7px;font-size:10px;padding:4px 6px;background:#52422a;color:#ffe3a8;white-space:nowrap}
+.v96-link-state.verified{background:#194836;color:#a8e3bc}
+.v96-endpoints{display:grid;grid-template-columns:1fr 25px 1fr;gap:5px;align-items:center;margin-top:11px}
+.v96-endpoints span{font-size:11px;border:1px solid #476274;background:#0c2635;border-radius:7px;padding:9px 6px;text-align:center;overflow-wrap:anywhere}
+.v96-endpoints b{text-align:center;color:#90d8c1}.v96-link-card p,.v96-link-detail{font-size:11px;color:#a9cbd6;line-height:1.6;display:block;margin:9px 0}
+.v96-link-inspect{margin-top:10px;border:0;background:transparent;color:#8ce1cb;text-decoration:underline;font-size:11px;padding:4px 0;text-align:left}
+.v96-empty{grid-column:1/-1;padding:18px 12px;border:1px dashed #486f7b;border-radius:12px;color:#b5cfdb;font-size:12px;line-height:1.7}
+/* Keep original photo button available through unified dossier but don't duplicate it in the selection bar */
+.v84-selection-buttons .v90-open-btn[hidden]{display:none!important}
+@media(max-width:760px){
+ .v84-editor-drawer:has(#v96Record:not([hidden])){width:100%;height:min(88dvh,820px);top:auto;bottom:0;left:0;right:0;border-radius:17px 17px 0 0;padding:14px 15px 22px}
+ .v96-tabs{top:53px}.v96-fields{grid-template-columns:1fr 1fr}.v96-section{padding-top:11px}
+}
+@media(max-width:370px){.v96-name strong{font-size:15px}.v96-tabs{gap:3px}.v96-tab{font-size:11px;padding:8px 3px}.v96-link-actions{grid-template-columns:1fr}}
+
+/* Actions must remain recognizable even when the original editor fields are collapsed. */
+#v84DrawerFooter:has(#eqSaveDevice:not([hidden])):not([hidden]){display:flex!important;gap:8px;margin:12px 0 0;padding:10px 0 5px;background:#0e2b3c}
+#v84DrawerFooter #eqSaveDevice{background:#177b69!important;color:#fff!important;border:1px solid #62cfb4!important;border-radius:10px!important;min-height:45px}
+#v84DrawerFooter #eqRemoveDevice{background:#343744!important;border:1px solid #7f5961!important;color:#ffcbcd!important;border-radius:10px!important;min-height:45px}
+#v84DrawerFooter[hidden]{display:none!important}

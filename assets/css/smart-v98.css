@@ -1,0 +1,20 @@
+/* V9.8：只在需要時顯示的設備卡；既有 CAD 和側欄外觀不受影響 */
+#v98SnapLayer,#v98SnapLayer *{pointer-events:none!important}
+.v98-snap-hint{position:absolute;z-index:1200;pointer-events:none;border:1px solid #60b8a2;background:#0e2b37ed;color:#dbfcf5;border-radius:9px;padding:7px 10px;font-size:11px;max-width:220px;line-height:1.5;box-shadow:0 6px 18px #0007}
+.v98-snap-hint[hidden]{display:none!important}
+.v98-card{position:fixed;bottom:78px;left:max(12px,calc(var(--side-width,300px) + 15px));z-index:1300;width:min(330px,calc(100vw - 36px));max-height:min(59vh,480px);overflow:auto;color:#e7f8f9;background:#0c2939f5;border:1px solid #427687;border-radius:15px;padding:12px;box-shadow:0 9px 35px #0008;backdrop-filter:blur(8px)}
+.v98-card[hidden]{display:none!important}
+.v98-card-head{display:flex;justify-content:space-between;align-items:start;gap:9px}
+.v98-card-head>div{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
+.v98-card-head small{font-size:10px;color:#99bbc8}.v98-card-head strong{font-size:14px;overflow-wrap:anywhere}
+#v98CardClose{background:transparent;border:0;color:#afcfd5;font-size:22px;padding:0 5px;cursor:pointer}
+.v98-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:11px 0}
+.v98-actions button{background:#194b54;border:1px solid #428779;color:#e7fcf1;border-radius:8px;min-height:38px;padding:6px 2px;font-weight:700;font-size:11px;cursor:pointer}
+.v98-system{display:flex;flex-direction:column;gap:8px}
+.v98-system-row{border-left:3px solid var(--sys);background:#123646;border-radius:7px;padding:8px}
+.v98-system-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;font-size:12px}.v98-system-head span{font-size:10px;color:#9cbdc8}
+.v98-route-row{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:#0c2738;border:1px solid #325766;color:#eaf9fa;text-align:left;border-radius:7px;margin-top:5px;padding:7px 9px;font-size:11px;cursor:pointer}
+.v98-route-row>span{min-width:0;flex:1;overflow-wrap:anywhere}.v98-route-row small{white-space:nowrap;font-size:10px}.v98-verified{color:#a8f2c4}.v98-unverified{color:#f1c38d}
+.v98-empty{color:#9bb9c4;font-size:10px}.v98-disclaimer{font-size:10px;color:#a3c1cb;line-height:1.5;margin:9px 0 0}
+@media (min-width:761px) and (max-width:1100px){.v98-card{left:322px;width:min(330px,calc(100vw - 336px))}}
+@media(max-width:760px){.v98-card{bottom:74px;left:10px;width:min(335px,calc(100vw - 20px));max-height:37vh;padding:9px;border-radius:12px}.v98-card-head strong{font-size:12px}.v98-actions{margin:7px 0}.v98-actions button{min-height:34px}.v98-system-row{padding:6px}.v98-disclaimer{display:none}}

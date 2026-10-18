@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://你的帳號.github.io"],
+    "method": ["GET", "HEAD", "OPTIONS"],
+    "responseHeader": ["Content-Type", "x-goog-meta-*"],
+    "maxAgeSeconds": 3600
+  }
+]

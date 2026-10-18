@@ -1,0 +1,39 @@
+{
+  "version": "V10.8",
+  "zone": "妊娠舍 B 棟左下方",
+  "mode": "設備配置（不顯示施工進度）",
+  "upperBoarPen": {
+    "id": "B-BOAR-UPPER-01",
+    "category": "公豬欄",
+    "pens": 1,
+    "capacityHeads": 1,
+    "separateFrom": "BOAR-HEAT-01"
+  },
+  "concreteSlab": {
+    "id": "B-CONCRETE-SLAB-UPPER-BUILT",
+    "category": "混凝土樓板",
+    "location": "公豬欄下方、污水池上方",
+    "exists": true,
+    "ownerReported": true,
+    "structureVerified": false
+  },
+  "wastewaterPit": {
+    "id": "B-WASTEWATER-PIT-LOWER",
+    "category": "污水集中抽取池",
+    "level": "下層",
+    "function": "收集、抽取、檢修"
+  },
+  "symbolPosition": {
+    "svgX": 1.7,
+    "svgY": 71.3,
+    "indicativeOnly": true,
+    "dimensionsVerified": false
+  },
+  "scope": {
+    "matingSowCrates": 76,
+    "pregnancyACrates": 252,
+    "pregnancyBCrates": 244,
+    "independentBoarPens": 2
+  },
+  "note": "資料描述預計長期設備配置，並非現況安裝盤點或施工安全認證。"
+}

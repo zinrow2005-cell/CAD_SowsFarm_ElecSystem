@@ -1,0 +1,7 @@
+{
+  "apiKey": "在 Firebase 主控台複製 apiKey",
+  "authDomain": "你的專案.firebaseapp.com",
+  "projectId": "你的 Firebase 專案 ID",
+  "storageBucket": "你的 Storage bucket 名稱",
+  "appId": "1:000000000:web:example"
+}

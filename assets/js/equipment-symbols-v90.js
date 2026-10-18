@@ -1,0 +1,65 @@
+/* V8.8 original, dependency-free vector pictograms for equipment plans.
+   All markup is constant and trusted; custom text never goes through innerHTML. */
+(function(){'use strict';
+const NS='http://www.w3.org/2000/svg';
+const art={
+ tower:'<ellipse cx="12" cy="5" rx="6.5" ry="2.7"/><path d="M5.5 5v12c0 3.5 13 3.5 13 0V5M5.5 17c0 3.5 13 3.5 13 0M7 21l-1 2M17 21l1 2"/>',
+ tank:'<rect x="5" y="6" width="14" height="14" rx="3"/><path d="M5 11h14M8 3v3M16 3v3M9 15h6"/>',
+ well:'<path d="M4 9h16M6 9v10h12V9M8 6h8M12 2v4M12 12v5M9.5 14.5 12 17l2.5-2.5"/>',
+ tap:'<path d="M4 10h14a3 3 0 0 1 3 3v2h-5v-2H4zM8 10V6M5 6h6M8 3v3M18.5 18l-1.7 2.5a2 2 0 0 0 3.5 0z"/>',
+ valve:'<path d="M2 9l7 5V4L2 9zm20 0l-7 5V4l7 5zM9 9h6M12 9V3M8.5 3h7M12 9v10M9 19h6"/>',
+ manual:'<path d="M3 7l7 5V2L3 7zm18 0l-7 5V2l7 5zM10 7h4M12 7v10M7 17h10M9 20h6"/>',
+ autoValve:'<path d="M2 13l7 5V8l-7 5zm20 0l-7 5V8l7 5zM9 13h6M9 3h6v6H9zM12 9v4M10 5h4"/>',
+ filter:'<rect x="7" y="4" width="10" height="16" rx="3"/><path d="M10 4V2h4v2M10 20v2h4v-2M9 9h6M9 13h6M9 17h6"/>',
+ pump:'<circle cx="11" cy="12" r="6.5"/><path d="M11 8l5 4-5 4V8zM4.5 12H2M17.5 12H22M9 19v2h5v-2"/>',
+ meter:'<circle cx="12" cy="12" r="8"/><path d="M7 15l5-5 5 5M12 10V7M7 18h10"/>',
+ manifold:'<path d="M3 12h18M8 7v10M16 7v10M8 7H5M16 17h3M12 3v9M12 12v9"/><circle cx="12" cy="12" r="2"/>',
+ waterPoint:'<path d="M12 3c-3 4-6 7-6 11a6 6 0 0 0 12 0c0-4-3-7-6-11zM10 17c-1.2-.5-2-1.5-2-3"/>',
+ drain:'<path d="M5 5v6h14V5M12 2v9M3 15h18M6 19h12M9 22h6"/>',
+ flush:'<path d="M3 10h12M15 7v6M18 7v6M21 8v4M5 6v8M3 17l-1 2M9 17l-1 2M15 17l-1 2"/>',
+ panel:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M10 3v18M13 8h3M13 12h3M13 16h3M7 7h1M7 11h1M7 15h1"/>',
+ subPanel:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h8M8 12h8M8 16h8M12 6v12"/>',
+ controller:'<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M7 9h10v4H7zM8 16h2M14 16h2"/>',
+ generator:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M6 9h6v6H6zM16 8l-2 4h3l-2 4M3 21h18"/>',
+ ats:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 16h10M12 8v8M9 12l3-3 3 3"/>',
+ socket:'<rect x="6" y="4" width="12" height="16" rx="3"/><path d="M10 9v3M14 9v3M10 16h4"/>',
+ switch:'<rect x="5" y="4" width="14" height="16" rx="3"/><path d="M12 7v5M8.5 10a5 5 0 1 0 7 0"/>',
+ light:'<path d="M8 17h8M9 20h6M10 22h4M8 15a7 7 0 1 1 8 0l-1 2H9z"/>',
+ motor:'<rect x="5" y="6" width="14" height="12" rx="3"/><path d="M2 12h3M19 12h3M9 15V9l3 4 3-4v6"/>',
+ alarm:'<path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4M11 2h2"/>',
+ ups:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 6h8M8 18h8M13 9l-3 4h3l-2 3"/>',
+ curtain:'<rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M8 4v16M12 4v16M16 4v16M4 10h16M4 15h16"/>',
+ fan:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.7"/><path d="M12 10c-1-4-1-5 1-6.5 2 .2 3.2 2.5 1.2 6.8M13.7 12c4-2 5.6-1 6 1.4-1.1 2-4 2.6-6.6.4M11.2 13.6c-2 4-4 4.3-5.7 2.3-.1-2.3 1.9-4.2 5.3-4.1"/>',
+ guideFan:'<circle cx="11" cy="12" r="6"/><path d="M11 10c-1-3-1-3 1-4.1M13 12l3.5 1M10 14l-2 3M18 8h4M18 12h4M18 16h4"/>',
+ ceilingFan:'<path d="M12 3v6M10 9a3 3 0 0 0-4-1C2 9 2 13 7 13h5M14 9a3 3 0 0 1 4-1c4 1 4 5-1 5h-5M12 14c-3-1-5 1-4 5 2 3 5 3 6-1l-2-4"/><circle cx="12" cy="12" r="2"/>',
+ roofFan:'<path d="M2 11l10-7 10 7M5 10v11h14V10M12 12a4 4 0 1 1 0 8 4 4 0 0 1 0-8M12 16l2-2M12 16l2 2M12 16h-3"/>',
+ inlet:'<path d="M4 4v16M20 4v16M7 8h9l-3-3M16 8l-3 3M7 16h9l-3-3M16 16l-3 3"/>',
+ outlet:'<path d="M4 4v16M20 4v16M16 8H7l3-3M7 8l3 3M16 16H7l3-3M7 16l3 3"/>',
+ sensor:'<rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 8v8M12 17a2 2 0 1 0 0 4M17 7h3M17 11h3M17 15h3"/>',
+ mist:'<path d="M4 6h16M9 6v5M15 6v5M7 15v1M12 15v1M17 15v1M6 19v1M11 19v1M16 19v1"/>',
+ feedSilo:'<path d="M6 3h12l2 5v9H4V8zM6 3v5h12V3M7 17l-2 5M17 17l2 5M9 11h6M12 8v9"/>',
+ feedAuger:'<path d="M2 8h20v8H2zM4 12h16M6 9l4 6 4-6 4 6M4 18l-1 2M20 18l1 2"/>',
+ feedMotor:'<rect x="4" y="6" width="16" height="12" rx="3"/><path d="M4 10H2M20 10h2M8 15v-6l4 6 4-6v6M9 18v3M15 18v3"/>',
+ feedDistributor:'<path d="M12 3v7M12 10L5 17M12 10l7 7M5 17v4M19 17v4"/><circle cx="12" cy="10" r="2"/>',
+ feedValve:'<path d="M3 8l7 4-7 4zM21 8l-7 4 7 4zM10 12h4M12 6v12M9 6h6"/>',
+ feedDrop:'<path d="M4 5h16v5H4zM12 10v7M8 16l4 5 4-5M9 7h6"/>',
+ feedSensor:'<path d="M5 5h14v13H5zM7 11h10M12 8v8M9 20h6"/><circle cx="12" cy="14" r="2"/>',
+ feedControl:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M7 7h10v5H7zM8 16h2M13 16h3"/>',
+ feedTrough:'<path d="M3 8h18l-2 11H5zM7 12h10M8 19v3M16 19v3"/>',
+ feedService:'<path d="M4 10h16v6H4zM8 10V6l4-3 4 3v4M10 13h4M12 16v5"/>',
+ feedBin:'<path d="M5 4h14l-2 11H7zM8 15l2 4h4l2-4M9 19v3M15 19v3M7 8h10"/>',
+ feedLine:'<path d="M2 9h20M2 15h20M6 6v12M12 6v12M18 6v12M9 12h6"/>',
+ drinker:'<path d="M5 5h14v6H5zM12 11v5M8 18a4 4 0 0 0 8 0M6 21h12"/>',
+ sprayer:'<path d="M4 10h14M11 7v3M18 8v4M15 15l-2 3M19 15l-1 4M8 15l-2 3M5 19h14"/>',
+ camera:'<rect x="3" y="6" width="14" height="12" rx="3"/><circle cx="10" cy="12" r="3"/><path d="M17 10l5-3v10l-5-3"/>',
+ gate:'<path d="M5 21V4h14v17M8 21V8h8v13M8 15h8M14 13h.5"/>',
+ wash:'<path d="M6 9l12-4M8 7l2-3h7l2 3M4 16l2-2M10 14l-1 3M16 14l2 2M8 20h8"/>',
+ repair:'<path d="M5 4l4 4-2 2-4-4M9 8l11 11-2 2L7 10M14 6l4-3 3 3-3 4M14 6l-3 3"/>',
+ reserve:'<circle cx="12" cy="12" r="8" stroke-dasharray="3 2"/><path d="M12 7v10M7 12h10"/>',
+ other:'<circle cx="12" cy="12" r="7"/><path d="M12 6v6l4 3M12 2v2M12 20v2M2 12h2M20 12h2"/>'
+};
+const types={waterTower:'tower',waterTank:'tank',groundwater:'well',tap:'tap',threeWay:'valve',manualValve:'manual',autoValve:'autoValve',filter:'filter',pump:'pump',meter:'meter',manifold:'manifold',waterPoint:'waterPoint',drainPoint:'drain',flushPoint:'flush',panel:'panel',subPanel:'subPanel',controlBox:'controller',generator:'generator',ats:'ats',socket:'socket',switch:'switch',lighting:'light',motorPower:'motor',alarm:'alarm',ups:'ups',curtain:'curtain',fan:'fan',smallFan:'fan',guideFan:'guideFan',ceilingFan:'ceilingFan',roofFan:'roofFan',airInlet:'inlet',airOutlet:'outlet',sensor:'sensor',controller:'controller',mist:'mist',feedSilo:'feedSilo',feedBin:'feedBin',feedLine:'feedLine',feedAuger:'feedAuger',feedMotor:'feedMotor',feedDistributor:'feedDistributor',feedValve:'feedValve',feedDrop:'feedDrop',feedSensor:'feedSensor',feedControl:'feedControl',feedTrough:'feedTrough',feedService:'feedService',drinker:'drinker',sprayer:'sprayer',camera:'camera',gate:'gate',washUnit:'wash',repairPoint:'repair',reservePoint:'reserve',other:'other'};
+function key(type,graphic){const k=graphic&&graphic!=='text'?graphic:types[type];return Object.hasOwn(art,k)?k:null;}
+function draw(type,graphic){const k=key(type,graphic);if(!k)return null;const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.85');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');svg.setAttribute('aria-hidden','true');svg.innerHTML=art[k];return svg;}
+window.HWIconArt={key,draw,options:[['text','自訂文字符號'],['tower','水塔'],['well','水井'],['tap','水龍頭'],['valve','三向閥'],['pump','加壓泵'],['filter','過濾器'],['panel','配電箱'],['generator','發電機'],['socket','插座'],['fan','排風扇'],['guideFan','導引扇'],['curtain','水簾'],['sensor','感測器'],['feedBin','料桶'],['feedSilo','料塔'],['feedAuger','絞龍'],['feedDistributor','分料器'],['feedDrop','落料口'],['drinker','飲水器'],['camera','監視器'],['gate','門禁'],['repair','維修'],['reserve','預留'] ]};
+})();

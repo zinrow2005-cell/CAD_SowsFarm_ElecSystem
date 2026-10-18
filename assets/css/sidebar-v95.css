@@ -1,0 +1,77 @@
+/* V9.5 compact, progressive sidebar: actions are visible; complexity is opt-in. */
+#side .topline{margin-bottom:0}
+#side h1{font-size:17px;margin:7px 0 2px}
+#side>.sub{font-size:11px;margin:2px 0 10px;line-height:1.45}
+#side .v82-rolebar{margin:9px 0;padding:9px 10px}
+#side .v82-rolebar .role-help{font-size:10px;margin:7px 0 0}
+#side .v83-workspace-tabs{margin-top:10px;margin-bottom:10px}
+#side .v83-panel-head{padding:4px 0 10px}
+#side .v83-panel-head small{line-height:1.5}
+#v83EquipPanel>.v83-panel-head{display:none}
+#v83EquipPanel{min-width:0}
+#v83EquipPanel .v84-intro{margin:0 0 9px;padding:0;background:none;border:0}
+#v83EquipPanel .v84-intro h2{font-size:16px;margin:0 0 3px}
+#v83EquipPanel .v84-intro .v84-kicker{font-size:9px}
+#v83EquipPanel .v84-intro p{font-size:10px;line-height:1.5;margin:3px 0 0}
+#v95Start{padding:12px;background:#0d2a3a;border:1px solid #356077;border-radius:14px;margin:8px 0 12px}
+.v95-head{display:flex;flex-direction:column;gap:3px;margin-bottom:12px}
+.v95-eyebrow{font-size:9px;font-weight:800;letter-spacing:.14em;color:#6ed2c0}
+.v95-head strong{font-size:15px;letter-spacing:.01em}
+.v95-head small{font-size:10px;color:#a8c4ce;line-height:1.55}
+.v95-start-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.v95-start-btn{min-width:0;display:flex;align-items:center;gap:8px;justify-content:center;border:1px solid #375f73;border-radius:10px;background:#19374b;color:#eafaff;padding:9px 6px;min-height:48px;font-size:12px}
+.v95-start-btn>span{font-size:19px;color:#8bc8dd;line-height:1;min-width:20px;text-align:center}
+.v95-start-btn b{font-weight:750}
+.v95-start-btn.v95-primary{background:#17685d;border-color:#5fceb2}
+.v95-start-btn.v95-primary>span{color:#e4fff2}
+.v95-start-btn.is-active{border-color:#9af4d9;box-shadow:inset 0 0 0 1px #8ce6d288;background:#1d675f}
+.v95-start-btn[hidden]{display:none!important}
+.v95-audit-link{width:100%;border:0;border-bottom:1px solid #315566;background:transparent;text-align:left;color:#8fddd3;font-size:11px;min-height:36px;margin:7px 0 0;padding:6px 2px}
+.v95-status{color:#9fbfc9;font-size:10px;line-height:1.6;margin:9px 1px 0}
+.v95-group{margin:9px 0;border:1px solid #345366;border-radius:12px;background:#102b3a;overflow:hidden}
+.v95-group-summary{margin:0!important;padding:12px 11px!important;cursor:pointer;display:flex!important;flex-direction:column;align-items:stretch!important;gap:3px;list-style:none;position:relative;padding-right:25px!important}
+.v95-group-summary::-webkit-details-marker{display:none}
+.v95-group-summary:after{content:'▾';position:absolute;right:12px;top:14px;color:#85e3c8;transform:rotate(-90deg)}
+.v95-group[open]>.v95-group-summary:after{transform:rotate(0)}
+.v95-group-title{font-size:12px;font-weight:780;color:#e6f8f9;letter-spacing:0}
+.v95-group-sub{font-size:10px;color:#92b2c0;font-weight:450;line-height:1.3}
+.v95-group-body{border-top:1px solid #294b5c;padding:7px 10px 12px}
+#v95Library .v84-section-label{margin:6px 0}
+#v95Library .v84-palette{max-height:228px}
+#v95Advanced>.v95-group-body{padding-top:4px}
+#v95Advanced .v84-fold,#v95Advanced .v87-placement{margin:6px 0}
+#v95Advanced .v84-storage{margin-top:7px}
+#v95Advanced .v84-route-tile{padding-top:3px;margin:3px 0 0;border:0}
+#v95Advanced .v84-route-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+#v83EquipPanel #v84Layers,#v83EquipPanel #v84Items{margin:8px 0;background:#102b3a}
+#v83EquipPanel #v84Layers summary,#v83EquipPanel #v84Items summary{font-size:12px}
+#v95BaseExtras{margin-top:14px}
+#v83BasePanel .v95-base-note{font-size:11px;padding:9px;margin:8px 0}
+#v83BasePanel .section{margin-top:15px}
+#v95BaseExtras .section{margin-top:11px}
+#v93CloudPanel{margin:9px 0 0}
+#v93CloudPanel summary{font-size:12px}
+#v83EquipPanel #v84AdminLower[hidden],#v83EquipPanel #v84Admin[hidden]{display:none!important}
+@media (max-width:760px){
+ #side{padding-left:12px;padding-right:12px;padding-bottom:34px}
+ #v95Start{margin:5px 0 10px;padding:10px}
+ .v95-start-btn{min-height:47px;font-size:12px}
+ .v95-group-summary{padding-top:13px!important;padding-bottom:13px!important}
+ #v83EquipPanel .v84-intro{display:none}
+ #side .v82-rolebar .role-help{display:none}
+}
+
+/* Trim high-friction header in admin/staff sidebar */
+#side>.sub{display:none}
+#side h1{font-size:15px;margin-bottom:6px}
+#side .v82-rolebar .role-title{font-size:10px;line-height:1.35;white-space:normal}
+#side .v82-rolebar .role-title #eqStatus{font-size:10px;white-space:normal}
+#side .v82-rolebar .role-help{display:none}
+#side .v82-role-row{gap:6px}
+#side .role-switch{font-size:11px;padding:7px 3px;min-width:0}
+
+/* V9.7: keep four main actions, search stays secondary */
+.v95-search-link{background:none;border:0;color:#b3deec;text-align:left;font-size:11px;width:100%;padding:9px 3px 3px;cursor:pointer}
+#v95Feed.is-active{border-color:#ffc49e;background:#593c32}
+#v95Feed>span{color:#f19f72}
+#v83EquipPanel .v84-route-actions{grid-template-columns:repeat(3,minmax(0,1fr))}

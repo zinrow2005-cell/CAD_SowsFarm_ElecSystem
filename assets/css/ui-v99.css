@@ -1,0 +1,30 @@
+/* V9.9: equipment size controls + explicit, real-time camera preview */
+.v99-size-panel[hidden],.v99-camera-stage[hidden],#v99NativeFallback[hidden],#v99OpenCamera[hidden],#v99RecordCamera[hidden]{display:none!important}
+.v99-size-panel{margin:14px 0 4px;padding:14px;border:1px solid #3d6d79;border-radius:13px;background:#122f40}
+.v99-size-head{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#e5f9f5;font-size:13px}
+.v99-size-head output{font-size:17px;font-weight:800;color:#97e3cc;font-variant-numeric:tabular-nums}
+.v99-size-controls{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:11px;margin:12px 0}
+.v99-size-controls input[type=range]{width:100%;height:28px;accent-color:#62d9b7;cursor:pointer;touch-action:pan-y}
+.v99-size-controls button,.v99-size-presets button{border:1px solid #547a8d;background:#214d5c;color:#f6ffff;border-radius:9px;min-height:43px;font-weight:700;cursor:pointer}
+.v99-size-controls button{font-size:22px}
+.v99-size-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.v99-size-presets button{font-size:11px;min-width:0;padding:6px 2px}
+.v99-size-panel p{color:#a7cbd5;font-size:11px;line-height:1.65;margin:10px 0 0}
+.v99-camera-open{border:1px solid #66cfb7;background:#17685a;color:#fff;font-weight:750;border-radius:9px;min-height:42px;padding:9px 13px;cursor:pointer;font-size:12px}
+.v99-camera-stage{margin:12px 0;padding:12px;border:1px solid #558d91;background:#081e2d;border-radius:15px;box-shadow:0 8px 22px #0007}
+.v99-camera-top{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#effffb;margin-bottom:9px}
+.v99-camera-top strong{font-size:14px}.v99-camera-top button{border:1px solid #5a7181;border-radius:9px;background:#233e4f;color:white;min-width:39px;min-height:39px;font-size:19px}
+.v99-camera-screen{position:relative;width:100%;background:#020a10;border-radius:12px;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+.v99-camera-screen video{width:100%;height:100%;object-fit:contain;position:absolute;inset:0}
+.v99-camera-screen p{z-index:1;font-size:12px;max-width:85%;text-align:center;line-height:1.65;background:#081825db;padding:11px 14px;border-radius:9px;color:#fff}
+.v99-camera-screen p[hidden]{display:none}
+.v99-camera-actions{display:grid;grid-template-columns:1fr 1.4fr auto;gap:7px;margin-top:11px}
+.v99-camera-actions button{border:1px solid #4d7587;border-radius:10px;background:#1c4051;color:#eaf9fc;font-size:11px;font-weight:700;min-height:44px;padding:8px 10px;cursor:pointer}
+.v99-camera-actions .v99-shutter{background:#16846e;border-color:#5ad2b4;color:#fff;font-size:13px}
+.v99-camera-actions button:disabled{opacity:.55}
+.v99-camera-help{font-size:10px;line-height:1.7;color:#a7c4d1;margin:9px 1px 1px}
+.v99-photos-tab #v99RecordCamera{width:100%;margin:0 0 8px;display:block}
+@media(max-width:760px){.v99-size-panel{padding:12px}.v99-camera-stage{margin:9px 0;padding:9px}.v99-camera-actions{grid-template-columns:1fr 1.2fr}.v99-camera-actions button:last-child{grid-column:1/-1;min-height:36px}.v99-camera-screen{aspect-ratio:3/4;max-height:46dvh}.v99-size-presets button{font-size:10px}}
+/* Do not obscure photo marking or the size slider with the V9.8 quick card. */
+.viewer:has(#v84Drawer:not([hidden])) #v98DeviceCard,
+.viewer:has(#v90Overlay:not([hidden])) #v98DeviceCard{display:none!important}

@@ -1,0 +1,11 @@
+/* V10.1 Equipment magnet - small floating affordance, not another long sidebar. */
+.v100-magnet-box[hidden],.v100-magnet-hint[hidden]{display:none!important}
+.v100-magnet-box{position:absolute;z-index:15;right:13px;bottom:105px;display:flex;align-items:flex-end;flex-direction:column;gap:5px;pointer-events:none;max-width:230px}
+.v100-magnet-toggle{pointer-events:auto;background:#0a2635ee;color:#c9e6ed;border:1px solid #507487;border-radius:22px;min-height:35px;padding:7px 12px;font-weight:700;font-size:12px;box-shadow:0 5px 14px #0008;cursor:pointer}
+.v100-magnet-toggle[aria-pressed="true"]{color:#9ff0cf;border-color:#61caa9}
+.v100-magnet-hint{padding:6px 10px;color:#fff8df;font-size:11px;background:#1b3d45ee;border:1px solid #e1b774;border-radius:9px;line-height:1.45;box-shadow:0 5px 12px #0006;pointer-events:none}
+#v100Guide,#v100Guide *{pointer-events:none!important}
+#v100Guide .v100-guide-line{stroke:#8cecc6;stroke-width:.11;stroke-dasharray:.3 .2;opacity:.93}
+#v100Guide .v100-guide-ring{fill:#0d40504d;stroke:#9cf4d3;stroke-width:.13}
+#plan .v89-preview[data-snap="yes"]{opacity:1}
+@media(max-width:760px){.v100-magnet-box{right:9px;bottom:166px;max-width:175px}.v100-magnet-toggle{padding:7px 9px;font-size:11px;min-height:34px}}

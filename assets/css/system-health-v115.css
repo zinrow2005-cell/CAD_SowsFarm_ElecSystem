@@ -1,0 +1,22 @@
+/* V11.5 — minimal operations and data-integrity modal, no CAD styling changes. */
+.v115-open,.v115-mobilebtn{border:1px solid #55bfa9;background:rgba(13,72,83,.66);color:#d8fff6;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700;font-size:12px}
+.v115-open:hover,.v115-mobilebtn:hover{background:#245b68}.v115-mobilebtn{margin-left:auto;flex-shrink:0;padding:7px 10px}
+.v115-more{font-size:12px;padding:10px;border:1px dashed #79b9be;border-radius:9px;margin:5px;color:#c3ebe9;background:#153746}
+.v115-modal[hidden]{display:none!important}.v115-modal{position:fixed;inset:0;z-index:100200;display:grid;place-items:center;padding:16px;background:rgba(3,14,25,.80);backdrop-filter:blur(5px)}
+.v115-panel{box-sizing:border-box;max-height:min(93dvh,950px);width:min(1060px,100%);overflow:auto;border-radius:20px;border:1px solid #427a8c;background:linear-gradient(160deg,#17384a,#102637 65%,#0c2332);color:#ecf6fa;box-shadow:0 24px 70px #020912;outline:none;padding:0 24px 20px}
+.v115-head{position:sticky;top:0;z-index:2;background:#17384a;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:22px 0 14px;border-bottom:1px solid #365b6d}
+.v115-head small{font-size:10px;color:#8ebfc6;letter-spacing:.09em}.v115-head h2{font-size:23px;line-height:1.3;margin:4px 0}.v115-head p{font-size:13px;color:#b6d8dd;margin:2px 0}
+#v115Close{font-size:23px;border:1px solid #476b7c;border-radius:10px;background:#224559;color:#fff;min-width:44px;min-height:44px;cursor:pointer}
+.v115-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:18px}.v115-stat{display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;background:#1c4552;border:1px solid #315e6a;border-radius:12px;min-height:66px;padding:9px 4px}
+.v115-stat strong{font-variant-numeric:tabular-nums;font-size:22px}.v115-stat small{font-size:11px;color:#a9d7dc}.v115-status{padding:12px 14px;border-radius:10px;background:#143c42;color:#bceee0;font-size:12px;line-height:1.6;margin:14px 0}
+.v115-status[data-dirty=true]{background:#5b302f;color:#fff0de;border:1px solid #f7ab91}.v115-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:17px}
+.v115-panel button{cursor:pointer}.v115-actions button,.v115-cols button{border:1px solid #53768a;background:#27495e;color:#eff9fa;border-radius:10px;padding:10px 13px;min-height:40px;font-size:12px;text-align:left}
+.v115-panel button:disabled{opacity:.42;cursor:not-allowed}.v115-panel .v115-primary{background:#146961;color:#fff;border-color:#369c8c;font-weight:700}
+.v115-cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(250px,1fr);gap:16px}.v115-cols>section{background:#143242;border:1px solid #345c6a;border-radius:14px;padding:15px;min-width:0}.v115-cols h3{font-size:15px;margin:1px 0 12px;color:#e6f7f5}
+.v115-issues{max-height:345px;overflow-y:auto;display:flex;flex-direction:column;gap:5px}.v115-issues button{width:100%;white-space:normal;line-height:1.5;word-break:break-word}.v115-issue.v115-error{border-left:4px solid #f0ab82}.v115-issue.v115-review{border-left:4px solid #e0ca8e}
+#v115Shortcuts{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:19px}#v115Shortcuts button{flex:1 1 145px}.v115-photo,.v115-muted,.v115-empty{font-size:12px;line-height:1.8;color:#c1dce3}.v115-foot{font-size:11px;line-height:1.6;color:#a7cbd3;margin-top:18px;border-top:1px solid #33596b;padding-top:13px}
+@media(max-width:760px){.v115-modal{padding:0;align-items:end}.v115-panel{width:100%;max-height:94dvh;border-radius:18px 18px 0 0;padding:0 12px 22px}.v115-head{padding:15px 0 12px}.v115-head h2{font-size:19px}.v115-head p{font-size:11px}.v115-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:11px}.v115-stat{min-height:54px}.v115-stat strong{font-size:19px}.v115-actions{display:grid;grid-template-columns:1fr 1fr}.v115-actions button{font-size:12px;padding:9px}.v115-cols{grid-template-columns:minmax(0,1fr);gap:12px}.v115-issues{max-height:32dvh}.v115-open{display:none}}
+@media(min-width:761px){.v115-mobilebtn{display:none}}
+@media(prefers-reduced-motion:reduce){.v115-modal{backdrop-filter:none}}
+
+.v115-actions button[hidden]{display:none!important}#v115Emergency{background:#6b332a;border-color:#e5a083;color:#ffeadd}

@@ -1,0 +1,41 @@
+{
+  "app": "HuweiStallCapacity",
+  "version": "V10.4",
+  "officialAsOf": "2026-10-17",
+  "mating": {
+    "zone": "配種舍夾欄區",
+    "stalls": 76,
+    "rowAllocation": "未提供排別，不推測"
+  },
+  "gilt": {
+    "zone": "女豬育成區",
+    "pens": 14,
+    "headPerPen": 10,
+    "designHeads": 140,
+    "referenceReservedPens": 2,
+    "referenceOperationalHeads": 120,
+    "reservedPenIds": "未提供，需管理者指定"
+  },
+  "gestationA": {
+    "zone": "妊娠舍 A 棟",
+    "rowStalls": [
+      84,
+      84,
+      84
+    ],
+    "total": 252
+  },
+  "gestationB": {
+    "zone": "妊娠舍 B 棟",
+    "rowStalls": [
+      82,
+      82,
+      80
+    ],
+    "thirdRow": "靠水溝",
+    "total": 244
+  },
+  "gestationTotal": 496,
+  "matingAndGestationTotal": 572,
+  "cadGeometryNote": "原始 CAD 妊娠欄位圖層有555個繪圖物件，這不是現場欄位數；僅記錄正式數量，不擅自調整CAD幾何或逐欄座標。"
+}
