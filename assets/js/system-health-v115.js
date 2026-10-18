@@ -91,7 +91,7 @@ window.addEventListener('keydown',e=>{if(visible&&e.key==='Escape'){e.preventDef
 $('v115Scan').onclick=()=>{photoReport=null;$('v115PhotoStatus').textContent='資料已重新掃描。照片仍需按「檢查本機照片」檢測。';scan();};
 $('v115Photos').onclick=auditPhotos;$('v115Export').onclick=saveReport;
 $('v115Retry').onclick=()=>{if(hw.getRole()!=='admin'){alert('請先切換管理者本機編輯模式');return;}hw.retryStorageSave?.();scan();};
-$('v115Backup').onclick=()=>{if(hw.getRole()!=='admin'){alert('請先切換管理者本機編輯模式');return;}close();document.getElementById('v92Export')?.click();};
+$('v115Backup').onclick=()=>{if(hw.getRole()!=='admin'){alert('請先切換管理者本機編輯模式');return;}close();if(window.HWPortableUI?.open)window.HWPortableUI.open();else document.getElementById('v92Export')?.click();};
 $('v115Emergency').onclick=()=>{
  if(hw.getRole()!=='admin'||!hw.getStorageState()?.dirty)return;
  if(!confirm('緊急 JSON 是「未加密」且「不包含照片原檔」，不可放到公開 GitHub。此檔只用來保存當前尚未成功寫入本機的設備、管線及工單資料，不能取代私人完整加密備份。確定下載？'))return;

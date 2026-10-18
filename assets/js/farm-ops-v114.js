@@ -3,7 +3,7 @@
 const hw=window.HWEquipment, links=window.HWStallLinks;
 if(!hw)return;
 const $=id=>document.getElementById(id), el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=String(txt);return e;};
-const TYPES={device:'設備',route:'管線',stall:'欄格',work:'維修單'};
+const TYPES={device:'設備',route:'管線',stall:'欄格',work:'維修單',photo:'設備照片',marker:'照片標記'};
 const CATS={water:'水路',electric:'電力',feed:'飼料',ventilation:'氣流',equipment:'其他'};
 const KINDS={fault:'異常通報',repair:'設備維修',inspection:'定期巡檢',replacement:'零件更換'};
 const STATUSES={open:'待處理',working:'處理中',done:'已完成'};
@@ -12,9 +12,9 @@ const escCSV=value=>{let s=String(value??'');if(/^[\s\uFEFF]*[=+\-@\t\r]/.test(s
 const openFile=(filename,contents)=>{const blob=new Blob(['\ufeff'+contents],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),6000);};
 const overlay=el('div','v114-overlay');overlay.id='v114Overlay';overlay.hidden=true;
 overlay.innerHTML=`<section class="v114-dialog" role="dialog" aria-modal="true" aria-labelledby="v114Title" tabindex="-1">
-<header class="v114-header"><div><small>HUWEI FARM · OPERATIONS DESK · V11.4</small><h2 id="v114Title">全場設備搜尋與維修工作台</h2><p>查設備、找欄格、看異常、記維修 · 使用既有 CAD 真實資料</p></div><button type="button" id="v114Close" aria-label="關閉搜尋與維修工作台">✕</button></header>
+<header class="v114-header"><div><small>HUWEI FARM · OPERATIONS DESK · V11.8</small><h2 id="v114Title">全場設備、照片標記與維修搜尋</h2><p>搜尋配電開關與照片標記、CAD 設備及維修紀錄 · 直接使用已建檔資料</p></div><button type="button" id="v114Close" aria-label="關閉搜尋與維修工作台">✕</button></header>
 <div class="v114-stats" id="v114Stats"></div>
-<div class="v114-toolbar"><div class="v114-search"><span aria-hidden="true">⌕</span><input id="v114Query" type="search" autocomplete="off" placeholder="輸入設備名稱、編號、棟舍、B-R3-025、線路、維修關鍵字…" aria-label="全場關鍵字搜尋"/></div><select id="v114Category" aria-label="搜尋類型"><option value="all">全部類型</option><option value="device">設備</option><option value="route">管線</option><option value="stall">欄格</option><option value="work">維修單</option></select><select id="v114WorkStatus" aria-label="維修單狀態"><option value="all">全部維修狀態</option><option value="open">待處理</option><option value="working">處理中</option><option value="done">已完成</option></select></div>
+<div class="v114-toolbar"><div class="v114-search"><span aria-hidden="true">⌕</span><input id="v114Query" type="search" autocomplete="off" placeholder="輸入設備、開關用途、標記文字、棟舍、B-R3-025…" aria-label="全場關鍵字搜尋"/></div><select id="v114Category" aria-label="搜尋類型"><option value="all">全部類型</option><option value="device">設備</option><option value="route">管線</option><option value="stall">欄格</option><option value="work">維修單</option><option value="photo">照片／開關標記</option></select><select id="v114WorkStatus" aria-label="維修單狀態"><option value="all">全部維修狀態</option><option value="open">待處理</option><option value="working">處理中</option><option value="done">已完成</option></select></div>
 <div class="v114-main"><section class="v114-left"><div class="v114-subhead"><b>查詢結果</b><span id="v114Count">0 筆</span></div><div id="v114Results" class="v114-results"></div><p class="v114-muted">最多顯示前 120 筆；請輸入更具體的設備名稱或欄格編號。</p></section>
 <section class="v114-right"><div id="v114Detail" class="v114-detail"></div>
 <div class="v114-subhead v114-audit-title"><b>全場資料檢查</b><button id="v114Export" type="button">↓ 維修清冊 CSV</button></div><div id="v114Audit" class="v114-audit"></div></section></div>
@@ -54,6 +54,22 @@ function resultItems(data){const q=$('v114Query').value.trim().toLocaleLowerCase
   const ids=links?.getKnownIds?.()||[];const exact=q?links?.resolve?.(q):null;
   if(exact){push('stall',exact,exact,links.label(exact),exact+' '+links.label(exact));}
   else if(q){for(const id of ids){const name=links.label(id);if((id+' '+name).toLocaleLowerCase().includes(q))push('stall',id,id,name,id+' '+name);if(arr.length>180)break;}}
+ }
+ // V11.8 — Photo markers and terminal purposes remain attached to original
+ // device / photo / marker IDs; no duplicate image index is persisted.
+ if(cat==='all'||cat==='photo')for(const d of data.devices){
+  const terms=new Map((d.terminals||[]).map(t=>[t.id,t]));
+  for(const ph of d.photos||[]){
+   const photoKey=[d.id,ph.id].join('|');
+   if(cat==='photo'||q)push('photo',photoKey,ph.name||'現場照片',`${d.name} · ${d.zone||'未填棟舍'} · ${(ph.markers||[]).length} 處標記`,[d.name,d.zone,ph.name,ph.id].join(' '));
+   for(const mark of ph.markers||[]){
+    const term=terms.get(mark.terminalId);
+    // Default all-category view should not be flooded with individual pins.
+    if(!q&&cat!=='photo')continue;
+    push('marker',[d.id,ph.id,mark.id].join('|'),mark.title||'未命名標記',`${d.name} · ${ph.name||'設備照片'}`,
+     [d.id,d.name,d.zone,ph.name,mark.title,mark.note,term?.name,term?.controls,term?.purpose].join(' '));
+   }
+  }
  }
  if(cat==='all'||cat==='work')for(const w of activeRecords(data))if(stat==='all'||stat===w.status){const d=data.devices.find(x=>x.id===w.deviceId);push('work',w.id,w.title,`${STATUSES[w.status]} · ${d?.name||'設備已移除'} · ${w.workDate||'未填日期'}`,[w.id,w.title,w.description,w.result,w.assignee,w.reporter,d?.name,d?.zone].join(' '));}
  return arr;
@@ -125,8 +141,27 @@ function renderWork(host,data,id){const w=data.maintenance.find(x=>x.id===id);if
  const actions=el('div','v114-buttons');
  if(w.photoId&&data.devices.find(x=>x.id===w.deviceId)?.photos?.some(p=>p.id===w.photoId))actions.append(btn('開啟佐證照片',()=>{close();hw.select('device',w.deviceId);window.HWDeviceRecords?.open('photos',w.photoId);}));if(hw.getRole()==='admin')actions.append(btn('編輯工作單',()=>form(id),'v114-primary'));if(data.devices.some(x=>x.id===w.deviceId))actions.append(btn('查看設備',()=>select('device',w.deviceId)));if(w.routeId&&data.routes.some(x=>x.id===w.routeId))actions.append(btn('查看管線',()=>select('route',w.routeId)));host.append(actions);
 }
+function renderPhotoRecord(host,data,kind,id){
+ const [deviceId,photoId,markerId]=id.split('|'),d=data.devices.find(x=>x.id===deviceId),ph=d?.photos?.find(x=>x.id===photoId),mark=ph?.markers?.find(x=>x.id===markerId);
+ if(!d||!ph||(kind==='marker'&&!mark)){host.append(el('p','v114-empty','照片或標記已移除，請重新搜尋。'));return;}
+ host.append(el('h3','',kind==='marker'?(mark.title||'照片標記'):(ph.name||'設備照片')));
+ row(host,'所屬設備',d.name);row(host,'棟舍／區域',d.zone||'未填');row(host,'照片名稱',ph.name);
+ if(mark){row(host,'標記用途',mark.note||'尚未填寫');row(host,'照片標記位置',`水平 ${mark.x}% ／ 垂直 ${mark.y}%`);
+  const t=(d.terminals||[]).find(x=>x.id===mark.terminalId);
+  row(host,'關聯開關／端子',t?.name||(mark.terminalId?'⚠ 端子已不存在':'尚未指定'));
+  if(t){row(host,'端子控制用途',t.controls||t.purpose||'尚未填寫');}
+ }
+ const actions=el('div','v114-buttons');
+ actions.append(btn('⌖ CAD 定位配電箱／設備',()=>mapLocate('device',d.id)));
+ actions.append(btn(mark?'📷 開啟照片並選取標記':'📷 開啟這張照片',()=>{
+  close();hw.setWorkspace('equipment');hw.select('device',d.id);
+  window.HWDeviceRecords?.open?.('photos',ph.id,mark?.id||'');
+ },'v114-primary'));
+ host.append(actions);
+ host.append(el('p','v114-muted','照片標記以原始百分比座標保存；需由現場人員核對開關實際接線。'));
+}
 function renderDetail(data){if(editing&&$('v114WorkForm'))return;const host=$('v114Detail');host.replaceChildren();if(!picked){host.append(el('h3','','選擇一台設備或工作單'),el('p','v114-muted','輸入名稱、欄格編號、配電箱、風扇或飼料設備，在左側選擇結果。'));const sel=hw.getSelected();if(sel?.kind==='device')host.append(btn('使用 CAD 已選設備',()=>select('device',sel.id),'v114-primary'));return;}
- if(picked.kind==='device')renderDevice(host,data,picked.id);else if(picked.kind==='route')renderRoute(host,data,picked.id);else if(picked.kind==='stall')renderStall(host,data,picked.id);else if(picked.kind==='work')renderWork(host,data,picked.id);
+ if(picked.kind==='device')renderDevice(host,data,picked.id);else if(picked.kind==='route')renderRoute(host,data,picked.id);else if(picked.kind==='stall')renderStall(host,data,picked.id);else if(picked.kind==='work')renderWork(host,data,picked.id);else if(picked.kind==='photo'||picked.kind==='marker')renderPhotoRecord(host,data,picked.kind,picked.id);
 }
 function renderAudit(data){const issues=issueItems(data),host=$('v114Audit');host.replaceChildren();if(!issues.length){host.append(el('p','v114-muted','目前沒有被資料檢查規則標記的項目；不等於現場零故障。'));return;}
  for(const i of issues.slice(0,50))host.append(btn('⚠ '+i.text,()=>select(i.kind,i.id),'v114-issue'));
@@ -134,9 +169,9 @@ function renderAudit(data){const issues=issueItems(data),host=$('v114Audit');hos
 function render(){if(!opened)return;const data=get();renderStats(data);renderResults(data);renderDetail(data);renderAudit(data);$('v114New').disabled=hw.getRole()!=='admin';$('v114Export').disabled=!data.maintenance.length;}
 function exportCSV(){const data=get();const header=['工單ID','設備ID','設備名稱','區域','類型','狀態','優先度','主旨','維修日期','預定完成','完成日期','回報人','處理人','費用元','說明','結果','線路ID','是否封存'];const lines=[header];for(const w of data.maintenance){const d=data.devices.find(x=>x.id===w.deviceId);lines.push([w.id,w.deviceId,d?.name||'設備已刪除',d?.zone||'',KINDS[w.kind],STATUSES[w.status],PRIORITIES[w.priority],w.title,w.workDate,w.dueDate,w.completedAt,w.reporter,w.assignee,w.cost,w.description,w.result,w.routeId,w.archived?'是':'否']);}openFile('虎尾場_V11.4_維修與巡檢工作單.csv',lines.map(row=>row.map(escCSV).join(',')).join('\r\n'));msg(`已匯出 ${data.maintenance.length} 筆維修／巡檢紀錄（包含封存資料）`);}
 launch.onclick=()=>open();fab.onclick=()=>open();$('v114Close').onclick=close;$('v114New').onclick=()=>form('',picked?.kind==='device'?picked.id:'');$('v114Export').onclick=exportCSV;
-$('v114Query').addEventListener('input',render);$('v114Category').addEventListener('change',render);$('v114WorkStatus').addEventListener('change',render);
+let v118SearchDelay=0;$('v114Query').addEventListener('input',()=>{clearTimeout(v118SearchDelay);v118SearchDelay=setTimeout(()=>{if(opened)render();},140);});$('v114Category').addEventListener('change',render);$('v114WorkStatus').addEventListener('change',render);
 $('v114Query').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const q=$('v114Query').value,stall=links?.resolve?.(q);if(stall)select('stall',stall);}});
 overlay.addEventListener('click',e=>{if(e.target===overlay)close();});window.addEventListener('keydown',e=>{if(opened&&e.key==='Escape'){e.stopPropagation();close();}});
 window.addEventListener('hw-v90-change',e=>{if(opened&&['data','role'].includes(e.detail?.kind)&&!$('v114WorkForm'))render();});
-window.HWFarmOpsV114={version:'11.5',open,close,newWork:(deviceId)=>{if(hw.getRole()!=='admin')return false;const selectedDevice=deviceId||hw.getSelected()?.id;if(!get().devices.some(d=>d.id===selectedDevice))return false;open('device',selectedDevice);form('',selectedDevice);return true;},issues:()=>issueItems(get()),search:()=>resultItems(get()),exportCSV,showDevice:id=>open('device',id),showWork:id=>open('work',id)};
+window.HWFarmOpsV114={version:'11.8',open,close,newWork:(deviceId)=>{if(hw.getRole()!=='admin')return false;const selectedDevice=deviceId||hw.getSelected()?.id;if(!get().devices.some(d=>d.id===selectedDevice))return false;open('device',selectedDevice);form('',selectedDevice);return true;},issues:()=>issueItems(get()),search:()=>resultItems(get()),exportCSV,showDevice:id=>open('device',id),showWork:id=>open('work',id)};
 })();

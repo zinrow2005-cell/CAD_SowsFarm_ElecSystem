@@ -1,0 +1,24 @@
+/* V11.7.2 compact CAD toolbar CAD operation, without touching calibrated geometry. */
+/* Fixed within the EXISTING top-right zoom toolbar, never floating over
+   arbitrary portions of the drawing or showing an instructional bubble. */
+.viewer .toolbar{z-index:22;align-items:center;}
+.v1172-mode-toggle{width:auto!important;min-width:57px;height:40px;padding:0 9px!important;font-size:12px!important;white-space:nowrap;background:#173a4a!important;border-color:#41718b!important;line-height:1.1}
+.v1172-mode-toggle.v1172-active{background:#226c72!important;border-color:#72c6bd!important;color:#fff!important}
+.v1172-mode-toggle:focus-visible,.v1171-card button:focus-visible{outline:2px solid #a2edd5;outline-offset:2px}
+.v1172-mode-fallback{position:absolute;top:16px;right:16px;z-index:22}
+#plan [data-stall-id]{cursor:grab}
+.v1172-inspecting #plan [data-stall-id]{cursor:crosshair}
+#plan .v1171-selected-stall>path{stroke:#ffe18b!important;stroke-width:.17!important;filter:drop-shadow(0 0 .15px #ffe18b)}
+.v1171-card[hidden]{display:none!important}
+.v1171-card{position:absolute;z-index:25;bottom:18px;right:18px;width:min(355px,calc(100% - 32px));border:1px solid #65a7ae;border-radius:15px;background:#103044f8;color:#eaf8ff;box-shadow:0 12px 40px #0009;padding:13px;max-height:50vh;overflow:auto;font-size:13px}
+.v1171-card-header{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border-bottom:1px solid #45677b;padding-bottom:10px}
+.v1171-card-title{display:flex;flex-direction:column;gap:3px}.v1171-card-title strong{font-size:15px}.v1171-card-title small{color:#9dc9d6}
+.v1171-card-close{background:transparent;color:#d9f2f8;border:1px solid #4a7185;border-radius:8px;font-size:20px;min-width:31px;min-height:31px}
+.v1171-card-content{padding:8px 0;line-height:1.5}.v1171-card-content p{margin:4px 0 9px}.v1171-linked{background:#1d4254;border-radius:7px;padding:7px 9px;margin:5px 0;overflow-wrap:anywhere}
+.v1171-card-content small{display:block;color:#a8c8d5}
+.v1171-card-actions{display:flex;gap:8px}.v1171-card-actions button{border:1px solid #568395;border-radius:8px;background:#24495a;color:#e5f8fa;padding:10px 9px;flex:1;font-size:12px;font-weight:700;min-height:40px}
+.v1171-card-actions .v1171-card-detail{background:#276d71;border-color:#56aaa0}
+@media(max-width:760px){.viewer .toolbar{top:64px;right:9px;gap:5px}.v1172-mode-toggle{min-width:51px;height:36px;padding:0 6px!important;font-size:11px!important}.v1171-card{left:7px;right:7px;bottom:12px;width:auto;max-height:45vh;padding:11px}.v1171-card-title strong{font-size:13px}}
+
+/* Reserve the compact mobile card area instead of letting old floating shortcuts cover its actions. */
+body.v1171-card-open .v114-fab,body.v1171-card-open .v113-fab{display:none!important}

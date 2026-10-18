@@ -72,7 +72,7 @@ async function renderPhotos(){const d=deviceNow();if(!d)return;const seq=++thumb
  if(!d.photos?.length){gallery.append(make('p','v96-empty','尚未上傳照片。可先拍攝配電箱、風扇或設備銘牌。'));return;}
  for(const ph of d.photos){const btn=make('button','v96-photo-tile');btn.type='button';const tile=make('span','v96-photo-image');tile.append(make('span','v96-photo-fallback','載入照片…'));btn.append(tile,make('strong','',ph.name||'設備照片'),make('small','',(ph.markers||[]).length+' 處標記'));
  btn.addEventListener('click',()=>window.HWDeviceRecords?.open('photos',ph.id));gallery.append(btn);
- if(media?.get){media.get(ph.id).then(src=>{if(seq!==thumbSeq||!btn.isConnected)return;tile.replaceChildren();if(src){const img=document.createElement('img');img.src=src;img.alt=ph.name||'設備照片';img.loading='lazy';tile.append(img);}else tile.append(make('span','v96-photo-fallback','本裝置沒有照片原檔'));}).catch(()=>{if(seq===thumbSeq&&btn.isConnected){tile.replaceChildren(make('span','v96-photo-fallback','照片載入失敗'));}});}
+ if(media?.get){(media.getPreview?media.getPreview(ph.id).then(src=>src||media.get(ph.id)):media.get(ph.id)).then(src=>{if(seq!==thumbSeq||!btn.isConnected)return;tile.replaceChildren();if(src){const img=document.createElement('img');img.src=src;img.alt=ph.name||'設備照片';img.loading='lazy';tile.append(img);}else tile.append(make('span','v96-photo-fallback','本裝置沒有照片原檔'));}).catch(()=>{if(seq===thumbSeq&&btn.isConnected){tile.replaceChildren(make('span','v96-photo-fallback','照片載入失敗'));}});}
  }
 }
 function routeDeviceMatch(r,id){return r.fromDeviceId===id||r.toDeviceId===id||r.points?.some(p=>p.deviceId===id);}
