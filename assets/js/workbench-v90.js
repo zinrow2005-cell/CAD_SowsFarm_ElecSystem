@@ -119,8 +119,33 @@ toolbar.innerHTML=`<div class="v84-tool-left"><span class="v84-tool-brand">設�
 viewer.appendChild(toolbar);
 const selectionBar=el('div','v84-selection');selectionBar.id='v84Selection';selectionBar.hidden=true;
 selectionBar.innerHTML=`<div class="v84-selected-meta"><strong id="v84SelectedName">未選取設備</strong><small id="v84SelectedSubtitle"></small></div>
-<div class="v84-selection-buttons"><button type="button" id="v84EditNow" class="primary">編輯內容</button><button type="button" id="v84Duplicate">複製</button><button type="button" id="v84Rotate">旋轉</button><button type="button" id="v84Lock">鎖定</button><button type="button" id="v84Deselection" title="取消選取">×</button></div>`;
+<div class="v84-selection-buttons"><button type="button" id="v84EditNow" class="primary">編輯內容</button><button type="button" id="v84Duplicate">複製</button><button type="button" id="v84Rotate" aria-haspopup="true" aria-expanded="false">旋轉 °</button><button type="button" id="v84Lock">鎖定</button><button type="button" id="v84Deselection" title="取消選取">×</button></div>`;
 viewer.appendChild(selectionBar);
+// V11.9.9: continuous 0–359° rotation control; no project writes during preview.
+const anglePanel=el('section','v1199-rotation-panel');anglePanel.id='v1199RotationPanel';anglePanel.hidden=true;
+anglePanel.setAttribute('role','group');anglePanel.setAttribute('aria-label','設備任意角度旋轉');
+anglePanel.innerHTML=`<div class="v1199-rotation-head"><strong>↻ 任意角度旋轉</strong><span id="v1199AngleLive">0°</span></div>
+<div class="v1199-rotation-row"><input id="v1199AngleRange" aria-label="旋轉角度滑桿" type="range" min="0" max="359" value="0" step="1"/><label><input id="v1199AngleNumber" aria-label="旋轉角度數值" inputmode="numeric" type="number" min="0" max="359" step="1" value="0"/> °</label></div>
+<div class="v1199-rotation-buttons"><button type="button" data-v1199-step="-15">−15°</button><button type="button" data-v1199-step="-1">−1°</button><button type="button" data-v1199-reset>歸零</button><button type="button" data-v1199-step="1">＋1°</button><button type="button" data-v1199-step="15">＋15°</button></div>
+<div class="v1199-rotation-footer"><span>滑動可預覽，放開即儲存；CAD 座標不變</span><button type="button" id="v1199CloseRotation">完成</button></div>`;
+selectionBar.appendChild(anglePanel);
+let rotationOpen=false,rotatingDeviceId='';
+const normalizeAngle=(v)=>((Math.round(Number(v)||0)%360)+360)%360;
+const editableRotationDevice=()=>{const s=api.getSelected();if(s?.kind!=='device'||api.getRole()!=='admin'||api.getWorkspace()!=='equipment')return null;const d=api.getData().devices.find(x=>x.id===s.id);return d&&!d.locked?d:null;};
+function previewRotation(angle){const d=editableRotationDevice();if(!d)return;const g=[...document.querySelectorAll('#eqIcons [data-eq-device]')].find(el=>el.dataset.eqDevice===d.id);const rotate=[...(g?.children||[])].find(el=>el.tagName.toLowerCase()==='g'&&el.hasAttribute('transform'));if(rotate){const type=api.getType(d.type);rotate.setAttribute('transform',`rotate(${normalizeAngle(angle)}) scale(${(d.size||type?.size||100)/100})`);}}
+function updateAngleInputs(deg){const n=normalizeAngle(deg);$('v1199AngleRange').value=String(n);$('v1199AngleNumber').value=String(n);$('v1199AngleLive').textContent=n+'°';}
+function closeRotation(){rotationOpen=false;anglePanel.hidden=true;$('v84Rotate').setAttribute('aria-expanded','false');}
+function syncRotationPanel(){const d=editableRotationDevice();if(!d||!rotationOpen||d.id!==rotatingDeviceId){closeRotation();return;}anglePanel.hidden=false;updateAngleInputs(d.rotation);}
+function saveRotation(angle){const d=editableRotationDevice();if(!d){closeRotation();return;}const old=normalizeAngle(d.rotation),next=normalizeAngle(angle);if(next!==old&&!api.setRotation(next)){updateAngleInputs(old);previewRotation(old);return;}syncRotationPanel();}
+$('v1199AngleRange').addEventListener('input',e=>{const n=normalizeAngle(e.target.value);updateAngleInputs(n);previewRotation(n);});
+$('v1199AngleRange').addEventListener('change',e=>saveRotation(e.target.value));
+$('v1199AngleNumber').addEventListener('input',e=>{if(e.target.value==='')return;const n=normalizeAngle(e.target.value);$('v1199AngleRange').value=n;$('v1199AngleLive').textContent=n+'°';previewRotation(n);});
+$('v1199AngleNumber').addEventListener('change',e=>saveRotation(e.target.value));
+$('v1199AngleNumber').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.currentTarget.blur();}});
+anglePanel.querySelectorAll('[data-v1199-step]').forEach(btn=>btn.addEventListener('click',()=>{const d=editableRotationDevice();if(d)saveRotation(normalizeAngle(d.rotation)+Number(btn.dataset.v1199Step));}));
+anglePanel.querySelector('[data-v1199-reset]').addEventListener('click',()=>saveRotation(0));
+$('v1199CloseRotation').addEventListener('click',closeRotation);
+
 const emptystate=el('div','v84-empty-help');emptystate.id='v84Empty';emptystate.hidden=true;emptystate.innerHTML='<b>開始配置設備</b><span>由左側圖庫挑選設備圖標，然後點一下底圖即可定位。</span><button type="button" id="v84OpenPalette">開啟圖庫</button>';
 viewer.appendChild(emptystate);
 // Tiny touch-safe status for active placement modes.
@@ -200,7 +225,9 @@ $('v84Undo').addEventListener('click',()=>api.undo());$('v84Redo').addEventListe
 $('v84ToolLayers').addEventListener('click',()=>{if(window.innerWidth<=760)$('side').classList.add('open');$('v84Layers').open=true;$('v84Layers').scrollIntoView({block:'nearest'});});
 $('v84OpenPalette').addEventListener('click',()=>{$('side').classList.add('open');$('v84PaletteSearch').focus();});
 $('v84EditNow').addEventListener('click',()=>api.openEditor());
-$('v84Duplicate').addEventListener('click',()=>api.duplicate());$('v84Rotate').addEventListener('click',()=>api.rotate());$('v84Lock').addEventListener('click',()=>api.toggleLock());
+$('v84Duplicate').addEventListener('click',()=>api.duplicate());
+$('v84Rotate').addEventListener('click',()=>{const d=editableRotationDevice();if(!d)return;if(rotationOpen){closeRotation();return;}rotatingDeviceId=d.id;rotationOpen=true;anglePanel.hidden=false;updateAngleInputs(d.rotation);$('v84Rotate').setAttribute('aria-expanded','true');});
+$('v84Lock').addEventListener('click',()=>{closeRotation();api.toggleLock();});
 $('v84Deselection').addEventListener('click',()=>{$('eqCloseDetail').click();});
 $('v84DrawerClose').addEventListener('click',()=>api.closeEditor());
 // Selecting an item in the inventory auto-focuses the CAD, while the sheet stays out of the way on a phone.
@@ -223,8 +250,9 @@ function sync(){const data=api.getData(),a=api.getAction(),role=api.getRole(),ws
  renderPalette();renderTemplates();
  window.dispatchEvent(new Event('hw-v89-ui-sync'));
 }
+window.addEventListener('hw-v90-change',e=>{if(['selection','role','workspace','data','action'].includes(e.detail?.kind))syncRotationPanel();});
 api.setHook('history',sync);api.setHook('role',sync);api.setHook('workspace',sync);api.setHook('action',sync);api.setHook('data',sync);api.setHook('selection',()=>{const sel=api.getSelected();const data=api.getData();if(sel?.kind==='device'){const d=data.devices.find(x=>x.id===sel.id);if(d)markRecent(d.type);}sync();});
-api.setHook('editorOpen',()=>{if(api.getRole()!=='admin')return;inspectorOpen=true;drawer.hidden=false;drawer.classList.add('open');const item=api.getSelected();$('v84DrawerTitle').textContent=item?.kind==='route'?'編輯路徑':'編輯設備';drawer.scrollTop=0;['eqSaveDevice','eqRemoveDevice'].forEach(id=>$(id).hidden=item?.kind!=='device');['eqSaveRoute','eqRemoveRoute'].forEach(id=>$(id).hidden=item?.kind!=='route');if(window.innerWidth<=760)$('side').classList.remove('open');});
+api.setHook('editorOpen',()=>{if(api.getRole()!=='admin')return;inspectorOpen=true;drawer.hidden=false;drawer.classList.add('open');const item=api.getSelected();$('v84DrawerTitle').textContent=item?.kind==='route'?'編輯路徑':'編輯設備';drawer.scrollTop=0;['eqSaveDevice','eqRemoveDevice'].forEach(id=>$(id).hidden=item?.kind!=='device');['eqSaveRoute','eqRemoveRoute'].forEach(id=>$(id).hidden=item?.kind!=='route');if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');});
 api.setHook('editorClose',()=>{inspectorOpen=false;drawer.hidden=true;drawer.classList.remove('open');});
 api.setHook('designerOpen',openDesigner);
 // Desktop drag-and-drop, in addition to touch-friendly 'choose then tap'.

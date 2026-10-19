@@ -5,8 +5,8 @@
  const api=window.HWEquipment, viewer=document.querySelector('.viewer'),map=document.getElementById('plan');
  if(!api||!viewer||!map)return;
  const $=id=>document.getElementById(id);
- const colors={water:'#65caff',electric:'#ffc96e',ventilation:'#88dfaf',equipment:'#d7a7f5'};
- const groups=[['all','全部'],['water','給排水'],['electric','電力'],['ventilation','通風'],['equipment','其他'],['favorite','★ 常用']];
+ const colors={water:'#65caff',electric:'#ffc96e',ventilation:'#88dfaf',feed:'#c592f4',equipment:'#d7a7f5'};
+ const groups=[['all','全部'],['water','給排水'],['electric','電力'],['ventilation','通風'],['feed','飼料'],['equipment','其他'],['favorite','★ 常用']];
  const n=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
  let open=false,filter='all',query='',chosen='waterTower',recent=[],cursor=null,pointerDrag=null,ignoreClickUntil=0;
  try{chosen=localStorage.getItem('hw-v89-last')||chosen;recent=JSON.parse(localStorage.getItem('hw-v89-recent')||'[]')||[];}catch(e){}
@@ -17,7 +17,7 @@
  const hint=n('div','v89-placement-hint');hint.id='v89PlacementHint';hint.hidden=true;
  const hintName=n('strong','','點圖面放置');const hintRepeat=n('button','','連續：關');const hintCancel=n('button','cancel','取消 Esc'); hint.append(hintName,hintRepeat,hintCancel);viewer.appendChild(hint);
  const panel=n('div','v89-dock');panel.id='v89Dock';panel.hidden=true;
- const header=n('div','v89-header');const htext=n('div');htext.innerHTML='<strong>快速放置設備</strong><small>點圖標 → 點圖面，或將圖標往上拖到圖面</small>';
+ const header=n('div','v89-header');const htext=n('div');htext.innerHTML='<strong>快速放置設備</strong><small>先點圖標了解用途 → 確認使用 → 放到圖面</small>';
  const close=n('button','', '×');close.title='關閉設備圖庫';header.append(htext,close);
  const search=n('input','v89-search');search.type='search';search.placeholder='搜尋設備名稱或功能…';search.setAttribute('aria-label','搜尋設備');
  const tabs=n('div','v89-tabs');const items=n('div','v89-tiles');items.id='v89PickerItems';panel.append(header,search,tabs,items);viewer.appendChild(panel);
@@ -30,13 +30,13 @@
  function isReady(){return api.getRole()==='admin'&&api.getWorkspace()==='equipment';}
  function shape(t){const e=n('span','v89-graphic');e.style.setProperty('--ic',t.color||colors[t.group]);const art=window.HWIconArt?.draw(t.type,t.graphic);if(art)e.appendChild(art);else e.textContent=t.symbol||'設';return e;}
  function addRecent(id){recent=[id,...recent.filter(x=>x!==id)].slice(0,8);try{localStorage.setItem('hw-v89-recent',JSON.stringify(recent));localStorage.setItem('hw-v89-last',id);}catch(e){} }
- function choose(id){if(!isReady())return;const type=find(id);if(!type)return;chosen=id;addRecent(id);setOpen(false);api.begin(id,'place');render();}
+ function choose(id){if(!isReady())return;const type=find(id);if(!type)return;const approved=()=>{chosen=id;addRecent(id);setOpen(false);if(window.HWEquipmentGuide)window.HWEquipmentGuide.beginNow(id,'place');else api.begin(id,'place');render();};if(window.HWEquipmentGuide)window.HWEquipmentGuide.request(id,approved);else approved();}
  function setOpen(on){if(!isReady())on=false;open=!!on;panel.hidden=!open; if(open){search.value='';query='';filter='all';render();} else{bubble.style.display='none';}sync();}
  function render(){items.replaceChildren();tabs.replaceChildren();
    for(const [g,name] of groups){const b=n('button','',name);b.type='button';b.setAttribute('aria-pressed',String(filter===g));b.addEventListener('click',()=>{filter=g;render();});tabs.appendChild(b);}
    const q=query.trim().toLocaleLowerCase(),f=favs();let kinds=arr().filter(t=>(filter==='all'||filter==='favorite'&&f.has(t.type)||t.group===filter) &&(!q||[t.label,t.type,(t.keywords||[]).join(' ')].join(' ').toLocaleLowerCase().includes(q)));
    if(filter==='all'&&!q){const rank=t=>{const r=recent.indexOf(t.type);return f.has(t.type)?-20:r>=0?r-10:50};kinds.sort((a,b)=>rank(a)-rank(b));}
-   for(const t of kinds){const btn=n('button','v89-pick'+(t.type===chosen?' selected':''));btn.type='button';btn.dataset.type=t.type;btn.title='點擊選擇；也可按住拖到 CAD 圖面';btn.append(shape(t),n('span','v89-name',t.label));
+   for(const t of kinds){const btn=n('button','v89-pick'+(t.type===chosen?' selected':''));btn.type='button';btn.dataset.type=t.type;btn.title='點擊查看設備用途，確認後再放置；拖放也會先詢問';btn.append(shape(t),n('span','v89-name',t.label));
      btn.addEventListener('click',e=>{if(performance.now()<ignoreClickUntil)return;choose(t.type);});
      btn.addEventListener('pointerdown',e=>startDrag(e,btn,t));
      items.appendChild(btn);
@@ -63,7 +63,7 @@
    // Capture on the tile so both touch and mouse follow reliably across the map.
    try{btn.setPointerCapture(e.pointerId);}catch(err){}
    const moved=ev=>{if(!pointerDrag||ev.pointerId!==o.id)return;o.x=ev.clientX;o.y=ev.clientY;if(!o.dragged&&Math.hypot(o.x-o.startX,o.y-o.startY)>11){o.dragged=true;bubble.replaceChildren(shape(t),n('span','',t.label));bubble.style.display='flex';}if(o.dragged){bubble.style.left=(o.x+13)+'px';bubble.style.top=(o.y+13)+'px';const inView=onMap(ev);if(inView)showGhost(o.x,o.y,o.type);else ghost.style.display='none';}};
-   const ended=ev=>{if(ev.pointerId!==o.id)return;cleanup();ignoreClickUntil=performance.now()+350;if(o.dragged){ev.preventDefault();if(onMap(ev)){chosen=o.type;addRecent(o.type);setOpen(false);api.cancelAction();api.placeAt(o.type,ev.clientX,ev.clientY);}ghost.style.display='none';render();} else {choose(o.type);} };
+   const ended=ev=>{if(ev.pointerId!==o.id)return;cleanup();ignoreClickUntil=performance.now()+350;if(o.dragged){ev.preventDefault();if(onMap(ev)){const x=ev.clientX,y=ev.clientY;const approved=()=>{chosen=o.type;addRecent(o.type);setOpen(false);api.cancelAction();if(window.HWEquipmentGuide)window.HWEquipmentGuide.placeNow(o.type,x,y);else api.placeAt(o.type,x,y);render();};if(window.HWEquipmentGuide)window.HWEquipmentGuide.request(o.type,approved,{drop:true});else approved();}ghost.style.display='none';render();} else {choose(o.type);} };
    const cancel=ev=>{if(ev.pointerId!==o.id)return;cleanup();};
    function cleanup(){try{btn.releasePointerCapture(o.id);}catch(err){}btn.removeEventListener('pointermove',moved);btn.removeEventListener('pointerup',ended);btn.removeEventListener('pointercancel',cancel);pointerDrag=null;bubble.style.display='none';ghost.style.display='none';}
    btn.addEventListener('pointermove',moved);btn.addEventListener('pointerup',ended);btn.addEventListener('pointercancel',cancel);

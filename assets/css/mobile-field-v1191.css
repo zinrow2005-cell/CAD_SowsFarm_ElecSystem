@@ -1,0 +1,50 @@
+/* V11.9.1 — compact CAD field navigation, touch-safe controls, portrait-tablet drawer. */
+#v1191Dock[hidden],#v1191ActionBar[hidden],#v1191Selected[hidden],#v1191Shade[hidden]{display:none!important}
+#v1191Dock,#v1191ActionBar,#v1191Selected{display:none}
+#v1191Shade{position:fixed;inset:54px 0 0;z-index:9;background:#04141bc4;border:0;border-radius:0;padding:0;cursor:default}
+/* iPad portrait is wide enough for a full viewer, but not the 308px permanent sidebar. */
+@media (min-width:761px) and (max-width:1024px) and (pointer:coarse){
+  #app{flex-direction:column}
+  #app>.mobilebar{display:flex;align-items:center;gap:8px;height:54px;padding:0 12px;flex:none;background:#11283b;border-bottom:1px solid #345166}
+  .mobilebar button{background:#193c50;border:1px solid #43647b;color:#f2f6fa;border-radius:9px;padding:8px 12px;min-height:40px}
+  .mobilebar strong{flex:1;min-width:0;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:12px}
+  #app>.side{position:absolute;z-index:10;left:0;top:54px;bottom:0;width:min(370px,90vw);max-width:90vw;flex:none;box-shadow:8px 0 25px #0008;transform:translateX(-110%);transition:transform .20s ease}
+  #app>.side.open{transform:translateX(0)}
+  #app>.viewer{height:100%;width:100%;flex:1}
+  .quickbar{top:8px;left:12px;right:auto;max-width:calc(100% - 195px)}
+  .toolbar{top:12px;right:12px}
+}
+@media(max-width:760px), (min-width:761px) and (max-width:1024px) and (pointer:coarse){
+ #v1191Dock{position:absolute;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-items:stretch;gap:3px;z-index:8;bottom:0;left:0;right:0;padding:8px max(7px,env(safe-area-inset-left)) calc(7px + env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-right));border-top:1px solid #467387;background:#0a2536f5;box-shadow:0 -9px 22px #05121aaa;backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
+ #v1191Dock button{appearance:none;touch-action:manipulation;min-width:0;min-height:54px;border:1px solid transparent;border-radius:12px;background:transparent;color:#b8d5df;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-weight:700;padding:3px 1px}
+ #v1191Dock button>span{display:block;font-size:24px;line-height:1.2}
+ #v1191Dock button small{font-size:11px;font-weight:700;white-space:nowrap;line-height:1.15}
+ #v1191Dock button[aria-pressed="true"]{background:#184f54;border-color:#4f9c91;color:#b5ffea}
+ #v1191Dock button:active{background:#246372;color:white}
+ #v1191Dock button:focus-visible,#v1191ActionBar button:focus-visible,#v1191Selected button:focus-visible{outline:2px solid #93f7d7;outline-offset:-2px}
+ #v1191ActionBar{position:absolute;z-index:9;display:flex;align-items:center;justify-content:space-between;gap:10px;bottom:calc(78px + env(safe-area-inset-bottom));left:9px;right:9px;min-height:60px;padding:9px 10px;border-radius:14px;border:1px solid #63cdb7;background:#103b43f7;box-shadow:0 8px 24px #0009;color:#f0fcfa}
+ .v1191-action-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+ .v1191-action-copy b{font-size:12px;line-height:1.3}
+ .v1191-action-copy small{font-size:10px;color:#bde1db;line-height:1.3}
+ .v1191-action-buttons{display:flex;gap:5px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+ #v1191ActionBar button{min-height:41px;border-radius:10px;background:#1b675c;border:1px solid #8bdac7;color:#effffb;padding:6px 9px;font-size:11px;font-weight:800;touch-action:manipulation}
+ #v1191ActionBar button[disabled]{opacity:.45}
+ #v1191ActionBar .v1191-cancel{background:#304657;border-color:#6a8597}
+ #v1191Selected{position:absolute;z-index:8;bottom:calc(79px + env(safe-area-inset-bottom));left:10px;right:10px;max-width:460px;min-height:42px;border-radius:12px;padding:6px 7px 6px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#153c4af5;border:1px solid #487c91;color:#effaff;box-shadow:0 7px 22px #0008;font-size:12px}
+ #v1191Selected span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #v1191Selected button{flex:none;width:37px;height:37px;border:1px solid #507689;border-radius:9px;background:#234b5d;color:white;font-size:18px}
+ .toolbar{display:none!important} /* same actions live in bottom dock; avoid duplicate floating controls */
+ .stat{bottom:calc(81px + env(safe-area-inset-bottom));max-height:45px;overflow:hidden;pointer-events:none}
+ .viewer.v1191-action-active .stat,.viewer.v1191-selected-active .stat{display:none!important}
+ #v84Selection{bottom:calc(84px + env(safe-area-inset-bottom));z-index:8}
+ #eqDetails{bottom:calc(137px + env(safe-area-inset-bottom));max-height:40%;overflow:auto}
+ .viewer .v84-editor-drawer{padding-bottom:calc(23px + env(safe-area-inset-bottom))}
+ #v83BaseQuick.quickbar{overflow-x:auto;justify-content:flex-start;overscroll-behavior-x:contain;scrollbar-width:none}
+ #v83BaseQuick.quickbar::-webkit-scrollbar{display:none}
+ #v83BaseQuick.quickbar label{flex:none;min-height:31px;white-space:nowrap}
+ #v83BaseQuick.quickbar input{width:18px;height:18px}
+ #side button,#side summary,#side input[type="checkbox"]{touch-action:manipulation}
+ #side .v95-start-btn{min-height:48px}
+}
+@media (max-width:350px){#v1191Dock button{min-height:52px}#v1191Dock button>span{font-size:20px}#v1191Dock button small{font-size:10px}#v1191ActionBar{flex-wrap:wrap}#v1191ActionBar .v1191-action-buttons{width:100%;justify-content:stretch}#v1191ActionBar .v1191-action-buttons button{flex:1}#v1191ActionBar{bottom:calc(76px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){#app>.side{transition:none!important}}

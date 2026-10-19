@@ -81,12 +81,18 @@ let currentRole='staff', selected=null, action=null, actionType='',drawing=[], p
 let history=[],historyIndex=-1,orthogonal=false,repeatPlacement=false,editorOpened=false;
 let placementSources=[],activeTemplate=null;
 let multiSelectMode=false, selectedIds=new Set(), snapEnabled=false, snapStep=0.25;
+let showAnchorGuides=false;try{showAnchorGuides=localStorage.getItem('hw-v1199-anchor-guides')==='on';}catch(_){}
 let deviceLabelMode='smart';try{const v=localStorage.getItem('hw-v88-device-label-mode');if(['smart','all','off'].includes(v))deviceLabelMode=v;}catch(e){}
 const roundPos=n=>Math.round(n*10000)/10000;
 function snapPos(n){return snapEnabled?roundPos(Math.round(n/snapStep)*snapStep):roundPos(n);}
 function inMap(x,y){const v=map.viewBox.baseVal;return Number.isFinite(x)&&Number.isFinite(y)&&x>=-10&&x<=75&&y>=-10&&y<=90;}
 let iconMagnetEnabled=true;try{iconMagnetEnabled=localStorage.getItem('hw-v100-icon-magnet')!=='off';}catch(e){}
-function visual(d){return {...d,x:Number.isFinite(d.displayX)?d.displayX:d.x,y:Number.isFinite(d.displayY)?d.displayY:d.y};}
+function visual(d){
+ const chosen=(selected?.kind==='device'&&selected.id===d.id)||selectedIds.has(d.id)||d.id==='preview-v100';
+ return {...d,x:Number.isFinite(d.displayX)?d.displayX:d.x,y:Number.isFinite(d.displayY)?d.displayY:d.y,
+  __selected:chosen,
+  __nameplateVisible:visibility.labels&&d.showLabel!==false&&(deviceLabelMode==='all'||(deviceLabelMode==='smart'&&chosen))};
+}
 function iconX(d){return Number.isFinite(d.displayX)?d.displayX:d.x;}
 function iconY(d){return Number.isFinite(d.displayY)?d.displayY:d.y;}
 function magnetSolve(p,d,devices=data.devices){return window.HWIconMagnet.solve(p,visual(d),devices.map(visual),id=>byType[id],{enabled:iconMagnetEnabled});}
@@ -212,11 +218,46 @@ function renderRoutes(){routesSvg.replaceChildren();data.routes.forEach(r=>{if(!
  if(visibility.labels&&(deviceLabelMode==='all'||(deviceLabelMode==='smart'&&selectedRoute))){const pts=r.points.map(routePoint),mid=pts[Math.floor(pts.length/2)];const t=node('text',{x:mid.x,y:mid.y-.33,'font-size':'.63','text-anchor':'middle',fill:groups[r.group].color,stroke:'#091b2d','stroke-width':'.08','paint-order':'stroke fill'},r.group==='ventilation'?'氣流示意 · '+r.name:r.name);routesSvg.appendChild(t);}
  });}
 const v115IconById=new Map();
+// Visual nameplates never block equipment snapping. Instead choose an unoccupied
+// side for the selected label using the current icon-only collision geometry.
+function nameplateLocation(d,size,width){
+ const x=iconX(d),y=iconY(d);
+ const placements=[
+  {x:0,y:1.34*size},
+  {x:0,y:-1.36*size},
+  {x:1.12*size+width/2+.17*size,y:0},
+  {x:-1.12*size-width/2-.17*size,y:0}
+ ];
+ const others=data.devices.filter(q=>{
+  if(q.id===d.id || !groupVisible((byType[q.type]||builtins.other).group))return false;
+  const type=byType[q.type]||builtins.other,neighborScale=(q.size||type.size||100)/100;
+  // Avoid repeated SVG geometry calculation for distant devices, especially
+  // on tablets displaying hundreds of equipment labels at once.
+  return Math.abs(iconX(q)-x)<=width/2+2*size+2*neighborScale &&
+   Math.abs(iconY(q)-y)<=2.3*size+2*neighborScale;
+ });
+ const h=.35;
+ let best=placements[0],lowest=Infinity;
+ for(const spot of placements){
+  const area={x0:x+spot.x-width/2,y0:y+spot.y-h,x1:x+spot.x+width/2,y1:y+spot.y+h};
+  let penalty=0;
+  for(const q of others){
+   const box=window.HWIconMagnet.dims(visual(q),id=>byType[id]);
+   const qx=iconX(q),qy=iconY(q);
+   const widthOverlap=Math.max(0,Math.min(area.x1,qx+box.maxX)-Math.max(area.x0,qx+box.minX));
+   const heightOverlap=Math.max(0,Math.min(area.y1,qy+box.maxY)-Math.max(area.y0,qy+box.minY));
+   penalty+=widthOverlap*heightOverlap;
+  }
+  if(penalty<.0001)return spot;
+  if(penalty<lowest){lowest=penalty;best=spot;}
+ }
+ return best;
+}
 function renderIcons(){icons.replaceChildren();v115IconById.clear();for(const d of data.devices){const type=byType[d.type]||builtins.other,gname=type.group;if(!groupVisible(gname))continue;
  const selectedIcon=(selected?.kind==='device'&&selected.id===d.id)||selectedIds.has(d.id);
  const size=(d.size||type.size||100)/100,shape=d.shape||type.shape||'circle',color=d.color||type.color||groups[gname].color;
  const dx=iconX(d),dy=iconY(d);
- if(Math.hypot(dx-d.x,dy-d.y)>.11){const leader=node('g',{class:'v101-anchor-link','pointer-events':'none','aria-hidden':'true'});leader.appendChild(node('line',{x1:d.x,y1:d.y,x2:dx,y2:dy,stroke:'#65c5bc','stroke-width':'.065','stroke-dasharray':'.18 .14',opacity:'.72'}));leader.appendChild(node('circle',{cx:d.x,cy:d.y,r:'.135',fill:'#0b3241',stroke:'#63e5bd','stroke-width':'.065'}));icons.appendChild(leader);}
+ if(showAnchorGuides&&Math.hypot(dx-d.x,dy-d.y)>.11){const leader=node('g',{class:'v101-anchor-link','pointer-events':'none','aria-hidden':'true'});leader.appendChild(node('line',{x1:d.x,y1:d.y,x2:dx,y2:dy,stroke:'#65c5bc','stroke-width':'.065','stroke-dasharray':'.18 .14',opacity:'.72'}));leader.appendChild(node('circle',{cx:d.x,cy:d.y,r:'.135',fill:'#0b3241',stroke:'#63e5bd','stroke-width':'.065'}));icons.appendChild(leader);}
  const g=node('g',{'data-eq-device':d.id,class:'v82-equip v88-device'+(selectedIcon?' is-selected':'')+(d.locked?' is-locked':''),transform:`translate(${dx} ${dy})`});
  g.appendChild(node('title',{},d.name+' · '+(type.label||'設備')));
  if(selectedIcon)g.appendChild(node('circle',{r:(1.21*size).toFixed(3),fill:'none',stroke:'#a8f5e0','stroke-width':'.10','stroke-dasharray':'.18 .11',class:'v88-selection-halo'}));
@@ -245,7 +286,8 @@ function renderIcons(){icons.replaceChildren();v115IconById.clear();for(const d 
  if(visibility.labels&&d.showLabel!==false&&(deviceLabelMode==='all'||(deviceLabelMode==='smart'&&selectedIcon))){
   const label=[...String(d.name||type.label)].slice(0,14).join('')+([...(d.name||type.label)].length>14?'…':'');
   const width=Math.max(.9,Array.from(label).reduce((v,ch)=>v+(/[\x00-\x7f]/.test(ch)?.35:.59),0)+.45);
-  const labelG=node('g',{class:'v88-nameplate',transform:`translate(0 ${(1.34*size).toFixed(3)})`});
+  const position=nameplateLocation(d,size,width);
+  const labelG=node('g',{class:'v88-nameplate','pointer-events':'none',transform:`translate(${position.x.toFixed(3)} ${position.y.toFixed(3)})`});
   labelG.appendChild(node('rect',{x:(-width/2).toFixed(3),y:'-.35',width:width.toFixed(3),height:'.68',rx:'.19',fill:'#0c2838',stroke:'#426477','stroke-width':'.047'}));
   labelG.appendChild(node('text',{x:'0',y:'.12','text-anchor':'middle','font-size':'.54',fill:'#e6f7fb','font-weight':'600'},label));g.appendChild(labelG);
  }
@@ -254,13 +296,60 @@ function renderIcons(){icons.replaceChildren();v115IconById.clear();for(const d 
  if(!action&&e.detail!==0)return; // V11.8.5 pointerup handles single click/tap after pan detection.
  e.stopPropagation();if(action==='route'){addRoutePoint(e,d.id);return;}if(action==='place')return;if(multiSelectMode||(currentRole==='admin'&&e.shiftKey)){if(!multiSelectMode)setMultiMode(true);toggleMany(d.id);return;}select('device',d.id);});
  g.addEventListener('pointerdown',e=>{
- // Ordinary drag on any equipment marker must PAN the CAD, not relocate equipment.
- // Advanced reposition: administrator holds Alt while dragging with left mouse button.
- if(e.pointerType!=='mouse'||!e.altKey||e.button!==0)return;
- if(currentRole!=='admin'||action||d.locked||multiSelectMode||e.shiftKey)return;e.preventDefault();e.stopPropagation();select('device',d.id);const start={x:e.clientX,y:e.clientY};const offset=svgPoint(e);const orig={x:iconX(d),y:iconY(d)};const activeIcon=Array.from(icons.children).find(el=>el.getAttribute('data-eq-device')===d.id)||g;let moved=false;
- function move(ev){const pt=svgPoint(ev);if(Math.hypot(ev.clientX-start.x,ev.clientY-start.y)<5&&!moved)return; moved=true;const dx=pt.x-offset.x,dy=pt.y-offset.y;const target=data.devices.find(x=>x.id===d.id);if(!target)return;const requested={x:snapPos(orig.x+dx),y:snapPos(orig.y+dy)};const result=magnetSolve(requested,target);if(!result.ok)return;target.displayX=result.x;target.displayY=result.y;activeIcon.setAttribute('transform',`translate(${target.displayX} ${target.displayY})`);window.dispatchEvent(new CustomEvent('hw-v100-magnet',{detail:{...result,mode:'drag',type:target.type}}));}
- function end(){window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);if(moved){save();fillEditor();}window.dispatchEvent(new CustomEvent('hw-v100-magnet',{detail:{mode:'end'}}));renderAll();}
- window.addEventListener('pointermove',move);window.addEventListener('pointerup',end,{once:true});window.addEventListener('pointercancel',end,{once:true});
+ // V11.9.5: admin + unlocked equipment -> ordinary mouse/stylus/touch drag.
+ // Panning on empty CAD remains unchanged; locked objects and staff still pan.
+ if(currentRole!=='admin'||action||d.locked||multiSelectMode||e.shiftKey||e.button!==0||e.isPrimary===false)return;
+ e.preventDefault();e.stopPropagation();
+ const start={x:e.clientX,y:e.clientY},offset=svgPoint(e),orig={x:iconX(d),y:iconY(d)};
+ let moved=false,accepted=false,rejected=false,finished=false;
+ // Capture on the persistent canvas, since select() may re-render this SVG group.
+ try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+ select('device',d.id);
+ const activeIcon=()=>v115IconById.get(d.id);
+ canvas.classList.add('hw-device-dragging');
+ function move(ev){
+  if(ev.pointerId!==e.pointerId||finished)return;
+  if(!moved&&Math.hypot(ev.clientX-start.x,ev.clientY-start.y)<6)return;
+  moved=true;
+  const target=data.devices.find(item=>item.id===d.id);
+  if(!target||target.locked||currentRole!=='admin')return;
+  const pt=svgPoint(ev),requested={x:snapPos(orig.x+pt.x-offset.x),y:snapPos(orig.y+pt.y-offset.y)};
+  if(!inMap(requested.x,requested.y)){rejected=true;return;}
+  const result=magnetSolve(requested,target);
+  if(!result.ok){rejected=true;return;}
+  target.displayX=result.x;target.displayY=result.y;
+  accepted=accepted||Math.hypot(result.x-orig.x,result.y-orig.y)>.0001;
+  const icon=activeIcon();if(icon){
+   icon.setAttribute('transform',`translate(${result.x} ${result.y})`);
+   const label=icon.querySelector('.v88-nameplate');
+   if(label){
+    const type=byType[target.type]||builtins.other;
+    const displayed=[...String(target.name||type.label)].slice(0,14).join('')+([...(target.name||type.label)].length>14?'…':'');
+    const width=Math.max(.9,Array.from(displayed).reduce((v,ch)=>v+(/[\x00-\x7f]/.test(ch)?.35:.59),0)+.45);
+    const pos=nameplateLocation(target,(target.size||type.size||100)/100,width);
+    label.setAttribute('transform',`translate(${pos.x.toFixed(3)} ${pos.y.toFixed(3)})`);
+   }
+  }
+  window.dispatchEvent(new CustomEvent('hw-v100-magnet',{detail:{...result,mode:'drag',type:target.type}}));
+ }
+ function end(ev){
+  if(ev.pointerId!==e.pointerId||finished)return;
+  finished=true;
+  window.removeEventListener('pointermove',move);
+  window.removeEventListener('pointerup',end);
+  window.removeEventListener('pointercancel',cancel);
+  canvas.classList.remove('hw-device-dragging');
+  try{if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);}catch(_){}
+  const target=data.devices.find(item=>item.id===d.id);
+  if(accepted&&target){save();fillEditor();}
+  else if(target){target.displayX=orig.x;target.displayY=orig.y;if(moved&&rejected)notify('該位置無法放置圖示，請避開其他設備或調整吸附設定');}
+  window.dispatchEvent(new CustomEvent('hw-v100-magnet',{detail:{mode:'end'}}));
+  renderAll();
+ }
+ function cancel(ev){if(ev.pointerId!==e.pointerId||finished)return;accepted=false;end(ev);}
+ window.addEventListener('pointermove',move);
+ window.addEventListener('pointerup',end);
+ window.addEventListener('pointercancel',cancel);
  });icons.appendChild(g);v115IconById.set(d.id,g);
  }
  // Preserve foreground selection even after layer toggles, edits and full rerenders.
@@ -350,7 +439,7 @@ function roleSet(role){currentRole=role==='admin'?'admin':'staff';document.query
 function syncLayerChecks(){document.querySelectorAll('[data-eq-toggle]').forEach(el=>{el.checked=!!visibility[el.dataset.eqToggle];});}
 function renderList(){const ul=$('eqList');ul.replaceChildren();const q=$('eqSearch').value.trim().toLowerCase();const entries=[];data.devices.forEach(d=>{const t=byType[d.type];if([d.name,d.zone,d.note,t.label].join(' ').toLowerCase().includes(q))entries.push({kind:'device',id:d.id,label:d.name,info:t.label+(d.zone?' · '+d.zone:''),color:groups[t.group].color,symbol:t.symbol});});data.routes.forEach(r=>{if([r.name,r.note,groups[r.group].name].join(' ').toLowerCase().includes(q))entries.push({kind:'route',id:r.id,label:r.name,info:groups[r.group].name+' · '+r.points.length+' 個節點',color:groups[r.group].color,symbol:'線'});});if(!entries.length){const el=document.createElement('div');el.className='v82-empty';el.textContent=data.devices.length?'找不到符合的設備／線路':'目前尚未放置設備。管理者可先選擇設備類型，再點擊底圖定位。';ul.appendChild(el);return;}
  if(entries.length>100){const tip=document.createElement('div');tip.className='v115-more';tip.textContent=`共 ${entries.length} 筆符合資料，先顯示前 100 筆；請繼續輸入關鍵字縮小範圍。`;ul.appendChild(tip);}
- for(const item of entries.slice(0,100)){const b=document.createElement('button');b.type='button';b.className='equipment-list-item'+(selected?.id===item.id?' active':'');const icon=document.createElement('span');icon.className='itemicon';icon.style.background=item.color;icon.textContent=item.symbol;const contents=document.createElement('span');contents.style.minWidth='0';contents.textContent=item.label;const sub=document.createElement('span');sub.className='minor';sub.textContent=item.info;contents.appendChild(sub);b.append(icon,contents);b.addEventListener('click',()=>{select(item.kind,item.id);const d=item.kind==='device'?data.devices.find(x=>x.id===item.id):null;if(d)focus(d.x,d.y);if(window.innerWidth<=760)$('side').classList.remove('open');fire('action');});ul.appendChild(b);}
+ for(const item of entries.slice(0,100)){const b=document.createElement('button');b.type='button';b.className='equipment-list-item'+(selected?.id===item.id?' active':'');const icon=document.createElement('span');icon.className='itemicon';icon.style.background=item.color;icon.textContent=item.symbol;const contents=document.createElement('span');contents.style.minWidth='0';contents.textContent=item.label;const sub=document.createElement('span');sub.className='minor';sub.textContent=item.info;contents.appendChild(sub);b.append(icon,contents);b.addEventListener('click',()=>{select(item.kind,item.id);const d=item.kind==='device'?data.devices.find(x=>x.id===item.id):null;if(d)focus(d.x,d.y);if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');fire('action');});ul.appendChild(b);}
 }
 function focus(x,y){const vb=map.viewBox.baseVal;const w=vb.width,h=vb.height;map.setAttribute('viewBox',[x-w/2,y-h/2,w,h].join(' '));}
 // V10.3: choosing an existing device does not reconstruct hundreds of SVG markers.
@@ -375,7 +464,8 @@ function fastSelectDevice(id,previous){
   if(deviceLabelMode==='smart'&&visibility.labels&&d.showLabel!==false){
    const full=String(d.name||t.label),label=Array.from(full).slice(0,14).join('')+(Array.from(full).length>14?'…':'');
    const width=Math.max(.9,Array.from(label).reduce((v,ch)=>v+(/[\x00-\x7f]/.test(ch)?.35:.59),0)+.45);
-   const plate=node('g',{class:'v88-nameplate',transform:`translate(0 ${(1.34*size).toFixed(3)})`});
+   const platePos=nameplateLocation(d,size,width);
+   const plate=node('g',{class:'v88-nameplate','pointer-events':'none',transform:`translate(${platePos.x.toFixed(3)} ${platePos.y.toFixed(3)})`});
    plate.appendChild(node('rect',{x:(-width/2).toFixed(3),y:'-.35',width:width.toFixed(3),height:'.68',rx:'.19',fill:'#0c2838',stroke:'#426477','stroke-width':'.047'}));
    plate.appendChild(node('text',{x:'0',y:'.12','text-anchor':'middle','font-size':'.54',fill:'#e6f7fb','font-weight':'600'},label));g.appendChild(plate);
   }
@@ -410,13 +500,15 @@ function applyTemplate(id,scope='selected'){
  if(scope==='sameType')targets=data.devices.filter(d=>d.type===t.type&&!d.locked);
  else {const d=selectedDevice();if(d&&!d.locked&&d.type===t.type)targets=[d];}
  let applied=0,skipped=0;for(const d of targets){const before=clone(d);d.shape=t.shape;d.color=t.color;d.size=t.size;d.showLabel=t.showLabel;
-   if(iconMagnetEnabled&&data.devices.some(other=>other.id!==d.id&&window.HWIconMagnet.collision(visual(d),visual(other),id=>byType[id]))){Object.assign(d,before);skipped++;continue;}
+   // Resized templates use the same adaptive edge layout as direct size editing.
+   // Never change physical CAD coordinates or move locked neighboring icons.
+   if(iconMagnetEnabled&&data.devices.some(other=>other.id!==d.id&&window.HWIconMagnet.collision(visual(d),visual(other),id=>byType[id]))&&!fitIcon(d)){Object.assign(d,before);skipped++;continue;}
    if(scope==='selected'){d.waterSources=[...t.waterSources];d.fields=clone(t.fields);d.note=t.note;}applied++;}
  if(applied){save();renderAll();showInspector();notify('已套用 '+applied+' 台設備'+(skipped?'；'+skipped+' 台因圖標空間不足而保留原樣':'')+'，原位置不變');}else notify(skipped?'目前圖標間距不足，無法套用新大小':'沒有符合的未鎖定同類設備');return applied;
 }
 function deleteTemplate(id){if(currentRole!=='admin')return false;const n=data.templates.length;data.templates=data.templates.filter(x=>x.id!==id);if(n===data.templates.length)return false;if(activeTemplate===id)activeTemplate=null;save();return true;}
 
-function begin(type,mode){if(currentRole!=='admin')return;if(mode==='route'&&!['water','electric','feed','ventilation'].includes(type)){cancelAction();notify('請選擇水管、電線、飼料管或通風氣流示意線；通風線不代表供電電線');return;}cancelAction();if(multiSelectMode){multiSelectMode=false;selectedIds.clear();fire('selection');}action=mode;actionType=type;if(mode==='place'&&activeTemplate&&data.templates.find(x=>x.id===activeTemplate)?.type!==type)activeTemplate=null;if(mode==='place'){$('eqPlaceTip').textContent='定位中｜在 CAD 底圖點一下放置 '+byType[type].label+'（按取消可結束）';$('eqAddDevice').classList.add('active');}else{$('eqPlaceTip').textContent='畫線中｜依序點選路徑，點擊設備可連接端點；最後按「完成線路」。';$('eqStartRoute').classList.add('active');}$('eqPlaceTip').hidden=false;if(window.innerWidth<=760)$('side').classList.remove('open');fire('action');}
+function begin(type,mode){if(currentRole!=='admin')return;if(mode==='route'&&!['water','electric','feed','ventilation'].includes(type)){cancelAction();notify('請選擇水管、電線、飼料管或通風氣流示意線；通風線不代表供電電線');return;}cancelAction();if(multiSelectMode){multiSelectMode=false;selectedIds.clear();fire('selection');}action=mode;actionType=type;if(mode==='place'&&activeTemplate&&data.templates.find(x=>x.id===activeTemplate)?.type!==type)activeTemplate=null;if(mode==='place'){$('eqPlaceTip').textContent='定位中｜在 CAD 底圖點一下放置 '+byType[type].label+'（按取消可結束）';$('eqAddDevice').classList.add('active');}else{$('eqPlaceTip').textContent='畫線中｜依序點選路徑，點擊設備可連接端點；最後按「完成線路」。';$('eqStartRoute').classList.add('active');}$('eqPlaceTip').hidden=false;if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');fire('action');}
 function setup(){
  updateCatalogue();document.querySelectorAll('.v83-tab').forEach(btn=>btn.addEventListener('click',()=>setWorkspace(btn.dataset.workspace)));
  let ws='base';try{ws=localStorage.getItem('hw-v83-workspace')||'base';}catch(e){}setWorkspace(ws);
@@ -431,7 +523,7 @@ function setup(){
  $('eqAddField').addEventListener('click',()=>addFieldRow());
  $('eqOpenEditor').addEventListener('click',()=>{if(currentRole!=='admin')return;setWorkspace('equipment');editorOpened=true;fire('editorOpen');});
  
- $('eqAddDevice').addEventListener('click',()=>{if(action==='place')cancelAction();else begin($('eqType').value,'place');});
+ $('eqAddDevice').addEventListener('click',()=>{if(action==='place')cancelAction();else {const type=$('eqType').value;if(window.HWEquipmentGuide)window.HWEquipmentGuide.request(type,()=>begin(type,'place'));else begin(type,'place');}});
  $('eqStartRoute').addEventListener('click',()=>{if(action==='route')cancelAction();else begin($('eqRouteType').value,'route');});
  $('eqFinishRoute').addEventListener('click',()=>{if(action!=='route'||drawing.length<2)return;const type=actionType;data.routes.push({id:newId('r'),group:type,name:groups[type].name+'線路',note:'',points:clone(drawing),fromDeviceId:drawing[0]?.deviceId||'',toDeviceId:drawing[drawing.length-1]?.deviceId||'',fromTerminalId:'',toTerminalId:'',circuitName:'',purpose:'',cableSpec:'',feedSpec:'',feedMode:'auger',waterSource:'unknown',flowDirection:'unknown',pipeDiameter:'',pipeMaterial:'',confirmed:false});save();const r=data.routes[data.routes.length-1];cancelAction();select('route',r.id);notify('已新增線路，可在編輯區填寫名稱與說明');});
  $('eqCancelMode').addEventListener('click',cancelAction);
@@ -629,6 +721,10 @@ function removeSystemNode(id){
  if(depend.length||devices.length||routes.length)return {ok:false,error:`尚有 ${depend.length} 個下屬、${devices.length} 台設備、${routes.length} 條線路；請先移轉關聯`};
  data.systemNodes=data.systemNodes.filter(x=>x.id!==id);save();return {ok:true};
 }
-window.HWEquipment={saveSystemNode,removeSystemNode,bulkSystemLink,manageWorkOrder:workOrderAction,getStorageState:()=>({dirty:storageDirty,error:storageLastError,lastSavedAt}),retryStorageSave:()=>{const ok=persist();updateFooter();window.dispatchEvent(new CustomEvent('hw-v101-storage',{detail:{ok,dirty:storageDirty,error:storageLastError}}));return ok;},resetIconPosition:(id)=>{if(currentRole!=='admin')return false;const d=data.devices.find(q=>q.id===id);if(!d||d.locked)return false;const old={x:d.displayX,y:d.displayY};d.displayX=d.x;d.displayY=d.y;if(iconMagnetEnabled&&data.devices.some(other=>other.id!==d.id&&window.HWIconMagnet.collision(visual(d),visual(other),id=>byType[id]))){d.displayX=old.x;d.displayY=old.y;notify('定位點上已有其他圖標，請先移開或關閉吸附');return false;}save();renderAll();return true;},getVisualPlacement:(id)=>{const d=data.devices.find(q=>q.id===id);return d?{physical:{x:d.x,y:d.y},icon:{x:iconX(d),y:iconY(d)}}:null;},getIconMagnetEnabled:()=>iconMagnetEnabled,setIconMagnetEnabled:enabled=>{iconMagnetEnabled=!!enabled;try{localStorage.setItem('hw-v100-icon-magnet',enabled?'on':'off');}catch(e){}window.dispatchEvent(new CustomEvent('hw-v100-magnet',{detail:{mode:'toggle',enabled:iconMagnetEnabled}}));return iconMagnetEnabled;},getIconMagnetPreview:(type,x,y)=>{const t=byType[type];if(!t)return {ok:false};const preset=activeTemplate&&data.templates.find(z=>z.id===activeTemplate&&z.type===type);return magnetSolve({x:snapPos(x),y:snapPos(y)},{id:'preview-v100',type,size:preset?.size||t.size||100,shape:preset?.shape||t.shape});},getSmartSnap:(x,y,group,includeRoutes=true)=>smartSnap({x,y},group,includeRoutes),updateDetails,importPrivateProject,importCloudReadOnlyProject:(raw,source)=>importPrivateProject(raw,source,true),validateData:raw=>sanitize(raw),getData:()=>clone(data),getSelected:()=>selected?clone(selected):null,getRole:()=>currentRole,getWorkspace:()=>workspace,getAction:()=>({action,actionType,count:drawing.length}),getHistory:()=>({index:historyIndex,length:history.length}),getTypes:()=>[...catalogue,...data.customTypes].map(t=>({...byType[t.type]})),getType:id=>byType[id],setHook:(k,fn)=>{hooks[k]=fn;},setRole:roleSet,setWorkspace,select,cancelAction,begin,placeAt:(type,clientX,clientY)=>{if(currentRole==='admin'&&byType[type])addNew(type,svgPoint({clientX,clientY}));},setRepeat:v=>{repeatPlacement=!!v;},setOrtho:v=>{orthogonal=!!v;},setPlacementSources:sources=>{placementSources=['tower','groundwater','tap'].filter(k=>Array.isArray(sources)&&sources.includes(k));activeTemplate=null;fire('action');},getPlacementSources:()=>[...placementSources],saveSelectedTemplate,applyTemplate,deleteTemplate,setActiveTemplate:id=>{activeTemplate=data.templates.some(x=>x.id===id)?id:null;fire('action');},getActiveTemplate:()=>activeTemplate,getMultiMode:()=>multiSelectMode,setMultiMode,getSelectionIds,clearMany,moveSelected,alignSelected,distributeSelected,arrayCopy,setSnap:(enabled,step)=>{snapEnabled=!!enabled;snapStep=[.1,.25,.5,1].includes(Number(step))?Number(step):.25;fire('selection');},getSnap:()=>({enabled:snapEnabled,step:snapStep}),undo:()=>timeTravel(-1),redo:()=>timeTravel(1),finishRoute:()=> $('eqFinishRoute').click(),removeLastPoint:()=>{if(action==='route'&&drawing.length){drawing.pop();$('eqRoutePoints').textContent=drawing.length+' 個節點';$('eqFinishRoute').disabled=drawing.length<2;renderPreview();fire('action');}},duplicate:()=>{if(currentRole!=='admin'||selected?.kind!=='device')return;const d=data.devices.find(x=>x.id===selected.id);if(!d)return;const b=clone(d);b.id=newId('d');b.name=d.name+' 副本';b.x=+(b.x+1.8).toFixed(4);b.y=+(b.y+1.8).toFixed(4);b.displayX=+(iconX(d)+1.8).toFixed(4);b.displayY=+(iconY(d)+1.8).toFixed(4);b.locked=false;b.photos=[];b.terminals=[];const spot=magnetSolve({x:b.displayX,y:b.displayY},b);if(!spot.ok){notify('周邊空間不足，無法複製設備');return;}b.displayX=spot.x;b.displayY=spot.y;data.devices.push(b);save();select('device',b.id);notify('已複製設備；可從設備位置欄位調整，或在電腦按 Alt＋左鍵拖動圖標');},rotate:()=>{if(currentRole!=='admin'||selected?.kind!=='device')return;const d=data.devices.find(x=>x.id===selected.id);if(!d||d.locked)return;const old=d.rotation;d.rotation=(d.rotation+90)%360;if(!fitIcon(d)){d.rotation=old;notify('旋轉後空間不足，請先調整圖標位置');return;}save();select('device',d.id);},toggleLock:()=>{if(currentRole!=='admin'||selected?.kind!=='device')return;const d=data.devices.find(x=>x.id===selected.id);if(!d)return;d.locked=!d.locked;save();select('device',d.id);},openEditor:()=>{if(currentRole!=='admin'||!selected)return;editorOpened=true;fire('editorOpen');},closeEditor:()=>{editorOpened=false;fire('editorClose');},setVisibility:(k,v)=>{if(k in visibility){visibility[k]=!!v;saveVisibility();renderAll();}},getVisibility:()=>({...visibility}),getLabelMode:()=>deviceLabelMode,setLabelMode:mode=>{if(!['smart','all','off'].includes(mode))return;deviceLabelMode=mode;try{localStorage.setItem('hw-v88-device-label-mode',mode);}catch(e){}renderIcons();renderRoutes();},getDrawing:()=>clone(drawing),focus};
+window.HWEquipment={
+getAnchorGuides:()=>showAnchorGuides,
+setAnchorGuides:(enabled)=>{showAnchorGuides=!!enabled;try{localStorage.setItem('hw-v1199-anchor-guides',showAnchorGuides?'on':'off');}catch(_){}renderIcons();return showAnchorGuides;},
+setRotation:(angle)=>{if(currentRole!=='admin'||selected?.kind!=='device')return false;const d=data.devices.find(q=>q.id===selected.id);if(!d||d.locked)return false;const n=Number(angle);if(!Number.isFinite(n))return false;const normalized=((Math.round(n)%360)+360)%360;if(((Math.round(Number(d.rotation)||0)%360)+360)%360===normalized)return true;return updateDetails('device',d.id,{rotation:normalized});},
+saveSystemNode,removeSystemNode,bulkSystemLink,manageWorkOrder:workOrderAction,getStorageState:()=>({dirty:storageDirty,error:storageLastError,lastSavedAt}),retryStorageSave:()=>{const ok=persist();updateFooter();window.dispatchEvent(new CustomEvent('hw-v101-storage',{detail:{ok,dirty:storageDirty,error:storageLastError}}));return ok;},resetIconPosition:(id)=>{if(currentRole!=='admin')return false;const d=data.devices.find(q=>q.id===id);if(!d||d.locked)return false;const old={x:d.displayX,y:d.displayY};d.displayX=d.x;d.displayY=d.y;if(iconMagnetEnabled&&data.devices.some(other=>other.id!==d.id&&window.HWIconMagnet.collision(visual(d),visual(other),id=>byType[id]))){d.displayX=old.x;d.displayY=old.y;notify('定位點上已有其他圖標，請先移開或關閉吸附');return false;}save();renderAll();return true;},getVisualPlacement:(id)=>{const d=data.devices.find(q=>q.id===id);return d?{physical:{x:d.x,y:d.y},icon:{x:iconX(d),y:iconY(d)}}:null;},getIconMagnetEnabled:()=>iconMagnetEnabled,setIconMagnetEnabled:enabled=>{iconMagnetEnabled=!!enabled;try{localStorage.setItem('hw-v100-icon-magnet',enabled?'on':'off');}catch(e){}window.dispatchEvent(new CustomEvent('hw-v100-magnet',{detail:{mode:'toggle',enabled:iconMagnetEnabled}}));return iconMagnetEnabled;},getIconMagnetPreview:(type,x,y)=>{const t=byType[type];if(!t)return {ok:false};const preset=activeTemplate&&data.templates.find(z=>z.id===activeTemplate&&z.type===type);return magnetSolve({x:snapPos(x),y:snapPos(y)},{id:'preview-v100',type,name:preset?.name||t.label,size:preset?.size||t.size||100,shape:preset?.shape||t.shape,showLabel:preset?.showLabel!==false});},getSmartSnap:(x,y,group,includeRoutes=true)=>smartSnap({x,y},group,includeRoutes),updateDetails,importPrivateProject,importCloudReadOnlyProject:(raw,source)=>importPrivateProject(raw,source,true),validateData:raw=>sanitize(raw),getData:()=>clone(data),getSelected:()=>selected?clone(selected):null,getRole:()=>currentRole,getWorkspace:()=>workspace,getAction:()=>({action,actionType,count:drawing.length}),getHistory:()=>({index:historyIndex,length:history.length}),getTypes:()=>[...catalogue,...data.customTypes].map(t=>({...byType[t.type]})),getType:id=>byType[id],setHook:(k,fn)=>{hooks[k]=fn;},setRole:roleSet,setWorkspace,select,cancelAction,begin,placeAt:(type,clientX,clientY)=>{if(currentRole==='admin'&&byType[type])addNew(type,svgPoint({clientX,clientY}));},setRepeat:v=>{repeatPlacement=!!v;},setOrtho:v=>{orthogonal=!!v;},setPlacementSources:sources=>{placementSources=['tower','groundwater','tap'].filter(k=>Array.isArray(sources)&&sources.includes(k));activeTemplate=null;fire('action');},getPlacementSources:()=>[...placementSources],saveSelectedTemplate,applyTemplate,deleteTemplate,setActiveTemplate:id=>{activeTemplate=data.templates.some(x=>x.id===id)?id:null;fire('action');},getActiveTemplate:()=>activeTemplate,getMultiMode:()=>multiSelectMode,setMultiMode,getSelectionIds,clearMany,moveSelected,alignSelected,distributeSelected,arrayCopy,setSnap:(enabled,step)=>{snapEnabled=!!enabled;snapStep=[.1,.25,.5,1].includes(Number(step))?Number(step):.25;fire('selection');},getSnap:()=>({enabled:snapEnabled,step:snapStep}),undo:()=>timeTravel(-1),redo:()=>timeTravel(1),finishRoute:()=> $('eqFinishRoute').click(),removeLastPoint:()=>{if(action==='route'&&drawing.length){drawing.pop();$('eqRoutePoints').textContent=drawing.length+' 個節點';$('eqFinishRoute').disabled=drawing.length<2;renderPreview();fire('action');}},duplicate:()=>{if(currentRole!=='admin'||selected?.kind!=='device')return;const d=data.devices.find(x=>x.id===selected.id);if(!d)return;const b=clone(d);b.id=newId('d');b.name=d.name+' 副本';b.x=+(b.x+1.8).toFixed(4);b.y=+(b.y+1.8).toFixed(4);b.displayX=+(iconX(d)+1.8).toFixed(4);b.displayY=+(iconY(d)+1.8).toFixed(4);b.locked=false;b.photos=[];b.terminals=[];const spot=magnetSolve({x:b.displayX,y:b.displayY},b);if(!spot.ok){notify('周邊空間不足，無法複製設備');return;}b.displayX=spot.x;b.displayY=spot.y;data.devices.push(b);save();select('device',b.id);notify('已複製設備；可從設備位置欄位調整，或以滑鼠／手指直接拖曳未鎖定圖標');},rotate:()=>{if(currentRole!=='admin'||selected?.kind!=='device')return false;const d=data.devices.find(x=>x.id===selected.id);return d&&!d.locked?window.HWEquipment.setRotation((d.rotation||0)+90):false;},toggleLock:()=>{if(currentRole!=='admin'||selected?.kind!=='device')return;const d=data.devices.find(x=>x.id===selected.id);if(!d)return;d.locked=!d.locked;save();select('device',d.id);},openEditor:()=>{if(currentRole!=='admin'||!selected)return;editorOpened=true;fire('editorOpen');},closeEditor:()=>{editorOpened=false;fire('editorClose');},setVisibility:(k,v)=>{if(k in visibility){visibility[k]=!!v;saveVisibility();renderAll();}},getVisibility:()=>({...visibility}),getLabelMode:()=>deviceLabelMode,setLabelMode:mode=>{if(!['smart','all','off'].includes(mode))return;deviceLabelMode=mode;try{localStorage.setItem('hw-v88-device-label-mode',mode);}catch(e){}renderIcons();renderRoutes();},getDrawing:()=>clone(drawing),focus};
 setup();
 })();

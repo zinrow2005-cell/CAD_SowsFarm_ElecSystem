@@ -298,3 +298,7 @@
 .v94-auto-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .v94-auto-actions small{font-size:10px;color:#9dbdc9}
 @media(max-width:760px){.v94-sync-buttons button{flex:1;min-height:43px}.v94-sync-head{align-items:flex-start}}
+
+/* V11.9.5 — Unlocked admin equipment can be dragged directly. */
+#app:has(.role-switch[data-role="admin"].is-active) #plan .v88-device:not(.is-locked){cursor:grab;touch-action:none}
+#canvas.hw-device-dragging,#canvas.hw-device-dragging #plan .v88-device{cursor:grabbing!important}

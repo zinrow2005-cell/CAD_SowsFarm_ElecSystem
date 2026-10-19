@@ -54,7 +54,7 @@ const dialog=document.createElement('div');dialog.className='v104-overlay';dialo
     <div class="v104-tip"><b>容量說明</b><span>設計總量 140 頭；預留 2 欄時，操作參考容量 120 頭。此數值不是實際在養頭數。</span></div>
     <div class="v104-tip"><b>CAD 原始物件</b><span>V10.5 底圖已繪妊娠 496 個獨立夾欄格；原有牆線、走道及歷史備份保留。上方三排暫對應 A 棟、下方三排暫對應 B 棟，請現場核對。</span></div>
    </section></div>
-  <div class="v104-tools"><div><b>欄位編號與資料匯出</b><p>可產生配種 76 個、妊娠 496 個母豬夾欄，另有 1 個巡情公豬欄，以及育成 14 欄 × 10 個頭位的識別碼；每一格已帶有 CAD 對應編號；可在圖上點選欄格查看。</p></div><div class="v104-actions"><button id="v104Csv" type="button">匯出完整欄位 CSV</button><button id="v104Backup" type="button">匯出欄位設定 JSON</button><button id="v104ImportBtn" type="button">匯入欄位設定</button><input id="v104File" type="file" accept=".json,application/json" hidden></div></div>
+  <div class="v104-tools"><div><b>欄位編號與資料匯出</b><p>可產生配種 76 個、妊娠 496 個母豬夾欄，另有 1 個巡情公豬欄，以及育成 14 欄 × 10 個頭位的識別碼；每一格已帶有 CAD 對應編號；夾欄圖面僅供定位；需查詢個別欄號請使用欄位搜尋或服務範圍管理。</p></div><div class="v104-actions"><button id="v104Csv" type="button">匯出完整欄位 CSV</button><button id="v104Backup" type="button">匯出欄位設定 JSON</button><button id="v104ImportBtn" type="button">匯入欄位設定</button><input id="v104File" type="file" accept=".json,application/json" hidden></div></div>
   <p class="v104-footer-note" id="v104SaveStatus">設定儲存在本機；使用「私人加密備份」時也會一同包含本模組。仍須在正式 HTTPS 網站驗證跨裝置還原。</p>
  </div></div>`;
 document.body.append(dialog);

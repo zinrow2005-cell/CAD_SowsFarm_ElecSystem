@@ -1,0 +1,24 @@
+/* V11.10.1 · Device placement clarity and genuinely usable mobile CAD space.
+   In a CAD placement / route action the authoritative compact action bar remains.
+   Do not hide original tools on larger desktop sizes. */
+@media (max-width:760px), (min-width:761px) and (max-width:1024px) and (pointer:coarse) {
+  .viewer.v1191-action-active #eqPlaceTip,
+  .viewer.v1191-action-active .v89-placement-hint,
+  .viewer.v1191-action-active #v89QuickLaunch,
+  .viewer.v1191-action-active #v83BaseQuick,
+  .viewer.v1191-action-active #v83EquipmentQuick,
+  .viewer.v1191-action-active .v100-magnet-box { display:none!important; }
+  .viewer.v1191-action-active #v1191ActionBar { z-index:12; }
+  .viewer.v1191-action-active #v1191Dock { z-index:11; }
+}
+/* All three controls below are already in the CAD's main/side menus and homepage.
+   Keep the header to one line on small phones, rather than six tiny controls. */
+@media (max-width:480px) {
+  #app>.mobilebar #v116MobileLaunch,
+  #app>.mobilebar #v115MobileLaunch,
+  #app>.mobilebar .v11101-duplicate-header { display:none!important; }
+  #app>.mobilebar {gap:7px;padding-inline:9px;}
+  #app>.mobilebar strong {font-size:12px;flex:1 1 auto;min-width:0;}
+  #app>.mobilebar #menuOpen {min-width:83px;}
+  #app>.mobilebar #v1192TopSearch {min-width:45px;}
+}

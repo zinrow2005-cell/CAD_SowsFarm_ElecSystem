@@ -1,0 +1,17 @@
+/* V11.9.9 · icon-rotation popover and opt-in CAD anchor guides */
+.v1199-rotation-panel[hidden]{display:none!important}
+.v1199-rotation-panel{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);width:min(400px,calc(100vw - 28px));max-width:calc(100vw - 28px);background:#0a2e43;box-shadow:0 15px 45px #0009;border:1px solid #58bcae;border-radius:16px;padding:14px;z-index:24;display:flex;flex-direction:column;gap:12px;white-space:normal;color:#e8fcff}
+.v1199-rotation-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.v1199-rotation-head strong{font-size:15px}.v1199-rotation-head span{font-size:23px;font-weight:850;color:#7de4c9;font-variant-numeric:tabular-nums}
+.v1199-rotation-row{display:flex;align-items:center;gap:10px}.v1199-rotation-row input[type=range]{flex:1;min-width:0;accent-color:#65d8c2;height:32px;touch-action:pan-x}.v1199-rotation-row label{display:flex;align-items:center;gap:3px;flex:0 0 auto;font-size:13px}.v1199-rotation-row input[type=number]{box-sizing:border-box;min-width:0;width:68px;padding:9px 5px;background:#0b1d2b;border:1px solid #589b9f;border-radius:9px;color:#fff;font-size:16px;text-align:center;appearance:textfield}
+.v1199-rotation-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.v1199-rotation-buttons button{min-width:0;font-size:12px!important;padding:8px 3px!important;min-height:39px;background:#1c495b;border:1px solid #457a83;color:#e7f9ff;border-radius:8px;cursor:pointer}
+.v1199-rotation-footer{display:flex;align-items:center;justify-content:space-between;gap:10px}.v1199-rotation-footer span{color:#a6cad3;font-size:11px;line-height:1.5}.v1199-rotation-footer button{background:#238870;border:1px solid #65d9be;color:white;border-radius:8px;padding:9px 14px;font-weight:750;min-height:37px;white-space:nowrap}
+.v1199-anchor-toggle{display:flex;align-items:center;gap:8px;margin:10px 0;color:#bff3e5;font-weight:650;font-size:13px}.v1199-anchor-toggle input{width:18px;height:18px;accent-color:#61e3b7;flex:none}
+@media(max-width:760px){.v1199-rotation-panel{width:min(340px,calc(100vw - 28px));padding:12px;bottom:calc(100% + 8px)}.v1199-rotation-row input[type=number]{width:62px}.v1199-rotation-buttons{gap:3px}.v1199-rotation-buttons button{padding:8px 1px!important;font-size:11px!important}}
+/* The old fixed-position equipment quick card overlaps selected-equipment tools.
+   Keep the quick card for read-only view; in admin CAD editing use the selected bar. */
+.viewer.v84-admin-mode #v98DeviceCard{display:none!important}
+/* Never let older floating toolbars cover the selected device edit controls. */
+.viewer.v84-admin-mode:has(#v84Selection:not([hidden])) #v89QuickLaunch,
+.viewer.v84-admin-mode:has(#v84Selection:not([hidden])) #v1191Selected{display:none!important}
+/* Concentrate the floating controls on angle adjustment while the rotation panel is open. */
+body:has(#v1199RotationPanel:not([hidden])) .v100-magnet-box{display:none!important}

@@ -1,0 +1,19 @@
+/* V11.9.3 actual responsive interaction QA: prevent overlaid floating controls and narrow-header crowding. */
+@media (max-width:760px), (min-width:761px) and (max-width:1024px) and (pointer:coarse) {
+  body.v1193-drawer-open #v113Fab,
+  body.v1193-drawer-open #v114Fab,
+  body.v1193-drawer-open .v97-floatbar { display:none!important; }
+}
+@media (max-width:760px) {
+  /* The bottom dock already has a dedicated Home control. */
+  #v119MobileHome {display:none!important;}
+  #app > .mobilebar {gap:5px;padding-inline:7px;}
+  #app > .mobilebar button {padding-inline:7px;min-height:38px;}
+}
+@media (max-width:350px) {
+  /* Keep the actual actions fully tappable instead of squashing all six header items. */
+  #app > .mobilebar strong {display:none!important;}
+  #app > .mobilebar {justify-content:space-between;gap:4px;padding-inline:5px;}
+  #app > .mobilebar button {flex:0 0 auto;padding-inline:7px;font-size:11px;min-height:39px;}
+  #app > .mobilebar #v1192TopSearch {min-width:36px;}
+}

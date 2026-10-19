@@ -28,6 +28,6 @@ body.v1171-card-open .v114-fab,body.v1171-card-open .v113-fab{display:none!impor
 
 /* V11.8.5: automatic tap vs pan — no persistent drag/query mode control. */
 #v1172ModeToggle,.v1172-mode-fallback{display:none!important}
-#plan [data-stall-id]{cursor:pointer}
+#plan [data-stall-id]{cursor:grab}
 #plan .v82-equip{cursor:pointer}
 #plan .v82-equip.is-selected{filter:drop-shadow(0 0 .08px #91fce9)}

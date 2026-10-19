@@ -149,7 +149,6 @@ function navCommit(){
   map.style.transform='';map.style.willChange='';navGesture=null;
 }
 box.addEventListener('pointerdown',function(e){
-  if(e.pointerType==='mouse'&&e.altKey&&e.target.closest?.('[data-eq-device]'))return;
   if(e.pointerType==='mouse'&&e.button!==0)return;
   if(navGesture)navCommit();
   activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});

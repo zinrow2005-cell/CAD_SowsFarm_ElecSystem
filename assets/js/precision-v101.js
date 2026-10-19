@@ -11,12 +11,15 @@ if(parent){
  box.innerHTML=`<div class="v101-title"><strong>📍 設備實際位置與圖標</strong><small>圖標移動不會改變管線端點</small></div>
  <div class="v101-coordinates"><div><span>真實設備定位點</span><strong id="v101Physical"></strong></div><div><span>圖標顯示位置</span><strong id="v101Display"></strong></div></div>
  <div class="v101-locate-buttons"><button type="button" id="v101ResetIcon">圖標回到定位點</button><button type="button" id="v101EditAnchor">修改實際位置 ↗</button></div>
- <small class="v101-help">拖曳圖標只調整顯示位置；修改真實設備座標才會讓相連管線端點移動。圖標偏移時，CAD 上會有細虛線指向真實定位點。</small>`;
+ <label class="v1199-anchor-toggle"><input type="checkbox" id="v1199ShowAnchorGuides"/> 顯示原始定位點連線（綠色圈圈與虛線）</label>
+ <small class="v101-help">拖曳圖示僅改變顯示位置，不會改動真正的設備座標或已連接的管線端點。定位輔助線預設隱藏；需要核對時再勾選顯示。</small>`;
  parent.appendChild(box);
  function updatePosition(){const d=target();box.hidden=!d||api.getRole()!=='admin';if(!d)return;
  const placement=api.getVisualPlacement(d.id);$('v101Physical').textContent=`${placement.physical.x.toFixed(2)}, ${placement.physical.y.toFixed(2)}`;
  $('v101Display').textContent=`${placement.icon.x.toFixed(2)}, ${placement.icon.y.toFixed(2)}`;
  }
+ $('v1199ShowAnchorGuides').checked=api.getAnchorGuides();
+ $('v1199ShowAnchorGuides').addEventListener('change',e=>{api.setAnchorGuides(e.currentTarget.checked);});
  $('v101ResetIcon').onclick=()=>{const d=target();if(d)api.resetIconPosition(d.id);updatePosition();};
  $('v101EditAnchor').onclick=()=>{const adv=$('v96Advanced');if(adv)adv.open=true;const field=$('eqX');field?.scrollIntoView({block:'center',behavior:'smooth'});field?.focus({preventScroll:true});};
  window.addEventListener('hw-v90-change',e=>{if(['selection','editorOpen','data','role'].includes(e.detail?.kind))updatePosition();});
