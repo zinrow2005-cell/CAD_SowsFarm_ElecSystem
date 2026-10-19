@@ -1,0 +1,32 @@
+/* V11.10.5 — concise new editing controls within existing drawer */
+#hwArrayBox label,#hwSegmentBox label{min-width:0}
+#hwArrayBox input,#hwArrayBox select{max-width:100%;box-sizing:border-box}
+.hw-segment-actions button{min-height:40px}
+@media(max-width:680px){#hwArrayBox{width:100%;box-sizing:border-box}.hw-segment-actions button{width:100%}}
+
+/* V11.10.6: distinct, touch-friendly array-split action in editor. */
+.hw-split-box{border:1px solid #377a86;border-radius:12px;background:#102e41;padding:12px;margin-top:12px;color:#d8f4f3;}
+.hw-split-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.hw-split-head span{font-size:12px;color:#7de1d4;}
+.hw-split-box p{font-size:12px;line-height:1.7;margin:8px 0 12px;color:#a9d4df;}
+.hw-split-button{display:block;width:100%;min-height:44px;padding:10px 12px;border:1px solid #74d9c5;border-radius:10px;color:#07332f;background:#88e8d0;font-weight:750;cursor:pointer;}
+.hw-split-button:hover{background:#b4ffe7;}
+.hw-split-button:focus-visible{outline:3px solid #ffcf83;outline-offset:3px;}
+.hw-split-box small{display:block;margin-top:9px;font-size:11px;line-height:1.5;color:#b9d5db;}
+
+/* V11.10.7 grouped-asset editing. Dialog overlays CAD without occupying sidebar space. */
+.v11107-batch-backdrop[hidden]{display:none!important;}
+.v11107-batch-backdrop{position:fixed;inset:0;z-index:2147483600;background:rgba(2,14,25,.78);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));box-sizing:border-box;}
+.v11107-batch-dialog{width:min(620px,100%);max-height:min(90dvh,880px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;border:1px solid #509f9d;border-radius:18px;background:#102a3c;color:#e2f7f7;padding:18px;box-shadow:0 24px 90px rgba(0,0,0,.42);font-family:system-ui,-apple-system,sans-serif;}
+.v11107-batch-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}.v11107-batch-head h2{font-size:21px;margin:3px 0 0;}.v11107-batch-kicker{letter-spacing:1px;font-size:11px;color:#85e5d6;}
+#v11107BatchClose{min-width:42px;min-height:42px;border:1px solid #517d90;border-radius:10px;background:#173e50;color:#e8f8ff;font-size:18px;cursor:pointer;}
+.v11107-batch-summary{margin-top:12px;padding:10px;border:1px solid #326a7f;border-radius:10px;background:#153b4f;font-weight:600;font-size:13px;}
+.v11107-batch-help{font-size:12px;line-height:1.65;color:#acd7da;}
+.v11107-batch-options{display:grid;gap:10px;margin:14px 0;}
+.v11107-batch-line{display:grid;grid-template-columns:minmax(130px,.85fr) minmax(0,1.2fr);gap:12px;align-items:center;border:1px solid #345b72;padding:11px;border-radius:11px;background:#143347;color:#e8fafa;font-size:14px;}
+.v11107-batch-stack{grid-template-columns:1fr;gap:7px;}.v11107-batch-line span{display:flex;align-items:center;gap:7px;font-weight:600;}.v11107-batch-line input[type=checkbox]{width:18px;height:18px;accent-color:#69dbc7;}
+.v11107-batch-line input:not([type=checkbox]),.v11107-batch-line select,.v11107-batch-line textarea{min-width:0;width:100%;box-sizing:border-box;border:1px solid #487f93;border-radius:8px;padding:10px;background:#0a2233;color:#fff;font:inherit;outline-offset:2px;}
+.v11107-batch-line small{font-size:11px;color:#a8c9d1;line-height:1.4;}.v11107-batch-preview{border:1px solid #3c8e88;border-radius:12px;padding:12px;min-height:45px;background:#0d2a35;line-height:1.65;font-size:13px;overflow-wrap:anywhere;}.v11107-batch-preview p{margin:6px 0 0}.v11107-warning{color:#ffdbab;}
+.v11107-batch-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}.v11107-batch-actions button{min-height:44px;flex:1 1 125px;border:1px solid #4c8592;border-radius:10px;background:#193d50;color:#eaf9fc;font-weight:700;cursor:pointer;padding:9px;}.v11107-batch-actions #v11107BatchApply:not(:disabled){color:#07362e;background:#8deed5;border-color:#8deed5;}.v11107-batch-actions button:disabled{opacity:.45;cursor:not-allowed;}
+#v11107BatchEntry,.v11107-drawer-entry{border:1px solid #63c9bb;border-radius:9px;padding:8px 10px;background:#1b5961;color:#e7fdfb;font-weight:700;cursor:pointer;min-height:40px}.v11107-drawer-entry{display:block;width:100%;margin:6px 0 11px}.v11107-drawer-entry[hidden],#v11107BatchEntry[hidden]{display:none!important;}
+@media(max-width:500px){.v11107-batch-dialog{max-height:calc(100dvh - 18px);padding:13px;border-radius:13px}.v11107-batch-line{grid-template-columns:1fr;gap:6px}.v11107-batch-head h2{font-size:18px}.v11107-batch-actions{position:sticky;bottom:-13px;background:#102a3c;padding:9px 0;z-index:1}}

@@ -11,12 +11,22 @@ const meta=(d,types)=>typeof types==='function'?(types(d.type)||{}):(types?.[d.t
 const size=(d,types)=>clamp(Number(d.size||meta(d,types).size||100)/100,.5,3);
 const axis=(d,k)=>clamp(Number(d[k]??100)/100,.30,3);
 const scales=(d,types)=>({x:size(d,types)*axis(d,'widthScale'),y:size(d,types)*axis(d,'heightScale')});
-const maxSize=(d,types)=>{const v=scales(d,types);return Math.max(v.x,v.y);};
-const minSize=(d,types)=>{const v=scales(d,types);return Math.min(v.x,v.y);};
+const maxSize=(d,types)=>{if(d.segment?.enabled)return Math.max(d.segment.length/2,d.segment.thickness/2);if(d.array?.enabled)return Math.max((1.65+(d.array.count-1)*d.array.spacing)/2,.825);const v=scales(d,types);return Math.max(v.x,v.y);};
+const minSize=(d,types)=>{if(d.segment?.enabled)return Math.max(.15,d.segment.thickness/2);if(d.array?.enabled)return .825;const v=scales(d,types);return Math.min(v.x,v.y);};
 const clearance=(a,b,types)=>round(clamp(.045*Math.min(minSize(a,types),minSize(b,types)),.025,.095));
 const points=(d,types)=>{
  const sc=scales(d,types),sh=d.shape||meta(d,types).shape||'circle';
  let raw;
+ if(d.segment?.enabled){const L=Math.max(.6,Math.min(45,Number(d.segment.length)||6))/2,H=Math.max(.18,Math.min(4,Number(d.segment.thickness)||.65))/2;
+  raw=[{x:-L,y:-H},{x:L,y:-H},{x:L,y:H},{x:-L,y:H}];
+  const theta=Number(d.rotation||0)*Math.PI/180,c=Math.cos(theta),sn=Math.sin(theta);
+  return raw.map(p=>({x:p.x*c-p.y*sn,y:p.x*sn+p.y*c}));
+ }
+ if(d.array?.enabled){const L=(1.65+(d.array.count-1)*d.array.spacing)/2,H=.825;
+  raw=[{x:-L,y:-H},{x:L,y:-H},{x:L,y:H},{x:-L,y:H}];
+  const theta=Number(d.rotation||0)*Math.PI/180,c=Math.cos(theta),sn=Math.sin(theta);
+  return raw.map(p=>({x:p.x*c-p.y*sn,y:p.x*sn+p.y*c}));
+ }
  if(sh==='diamond'){
   const r=1.185;raw=[{x:0,y:-r},{x:r,y:0},{x:0,y:r},{x:-r,y:0}];
  }else if(sh==='square'){
@@ -147,5 +157,5 @@ function solve(p,dev,others,types,opts={}){
  return{ok:false,reason:'no-space'};
 }
 function overlapsFor(dev,devices,types){return(devices||[]).filter(d=>d.id!==dev.id&&collision(dev,d,types));}
-window.HWIconMagnet={solve,collision,dims,regions,clearance,overlapsFor,version:'V11.10.3'};
+window.HWIconMagnet={solve,collision,dims,regions,clearance,overlapsFor,version:'V11.10.4'};
 })();

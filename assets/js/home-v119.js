@@ -46,6 +46,7 @@ root.innerHTML=`<div class="v119-shell">
  <button class="v119-card" data-home-action="equipment" data-tone="blue" type="button"><span class="v119-card-icon">⚙</span><span class="v119-card-copy"><b>設備配置工作台</b><small>設備點位、水電、通風與飼料管線</small></span><span class="v119-card-arrow">↗</span></button>
  <button class="v119-card" data-home-action="layers" type="button"><span class="v119-card-icon">◫</span><span class="v119-card-copy"><b>圖層與文字顯示</b><small>棟舍、面積、尺寸自由勾選</small></span><span class="v119-card-arrow">↗</span></button>
  <button class="v119-card" data-home-action="search" data-tone="blue" type="button"><span class="v119-card-icon">⌕</span><span class="v119-card-copy"><b>設備搜尋與維修</b><small>依名稱、位置、照片標記快速查詢</small></span><span class="v119-card-arrow">↗</span></button>
+ <button class="v119-card" data-home-action="inspection" data-tone="gold" type="button"><span class="v119-card-icon">☑</span><span class="v119-card-copy"><b>現場巡檢與維修</b><small>逐台檢查、同排巡檢、異常報修與紀錄</small></span><span class="v119-card-arrow">↗</span></button>
  <button class="v119-card" data-home-action="health" data-tone="gold" type="button"><span class="v119-card-icon">✓</span><span class="v119-card-copy"><b>資料健檢</b><small>檢查缺失關聯與需要核對的紀錄</small></span><span class="v119-card-arrow">↗</span></button>
  <button class="v119-card" data-home-action="backup" data-tone="purple" type="button"><span class="v119-card-icon">⇩</span><span class="v119-card-copy"><b>完整專案備份</b><small>加密匯出、跨裝置匯入 .hwpack</small></span><span class="v119-card-arrow">↗</span></button>
 </section>
@@ -87,6 +88,7 @@ function hide(){root.hidden=true;document.body.classList.remove('v119-home-open'
 function openDrawer(){const sidebar=$('side');if(sidebar && matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches){sidebar.classList.add('open');}}
 function run(action){
  if(action==='home'){show();return;}
+ if(action==='inspection'){hide();window.HWInspectionV11108?.open?.();return;}
  if(['equipment','layers','search','health','backup'].includes(action) && window.HWWorkspaceHubV1194?.open){hide();window.HWWorkspaceHubV1194.open(action);return;}
  hide();
  $('side')?.classList.remove('open');

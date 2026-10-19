@@ -63,6 +63,9 @@ const entries={
  reservePoint:['未來可能增設的設備或管線預留位置。','規劃尚未施工的管線端點或設備位置。','避免與已安裝設備混淆，建議註明「預留」。'],
  other:['沒有適合預設分類時的通用設備圖示。','可在設備記錄輸入真實名稱、用途及照片。','建議常用的特殊設備另外建立自訂種類。']
 };
+entries.ventWall=['以區段方式標示連續的排風牆或排風牆面。','沿豬舍牆面兩點定位，長條標示實際配置範圍。','僅是 CAD 配置標記，不表示已接入風扇供電或風量資料。'];
+entries.cableTrunk=['代表電纜幹線的配置區段示意。','沿通道或牆面標示電纜幹線的大致區域。','與真正電線迴路不同；供電連線仍應用畫電線工具記錄。'];
+entries.warningZone=['走道或設備旁的警示與管制區段標示。','用兩點標記長條警戒位置，避免一般圖示拉伸失真。','不會修改底圖牆線，且不取代現場的警告標線。'];
 const groupTitles={water:'給排水',electric:'電力',ventilation:'通風與環控',feed:'飼料輸送',equipment:'其他設備'};
 const E=(tag,cls,content)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(content!==undefined)el.textContent=content;return el;};
 const overlay=E('div','v11100-backdrop');overlay.id='v11100Backdrop';overlay.hidden=true;overlay.setAttribute('aria-hidden','true');
@@ -74,7 +77,7 @@ const body=E('div','v11100-body');
 const purpose=E('div','v11100-section');const purposeTitle=E('strong','','這是什麼設備？');const purposeText=E('p','');purposeText.id='v11100Purpose';purpose.append(purposeTitle,purposeText);
 const usage=E('div','v11100-section');const usageTitle=E('strong','','什麼時候使用？');const usageText=E('p','');usage.append(usageTitle,usageText);
 const note=E('div','v11100-note');const noteTitle=E('strong','','使用提醒');const noteText=E('p','');note.append(noteTitle,noteText);body.append(purpose,usage,note);
-const footer=E('div','v11100-footer');const cancel=E('button','v11100-cancel','取消');const confirm=E('button','v11100-confirm','確認使用・開始放置');cancel.type=confirm.type='button';footer.append(cancel,confirm);
+const footer=E('div','v11100-footer');const cancel=E('button','v11100-cancel','取消');const confirm=E('button','v11100-confirm','確認使用・開始放置');cancel.type=confirm.type='button';const arrayBtn=E('button','v11100-confirm','改用陣列・兩點放置');arrayBtn.type='button';arrayBtn.hidden=true;const segmentBtn=E('button','v11100-confirm','改用長條・兩點放置');segmentBtn.type='button';segmentBtn.hidden=true;footer.append(cancel,arrayBtn,segmentBtn,confirm);
 dialog.append(header,hero,body,footer);overlay.appendChild(dialog);document.body.appendChild(overlay);
 let pending=null,prevFocus=null;
 function dismiss(){if(!pending)return;pending=null;overlay.hidden=true;overlay.setAttribute('aria-hidden','true');document.body.classList.remove('v11100-dialog-open');if(prevFocus?.isConnected)prevFocus.focus({preventScroll:true});prevFocus=null;}
@@ -83,13 +86,15 @@ function infoFor(t){let item=entries[t.type];if(item)return item;
  return [own||'這是你自訂的「'+t.label+'」設備種類，可用來管理圖面上的實際設備。','在 CAD 上標記「'+t.label+'」位置，之後可補充規格、照片與設備資料。','自訂設備｜'+group+'；如用途不夠清楚，可至左側「自訂設備圖庫」修改預設說明。'];}
 function request(type,cb,opts={}){const t=hw.getType(type);if(!t||hw.getRole()!=='admin')return false;if(pending)dismiss();prevFocus=document.activeElement;pending={type,cb};
  art.replaceChildren();const svg=window.HWIconArt?.draw(t.type,t.graphic);if(svg)art.appendChild(svg);else art.appendChild(E('span','',t.symbol||'設'));
- const info=infoFor(t);name.textContent=t.label;typeText.textContent=(groupTitles[t.group]||'設備')+' · CAD 圖面標記';purposeText.textContent=info[0];usageText.textContent=info[1];noteText.textContent=info[2];confirm.textContent=opts.drop?'確認使用・放置於此位置':'確認使用・開始放置';
+ const info=infoFor(t);name.textContent=t.label;typeText.textContent=(groupTitles[t.group]||'設備')+' · CAD 圖面標記';purposeText.textContent=info[0];usageText.textContent=info[1];noteText.textContent=info[2];const supported=['curtain','airInlet','airOutlet','feedLine','feedAuger','feedTrough','mist','ventWall','cableTrunk','warningZone'];arrayBtn.hidden=!!opts.drop||!!opts.preferArray||!['fan','smallFan','guideFan','ceilingFan','roofFan','lighting','drinker','sprayer'].includes(type);segmentBtn.hidden=!!opts.drop||!!opts.preferSegment||!supported.includes(type);confirm.textContent=opts.preferArray?'確認・兩點建立陣列':opts.preferSegment?'確認・兩點放置長條':opts.drop?'確認使用・放置於此位置':'確認使用・一般圖示';
  overlay.hidden=false;overlay.setAttribute('aria-hidden','false');document.body.classList.add('v11100-dialog-open');confirm.focus({preventScroll:true});return true;}
 function approve(){const run=pending?.cb;dismiss();if(typeof run==='function')run();}
+arrayBtn.addEventListener('click',()=>{const type=pending?.type;dismiss();if(type)hw.begin(type,'array');});
+segmentBtn.addEventListener('click',()=>{const type=pending?.type;dismiss();if(type)hw.begin(type,'segment');});
 close.addEventListener('click',dismiss);cancel.addEventListener('click',dismiss);confirm.addEventListener('click',approve);
 overlay.addEventListener('pointerdown',e=>{if(e.target===overlay)dismiss();});
 document.addEventListener('keydown',e=>{if(!pending)return;if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();dismiss();}else if(e.key==='Tab'){
- const focus=[close,cancel,confirm];const at=focus.indexOf(document.activeElement);if(e.shiftKey&&at===0){e.preventDefault();confirm.focus();}else if(!e.shiftKey&&at===2){e.preventDefault();close.focus();}
+ const focus=[close,cancel,...(arrayBtn.hidden?[]:[arrayBtn]),...(segmentBtn.hidden?[]:[segmentBtn]),confirm];const at=focus.indexOf(document.activeElement);if(e.shiftKey&&at===0){e.preventDefault();confirm.focus();}else if(!e.shiftKey&&at===focus.length-1){e.preventDefault();close.focus();}
 }},true);
 const beginNow=hw.begin.bind(hw),placeNow=hw.placeAt.bind(hw);
 hw.begin=(type,mode)=>{if(mode!=='place')return beginNow(type,mode);return request(type,()=>beginNow(type,mode));};

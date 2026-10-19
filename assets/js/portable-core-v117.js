@@ -1,4 +1,4 @@
-/* V11.7 portable encrypted whole-project archive. Offline, no cloud requests.
+/* V11.11.2 portable encrypted whole-project archive. Offline, no cloud requests.
  * Binary AES-256-GCM envelope: 8-byte magic + LE uint32 header length +
  * JSON structural header (random PBKDF2 salt + random per-entry IVs) +
  * independently authenticated ciphertexts: encrypted project manifest, then
@@ -20,6 +20,26 @@ async function sha(bytes){const dig=await cryptoProvider().subtle.digest('SHA-25
 async function passwordKey(pass,salt,iterations=ITERATIONS){if(typeof pass!=='string'||pass.length<12)throw Error('密碼至少須 12 個字元');const subtle=cryptoProvider().subtle;const raw=await subtle.importKey('raw',te.encode(pass),'PBKDF2',false,['deriveKey']);return subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt,iterations},raw,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
 function photoIds(p){const ids=[],set=new Set();for(const d of p.devices||[])for(const ph of d.photos||[]){if(typeof ph.id!=='string'||!/^[-\w]{3,100}$/.test(ph.id))throw Error('設備照片 ID 不正確');if(!set.has(ph.id)){ids.push(ph.id);set.add(ph.id);}}if(ids.length>MAX_PHOTOS)throw Error('照片超出上限 '+MAX_PHOTOS+' 張');return ids;}
 function totals(p){return{devices:p.devices?.length||0,routes:p.routes?.length||0,photos:photoIds(p).length,markers:(p.devices||[]).reduce((s,d)=>s+(d.photos||[]).reduce((n,ph)=>n+(ph.markers||[]).length,0),0),systems:p.systemNodes?.length||0,maintenance:p.maintenance?.length||0,stallLinks:Object.values(p.stallLinks?.bindings||{}).reduce((n,arr)=>n+(Array.isArray(arr)?arr.length:0),0)};}
+// V11.11.2: detailed coverage uses actual saved records; no inferred physical assets.
+function coverage(p,stallCapacity,stallLinks){
+ const devices=p.devices||[],routes=p.routes||[],works=p.maintenance||[];
+ return {...totals({...p,stallLinks:stallLinks||p.stallLinks}),
+  inspected:devices.filter(d=>d.condition&&d.condition!=='unchecked').length,
+  abnormal:devices.filter(d=>d.condition==='abnormal').length,
+  arrayMembers:devices.filter(d=>!!d.arrayBatchId).length,
+  arrays:devices.filter(d=>!!d.array).length,
+  segments:devices.filter(d=>!!d.segment).length,
+  customTypes:(p.customTypes||[]).length,templates:(p.templates||[]).length,
+  routeEndpoints:routes.filter(r=>r.fromDeviceId&&r.toDeviceId).length,
+  circuitTerminals:devices.reduce((n,d)=>n+(d.terminals||[]).length,0),
+  capacitySaved:!!stallCapacity,stallLinksSaved:!!stallLinks,
+  workOrdersOpen:works.filter(w=>!w.archived&&w.status!=='done').length};
+}
+function equalExceptRootTimestamp(a,b){
+ if(!a&&!b)return true;if(!a||!b)return false;
+ const clean=o=>{const t=JSON.parse(JSON.stringify(o));delete t.updatedAt;return JSON.stringify(t);};
+ return clean(a)===clean(b);
+}
 function cleanProject(project){const p=JSON.parse(JSON.stringify(project));delete p.photoAssets;delete p.photoManifest;delete p.portable;return p;}
 async function encrypt(bytes,key){const iv=cryptoProvider().getRandomValues(new Uint8Array(12));const body=new Uint8Array(await cryptoProvider().subtle.encrypt({name:'AES-GCM',iv},key,bytes));return{iv:b64(iv),body};}
 async function decrypt(file,offset,entry,key){const iv=unb64(entry.iv);if(iv.length!==12)throw Error('加密 IV 無效');const buf=await file.slice(offset,offset+entry.length).arrayBuffer();try{return new Uint8Array(await cryptoProvider().subtle.decrypt({name:'AES-GCM',iv},key,buf));}catch(e){throw Error('密碼錯誤、備份受損或驗證未通過（區塊 '+entry.index+'）');}}
@@ -40,7 +60,7 @@ async function exportArchive({project,photos,stallCapacity,stallLinks,password,o
   if(master)counts.master++;else counts.previewOnly++;
  }
  const metadata={format:'HuweiPortableManifest',schema:2,createdAt:new Date().toISOString(),cadFingerprint:CAD_SHA256,
-  project:cleanProject({...project,stallCapacity,stallLinks}),images:descriptors,summary:totals({...project,stallLinks})};
+  project:cleanProject({...project,stallCapacity,stallLinks}),images:descriptors,summary:totals({...project,stallLinks}),coverage:coverage(project,stallCapacity,stallLinks)};
  const metaBytes=te.encode(JSON.stringify(metadata));if(metaBytes.length>MAX_META)throw Error('專案基本資料超過 14 MB');
  const plain=[metaBytes,...media],encrypted=[],headerEntries=[];
  for(let i=0;i<plain.length;i++){
@@ -109,5 +129,83 @@ async function applyArchive(ctx,{importProject,restoreCapacity,restoreLinks,onPr
  if(restoreLinks){const s=restoreLinks(meta.project.stallLinks||{bindings:{}});if(!s?.ok)throw Error('設備與照片已寫入，但欄格關聯保存失敗：'+(s?.reason||''));}
  return result;
 }
-root.HWPortableCore={version:'11.7',cadFingerprint:CAD_SHA256,totals,readHeader,exportArchive,inspectArchive,applyArchive};
+// Read back the actual persistent localStorage-derived project and both IndexedDB
+// photo stores after restore. This is *not* an atomic rollback mechanism: on
+// failure, the user must keep the source archive and retry from a clean state.
+async function verifyRestored({archive,project,photos,stallCapacity,stallLinks,onProgress}){
+ if(!archive?.validated||!photos?.getPreview||!photos?.getOriginal)throw Error('缺少已通過驗證的備份或照片儲存元件');
+ const expected=archive.validated.project;
+ if(JSON.stringify(cleanProject(project))!==JSON.stringify(cleanProject(expected)))throw Error('還原後設備／管線／維修資料與備份不一致');
+ const saved=archive.meta.project;
+ if(saved.stallCapacity&&!equalExceptRootTimestamp(saved.stallCapacity,stallCapacity))throw Error('還原後欄位容量設定與備份不一致');
+ if(!equalExceptRootTimestamp(saved.stallLinks||{bindings:{}},stallLinks||{bindings:{}}))throw Error('還原後設備欄格關聯與備份不一致');
+ let master=0,preview=0;
+ for(let i=0;i<archive.validated.images.length;i++){
+  const item=archive.validated.images[i];
+  progress(onProgress,'核對已還原照片 '+(i+1)+'／'+archive.validated.images.length,i+1,archive.validated.images.length);
+  const url=item.kind==='master'?await photos.getOriginal(item.id):await photos.getPreview(item.id);
+  if(!url)throw Error('還原後缺少'+(item.kind==='master'?'原圖':'縮圖')+'：'+item.id);
+  const decoded=decodePhoto(url);
+  if(decoded.mime!==item.mime||decoded.bytes.length!==item.bytes||await sha(decoded.bytes)!==item.sha256)throw Error('還原後照片驗證失敗：'+item.id+'（'+item.kind+'）');
+  if(item.kind==='master')master++;else preview++;
+ }
+ // In a preview-only archive, an old original under the same ID must not remain
+ // in the target's master store (otherwise normal photo viewing shows stale data).
+ const masterIds=new Set(archive.validated.images.filter(i=>i.kind==='master').map(i=>i.id));
+ for(const item of archive.validated.images.filter(i=>i.kind==='preview'&&!masterIds.has(i.id))){
+  if(await photos.getOriginal(item.id))throw Error('還原後保留了其他專案的舊原圖：'+item.id);
+ }
+ return {...coverage(project,stallCapacity,stallLinks),verifiedPreviews:preview,verifiedMasters:master};
+}
+// V11.11.2: Non-destructive cross-device acceptance check. Reads local project
+// and both photo stores and compares against a fully authenticated .hwpack.
+// Nothing in this function modifies devices, photos, or backup files.
+function stableJson(value){
+ const canon=v=>{
+  if(Array.isArray(v))return v.map(canon);
+  if(v&&typeof v==='object')return Object.fromEntries(Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>[k,canon(v[k])]));
+  return v;
+ };
+ return JSON.stringify(canon(value));
+}
+async function compareCurrentArchive({archive,project,photos,stallCapacity,stallLinks,onProgress}){
+ if(!archive?.validated?.project||!archive?.meta?.project)throw Error('請先輸入密碼並驗證備份檔');
+ if(!project||!photos?.getPreview||!photos?.getOriginal)throw Error('無法讀取目前設備或照片資料');
+ const expected=cleanProject(archive.validated.project),actual=cleanProject(project),sections=[];
+ // Any additional project module must be compared, not merely the familiar counters.
+ const label={devices:'設備資料（含尺寸、座標、巡檢）',routes:'水電與送料管線',maintenance:'維修與工作單',systemNodes:'設備母子系統',customTypes:'自訂設備種類',templates:'設備樣板',stallCapacity:'棟舍欄格容量',stallLinks:'設備欄格關聯'};
+ const keys=[...new Set([...Object.keys(expected),...Object.keys(actual)])].sort();
+ for(const key of keys){
+  if(key==='photoAssets'||key==='photoManifest'||key==='portable')continue;
+  const a=stableJson(actual[key]),b=stableJson(expected[key]);
+  sections.push({key,label:label[key]||('其他專案設定：'+key),ok:a===b,
+   localCount:Array.isArray(actual[key])?actual[key].length:null,expectedCount:Array.isArray(expected[key])?expected[key].length:null});
+ }
+ const saved=archive.meta.project;
+ // Auxiliary stores may generate a new updatedAt on restore; their actual data
+ // must still match, and a missing store is considered a mismatch.
+ sections.push({key:'aux-capacity',label:'欄位容量獨立儲存區',ok:equalExceptRootTimestamp(saved.stallCapacity||null,stallCapacity||null)});
+ sections.push({key:'aux-links',label:'欄格關聯獨立儲存區',ok:equalExceptRootTimestamp(saved.stallLinks||{bindings:{}},stallLinks||{bindings:{}})});
+ const issues=[];let passed=0;
+ const expectedMasters=new Set(archive.validated.images.filter(i=>i.kind==='master').map(i=>i.id));
+ for(let i=0;i<archive.validated.images.length;i++){
+  const item=archive.validated.images[i];progress(onProgress,'逐張核對目前裝置照片 '+(i+1)+'／'+archive.validated.images.length,i+1,archive.validated.images.length);
+  try{
+   const url=item.kind==='master'?await photos.getOriginal(item.id):await photos.getPreview(item.id);
+   if(!url){issues.push({id:item.id,kind:item.kind,reason:'目前裝置缺少照片'});continue;}
+   const decoded=decodePhoto(url);
+   if(decoded.mime!==item.mime||decoded.bytes.length!==item.bytes||await sha(decoded.bytes)!==item.sha256){issues.push({id:item.id,kind:item.kind,reason:'照片內容或格式與備份不同'});continue;}
+   passed++;
+  }catch(e){issues.push({id:item.id,kind:item.kind,reason:'讀取／核對失敗：'+(e?.message||e)});}
+ }
+ const previewOnlyIds=new Set(archive.validated.images.filter(i=>i.kind==='preview'&&!expectedMasters.has(i.id)).map(i=>i.id));
+ for(const id of previewOnlyIds){
+  try{if(await photos.getOriginal(id))issues.push({id,kind:'master',reason:'備份只有縮圖，但目前裝置殘留同 ID 原圖'});}
+  catch(e){issues.push({id,kind:'master',reason:'無法確認是否殘留原圖'});}
+ }
+ const changed=sections.filter(a=>!a.ok);
+ return {ok:!changed.length&&!issues.length,sections,changed,photoIssues:issues,verifiedPhotos:passed,expectedPhotos:archive.validated.images.length,
+  checkedAt:new Date().toISOString(),archiveDate:archive.meta.createdAt};
+}
+root.HWPortableCore={version:'11.11.2',cadFingerprint:CAD_SHA256,totals,coverage,readHeader,exportArchive,inspectArchive,applyArchive,verifyRestored,compareCurrentArchive};
 })(typeof window==='undefined'?globalThis:window);

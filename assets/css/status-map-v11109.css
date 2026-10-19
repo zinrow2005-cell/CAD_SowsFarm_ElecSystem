@@ -1,0 +1,36 @@
+/* V11.10.9 CAD manual equipment condition map */
+#hw109Toggle{position:absolute;z-index:7;top:116px;right:16px;border:1px solid #58b6bd;background:#10384aee;box-shadow:0 4px 14px #0005;color:#e4fcff;padding:10px 14px;border-radius:12px;font-weight:760;min-height:42px;cursor:pointer;display:flex;align-items:center;gap:7px}
+#hw109Toggle:hover,#hw109Toggle[aria-expanded=true]{background:#166367;border-color:#7ee5d4}
+#hw109Toggle .hw109-alert-count{border-radius:99px;min-width:22px;text-align:center;padding:2px 5px;background:#9c303e;color:white;font-size:11px}
+#hw109Panel{position:absolute;z-index:8;right:16px;top:169px;width:min(364px,calc(100% - 24px));max-height:calc(100% - 193px);overflow:hidden;display:flex;flex-direction:column;background:#0d2a3bec;color:#e7f6fb;border:1px solid #508296;box-shadow:0 15px 50px #00121eaf;border-radius:16px;font-family:inherit;backdrop-filter:blur(11px)}
+#hw109Panel[hidden],#hw109Toggle[hidden]{display:none!important}
+.hw109-panel-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:14px 15px 8px}
+.hw109-panel-head strong{display:block;font-size:17px}.hw109-panel-head small{display:block;color:#a7d0dc;font-size:11px;line-height:1.5;margin-top:3px}.hw109-panel-head button{background:#173f51;color:#dff7fa;border:1px solid #426779;border-radius:9px;width:36px;height:36px;cursor:pointer}
+.hw109-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:7px 12px}.hw109-summary div{background:#12394b;border:1px solid #31566a;border-radius:9px;padding:8px 6px;text-align:center}.hw109-summary b{display:block;font-size:20px}.hw109-summary small{font-size:10px;color:#b9d4dc}
+.hw109-filters{display:flex;gap:6px;flex-wrap:wrap;padding:9px 12px;border-top:1px solid #35566a}
+.hw109-filters button{border:1px solid #3b6376;color:#cceaf0;background:#183a50;border-radius:999px;font-size:12px;min-height:36px;padding:5px 9px;cursor:pointer}
+.hw109-filters button[aria-pressed=true]{background:#22796f;border-color:#70e8c8;color:white;font-weight:800}
+.hw109-filter-dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:1px;margin-right:4px}
+.hw109-controls{display:flex;gap:9px;align-items:center;padding:3px 12px 9px}
+.hw109-controls input{min-width:0;flex:1;background:#0b2635;border:1px solid #42667d;color:white;border-radius:9px;min-height:41px;padding:8px 10px}
+.hw109-list{padding:0 11px 8px;overflow:auto;min-height:40px;max-height:45vh;display:grid;gap:7px}
+.hw109-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid #345e6e;background:#102f41;border-radius:10px;padding:9px}
+.hw109-row-bullet{width:9px;height:9px;border-radius:50%}.hw109-row-main{min-width:0}.hw109-row-main b{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hw109-row-main small{display:block;font-size:10px;color:#a7c8d3;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hw109-row-actions{display:flex;gap:4px}.hw109-row-actions button{font-size:11px;padding:7px;min-height:34px;color:#dcf3f6;background:#1a4856;border:1px solid #4e7589;border-radius:8px;cursor:pointer}.hw109-row-actions button:hover{background:#236870}
+.hw109-foot{border-top:1px solid #33586b;padding:10px 13px;color:#a8cbd7;font-size:11px;line-height:1.65}
+#hw109Peek{position:absolute;z-index:11;left:50%;transform:translateX(-50%);bottom:86px;max-width:min(540px,calc(100% - 20px));width:max-content;display:flex;gap:10px;align-items:center;border:1px solid #68d4bc;background:#103949ee;box-shadow:0 8px 28px #001521bb;border-radius:12px;padding:10px 12px;color:#f0fdff}
+#hw109Peek[hidden]{display:none}.hw109-peek-copy{min-width:0}.hw109-peek-copy b{display:block;font-size:12px}.hw109-peek-copy small{display:block;color:#b5dbe0;font-size:10px;margin-top:3px}
+#hw109Peek button{flex:none;border-radius:8px;background:#17655b;border:1px solid #79d7ba;color:#eafffa;min-height:36px;padding:7px 9px;cursor:pointer}
+#eqIcons .hw109-muted{opacity:.18}#eqIcons .hw109-target{filter:drop-shadow(0 0 2px #e9fff4)}
+#eqIcons .hw109-abnormal .ring{stroke:#ff626e!important;stroke-width:.2!important}
+#eqIcons .hw109-repairing .ring{stroke:#ffba68!important;stroke-width:.19!important}
+#eqIcons .hw109-offline .ring{stroke:#abb5c3!important;stroke-dasharray:.22 .12;stroke-width:.17!important}
+#eqIcons .hw109-condition-halo{animation:hw109Breath 2.8s ease-in-out infinite;opacity:.64}
+@keyframes hw109Breath{0%,100%{opacity:.46}50%{opacity:.95}}
+@media(prefers-reduced-motion:reduce){#eqIcons .hw109-condition-halo{animation:none;opacity:.7}}
+body.v119-home-open #hw109Toggle,body.v119-home-open #hw109Panel,body.v119-home-open #hw109Peek,body.v1194-hub-open #hw109Toggle,body.v1194-hub-open #hw109Panel,body.v1194-hub-open #hw109Peek{display:none!important}
+@media(max-width:760px){#hw109Toggle{top:157px;right:10px;padding:9px 11px;min-height:39px;font-size:12px}#hw109Panel{top:206px;right:8px;width:calc(100% - 16px);max-height:calc(100% - 261px)}.hw109-list{max-height:32vh}#hw109Peek{bottom:calc(160px + env(safe-area-inset-bottom));left:8px;right:8px;transform:none;max-width:none;width:auto}.hw109-peek-copy{flex:1}}
+@media(max-height:580px){#hw109Panel{top:86px;max-height:calc(100% - 106px)}#hw109Toggle{top:61px;right:160px}#hw109Peek{bottom:calc(150px + env(safe-area-inset-bottom))}}
+
+body.hw109-panel-open #v1191Selected,body.hw109-panel-open #v1191ActionBar{display:none!important}
+@media(max-width:760px){#hw109Panel{bottom:calc(90px + env(safe-area-inset-bottom));max-height:none}}

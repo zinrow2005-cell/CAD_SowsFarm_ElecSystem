@@ -28,6 +28,7 @@ sheet.innerHTML=`
     <div class="v84-quickzone"><div class="v84-chip-title">最近使用</div><div class="v84-recent" id="v84Recent"></div></div>
     <div class="v84-palette" id="v84Palette" aria-label="可使用的設備圖標"></div>
     <label class="v84-repeat"><input type="checkbox" id="v84Repeat"/> 連續放置相同圖標 <span>（適合多台風扇、分電盤）</span></label>
+    <div class="hw-segment-quick"><strong>區段型設備｜沿牆兩點放置</strong><p>水簾不再硬拉長圖示。點起點、點終點，產生獨立長條設備。</p><div class="hw-segment-actions"><button type="button" id="hwCurtainSegment">▥ 兩點放置水簾</button><button type="button" id="hwFanArray">◉ 兩點排列風扇</button><label><input type="checkbox" id="hwWallSnap" checked> 自動對齊附近牆線方向（約 ±15°）</label></div></div>
     <div class="v84-route-tile"><div class="v84-section-label"><strong>繪製水管／電線</strong><span>依序點圖面，建立起訖連接</span></div><div class="v84-route-actions">
       <button type="button" data-start-route="water">水管</button><button type="button" data-start-route="electric">電線</button><button type="button" data-start-route="feed">飼料管</button></div><label class="v84-repeat"><input type="checkbox" id="v84Ortho"/> 水平／垂直轉折優先</label></div>
   </div>
@@ -59,6 +60,8 @@ equip.replaceChildren(sheet); // old panels are moved below, no extra broken con
 $('v84Admin').insertBefore($('v87Placement'), $('v84Palette'));
 const legacyHost=el('div','v84-legacy-host');legacyHost.hidden=true;sheet.appendChild(legacyHost);oldEquipmentNodes.forEach(n=>legacyHost.appendChild(n));
 $('v84AdminLower').appendChild(admin);
+$('hwFanArray')?.addEventListener('click',()=>{if(api.getRole()!=='admin')return;window.HWEquipmentGuide?.request('fan',()=>api.begin('fan','array'),{preferArray:true})||api.begin('fan','array');});
+$('hwCurtainSegment')?.addEventListener('click' ,()=>{if(api.getRole()!=='admin')return;window.HWEquipmentGuide?.request('curtain',()=>api.begin('curtain','segment'),{preferSegment:true})||api.begin('curtain','segment');});
 const readonly=$('v84ReadOnly'),baseAdmin=$('v84Admin'),lower=$('v84AdminLower');
 layers.forEach(n=>$('v84LayersContents').appendChild(n));
 const modes=el('div','v88-label-control');modes.innerHTML='<div class="v88-label-head"><strong>圖面設備標示</strong><small>只改顯示，不修改設備資料</small></div><div class="v88-label-options" role="group" aria-label="設備名稱顯示模式"><button type="button" data-v88-label="smart">智慧顯示</button><button type="button" data-v88-label="all">全部名稱</button><button type="button" data-v88-label="off">僅圖標</button></div>';
@@ -101,11 +104,36 @@ viewer.appendChild(drawer);
 const iconEdit=el('fieldset','v84-icon-overrides');iconEdit.innerHTML=`<legend>圖標外觀（單一設備）</legend>
   <div class="v84-edit-grid"><label>形狀<select id="eqIconShape"><option value="circle">● 圓形</option><option value="square">■ 方形</option><option value="diamond">◆ 菱形</option><option value="hex">⬡ 六角形</option></select></label><label>顏色<input id="eqIconColor" type="color" value="#65caff"/></label><label>大小 (%)<input id="eqIconSize" type="number" min="50" max="300" step="5" value="100"/></label></div>
   <div class="v11103-size-grid"><label>↔ 左右寬度 (%)<input id="eqIconWidth" aria-label="圖示左右寬度百分比" type="number" inputmode="numeric" min="30" max="300" step="5" value="100"/></label><label>↕ 上下高度 (%)<input id="eqIconHeight" aria-label="圖示上下高度百分比" type="number" inputmode="numeric" min="30" max="300" step="5" value="100"/></label></div>
+  <div id="hwSegmentBox" class="hw-segment-editor" hidden>
+    <label class="hw-segment-title">區段設備顯示模式<select id="hwSegmentMode"><option value="icon">一般圖示</option><option value="bar">長條標示（圖案不拉伸）</option></select></label>
+    <div id="hwSegmentParams" hidden>
+      <div class="hw-segment-grid"><label>長度（CAD 座標）<input id="hwSegmentLength" type="number" inputmode="decimal" min="0.6" max="45" step="0.1" value="6"></label><label>厚度（CAD 座標）<input id="hwSegmentThickness" type="number" inputmode="decimal" min="0.18" max="4" step="0.05" value="0.65"></label></div>
+      <div class="hw-segment-grid"><label>中間紋理<select id="hwSegmentPattern"><option value="auto">自動（依設備類型）</option><option value="grille">水簾柵格</option><option value="bars">疏格線條</option><option value="dashes">虛線區段</option><option value="solid">純色長條</option></select></label><label>端頭<select id="hwSegmentCap"><option value="round">圓角</option><option value="flat">平角</option></select></label></div>
+      <div class="hw-segment-grid"><label>名稱位置<select id="hwSegmentLabel"><option value="bottom">下側</option><option value="top">上側</option><option value="off">隱藏</option></select></label><label class="hw-segment-check"><input id="hwSegmentGlyph" type="checkbox"> 顯示中央小符號</label></div>
+      <p class="hw-segment-hint">長度和厚度彼此獨立，圖案不會被拉伸。旋轉仍由上方角度設定；這是設備區段標記，不代表實際管線連接。</p>
+    </div>
+  </div>
+  <div id="hwArrayBox" class="hw-segment-editor" hidden>
+    <label class="hw-segment-title">設備陣列顯示模式<select id="hwArrayMode"><option value="icon">單一設備圖示</option><option value="array">等距陣列標示（單一群組紀錄）</option></select></label>
+    <div id="hwArrayParams" hidden><div class="hw-segment-grid"><label>圖示數量<input type="number" id="hwArrayCount" min="2" max="20" step="1" value="3"/></label><label>中心間距（CAD 單位）<input type="number" id="hwArraySpacing" min="1.3" max="6" step="0.1" value="2.3"/></label></div>
+    <label>名稱位置<select id="hwArrayLabel"><option value="bottom">下方</option><option value="top">上方</option><option value="off">隱藏</option></select></label>
+    <div class="hw-split-box" id="hwSplitBox"><div class="hw-split-head"><strong>拆成每台獨立設備</strong><span id="hwSplitCount">目前 3 台</span></div><p>保留這一排的 CAD 座標、旋轉與間距；拆分後每台都有獨立編號、照片及維修紀錄。原陣列標示將被取代，可使用復原。</p><button type="button" class="hw-split-button" id="hwSplitArray">拆分並建立獨立設備</button><small id="hwSplitWarning">請先儲存目前的陣列數量、間距與角度，再執行拆分。</small></div></div>
+  </div>
   <p class="v11103-size-note">大小為整體比例；寬度和高度可再各自調整，100% 為原比例。圖示旋轉後會保留此寬高形狀，吸附也依新外框計算。</p>
   <div class="v84-check-grid"><label><input id="eqIconLabel" type="checkbox" checked/> 顯示名稱</label><label><input id="eqIconLocked" type="checkbox"/> 鎖定位置</label></div>`;
 // Keep size controls immediately visible in the edit drawer. Other advanced
 // device details stay in their existing collapsible section.
 drawer.insertBefore(iconEdit,drawer.children[1]);
+const batchDrawerButton=el('button','v11107-drawer-entry','同排設備｜批次更新共同規格');batchDrawerButton.type='button';batchDrawerButton.id='v11107BatchDrawer';batchDrawerButton.hidden=true;iconEdit.insertBefore(batchDrawerButton,iconEdit.firstChild);
+$('hwSplitArray')?.addEventListener('click',()=>{
+ const check=api.previewArraySplit?.();
+ if(!check?.ok){window.alert(check?.reason||'無法拆分，請先選取陣列');return;}
+ const message=`將「${check.sourceName}」拆成 ${check.count} 台獨立設備？\n\n每台建立自己的設備 ID、名稱與 CAD 座標。\n原陣列標示會移除，不會複製原群組的照片、維修或管線。\n可利用「復原」回到拆分前。`;
+ if(!window.confirm(message))return;
+ api.splitArraySelected?.();
+});
+$('hwArrayCount')?.addEventListener('input',()=>{const n=$('hwSplitCount');if(n)n.textContent='目前 '+($('hwArrayCount').value||'—')+' 台（尚未儲存）';});
+
 // Add custom type visual designer before original notes and specs.
 const iconDesign=el('div','v84-icon-design');iconDesign.innerHTML=`<div class="v84-design-visual"><div class="v84-design-preview" id="v84DesignPreview">閥</div><div><b>圖標即時預覽</b><small>建立後可重複放置，也能單獨調整每個圖標</small></div></div>
 <div class="v84-edit-grid"><label>外框形狀<select id="eqCustomShape"><option value="circle">● 圓形</option><option value="square">■ 圓角方形</option><option value="diamond">◆ 菱形</option><option value="hex">⬡ 六角形</option></select></label><label>標記顏色<input id="eqCustomColor" type="color" value="#65caff"/></label><label>預設尺寸 (%)<input id="eqCustomSize" type="number" min="50" max="300" step="5" value="100"/></label></div>
@@ -123,7 +151,7 @@ toolbar.innerHTML=`<div class="v84-tool-left"><span class="v84-tool-brand">設�
 viewer.appendChild(toolbar);
 const selectionBar=el('div','v84-selection');selectionBar.id='v84Selection';selectionBar.hidden=true;
 selectionBar.innerHTML=`<div class="v84-selected-meta"><strong id="v84SelectedName">未選取設備</strong><small id="v84SelectedSubtitle"></small></div>
-<div class="v84-selection-buttons"><button type="button" id="v84EditNow" class="primary">編輯內容</button><button type="button" id="v84Duplicate">複製</button><button type="button" id="v84Rotate" aria-haspopup="true" aria-expanded="false">旋轉 °</button><button type="button" id="v84Lock">鎖定</button><button type="button" id="v84Deselection" title="取消選取">×</button></div>`;
+<div class="v84-selection-buttons"><button type="button" id="v84EditNow" class="primary">編輯內容</button><button type="button" id="v11107BatchEntry" hidden>同排批次</button><button type="button" id="v84Duplicate">複製</button><button type="button" id="v84Rotate" aria-haspopup="true" aria-expanded="false">旋轉 °</button><button type="button" id="v84Lock">鎖定</button><button type="button" id="v84Deselection" title="取消選取">×</button></div>`;
 viewer.appendChild(selectionBar);
 // V11.9.9: continuous 0–359° rotation control; no project writes during preview.
 const anglePanel=el('section','v1199-rotation-panel');anglePanel.id='v1199RotationPanel';anglePanel.hidden=true;
@@ -133,10 +161,70 @@ anglePanel.innerHTML=`<div class="v1199-rotation-head"><strong>↻ 任意角度�
 <div class="v1199-rotation-buttons"><button type="button" data-v1199-step="-15">−15°</button><button type="button" data-v1199-step="-1">−1°</button><button type="button" data-v1199-reset>歸零</button><button type="button" data-v1199-step="1">＋1°</button><button type="button" data-v1199-step="15">＋15°</button></div>
 <div class="v1199-rotation-footer"><span>滑動可預覽，放開即儲存；CAD 座標不變</span><button type="button" id="v1199CloseRotation">完成</button></div>`;
 selectionBar.appendChild(anglePanel);
+// V11.10.7: independent confirmation dialog with no space consumed in the CAD or editor.
+const batchOverlay=el('div','v11107-batch-backdrop');batchOverlay.id='v11107BatchOverlay';batchOverlay.hidden=true;
+batchOverlay.innerHTML=`<section class="v11107-batch-dialog" role="dialog" aria-modal="true" aria-labelledby="v11107BatchTitle" tabindex="-1">
+  <div class="v11107-batch-head"><div><span class="v11107-batch-kicker">ARRAY · BATCH EDIT</span><h2 id="v11107BatchTitle">同排設備批次編輯</h2></div><button type="button" id="v11107BatchClose" aria-label="關閉批次編輯">✕</button></div>
+  <div class="v11107-batch-summary" id="v11107BatchSummary"></div>
+  <p class="v11107-batch-help">只有勾選的欄位會套用；個別名稱、CAD 位置、照片、維修、管線與設備 ID 都不會改動。已鎖定設備會略過。</p>
+  <div class="v11107-batch-options">
+    <label class="v11107-batch-line"><span><input type="checkbox" id="v11107SetStatus"> 批次設定狀態</span><select id="v11107Status"><option value="planned">規劃中</option><option value="installed">已安裝</option><option value="maintenance">維修中</option></select></label>
+    <label class="v11107-batch-line"><span><input type="checkbox" id="v11107SetZone"> 批次設定區域</span><input id="v11107Zone" type="text" maxlength="80" placeholder="例如：妊娠舍 A 棟"/></label>
+    <label class="v11107-batch-line v11107-batch-stack"><span><input type="checkbox" id="v11107SetSpecs"> 批次設定共同規格</span><textarea id="v11107Specs" rows="3" placeholder="每行一項：電壓=220V\n額定功率=0.75kW\n風扇尺寸=42吋"></textarea><small>已有同名規格只更新數值，其他個別規格保留；最多 12 項。</small></label>
+    <label class="v11107-batch-line v11107-batch-stack"><span><input type="checkbox" id="v11107SetNote"> 批次取代備註</span><textarea id="v11107Note" rows="2" maxlength="900" placeholder="只有勾選後才會覆寫每台既有備註"></textarea><small>注意：會取代個別備註，若有個別維修說明請勿勾選。</small></label>
+  </div>
+  <div id="v11107BatchPreview" class="v11107-batch-preview" aria-live="polite">先勾選修改欄位，再點「預覽影響」。</div>
+  <div class="v11107-batch-actions"><button type="button" id="v11107BatchCancel">取消</button><button type="button" id="v11107BatchReview">預覽影響</button><button type="button" id="v11107BatchApply" disabled>確認套用</button></div>
+</section>`;
+document.body.appendChild(batchOverlay);
+let batchPlan=null,batchOptions=null,batchFocus=null;
+const batchDialog=batchOverlay.querySelector('.v11107-batch-dialog');
+const batchPreviewEl=$('v11107BatchPreview');
+function batchReadOptions(){
+ const specs=$('v11107Specs').value.trim().split(/\r?\n/).filter(v=>v.trim()).map(line=>{const idx=line.indexOf('=');return {key:idx<0?line.trim():line.slice(0,idx).trim(),value:idx<0?'':line.slice(idx+1).trim()};});
+ return {setStatus:$('v11107SetStatus').checked,status:$('v11107Status').value,setZone:$('v11107SetZone').checked,zone:$('v11107Zone').value,setNote:$('v11107SetNote').checked,note:$('v11107Note').value,setSpecs:$('v11107SetSpecs').checked,specs};
+}
+function batchInvalidate(){batchPlan=null;batchOptions=null;$('v11107BatchApply').disabled=true;batchPreviewEl.textContent='設定已變更，請重新預覽影響後再確認。';}
+function batchClose(){batchOverlay.hidden=true;batchPlan=null;batchOptions=null;$('v11107BatchApply').disabled=true;batchFocus?.focus?.();}
+function batchOpen(){const sel=api.getSelected(),dev=api.getData().devices.find(x=>x.id===sel?.id);
+ if(api.getRole()!=='admin'||!dev?.arrayBatchId)return;
+ batchFocus=document.activeElement;batchPlan=null;batchOptions=null;
+ for(const id of ['v11107SetStatus','v11107SetZone','v11107SetSpecs','v11107SetNote'])$(id).checked=false;
+ $('v11107Status').value=dev.status;$('v11107Zone').value=dev.zone||'';$('v11107Specs').value='';$('v11107Note').value='';
+ const batch=api.getData().devices.filter(x=>x.arrayBatchId===dev.arrayBatchId),locked=batch.filter(x=>x.locked).length;
+ $('v11107BatchSummary').textContent='目前選取：'+dev.name+' · 同排 '+batch.length+' 台 · 未鎖定 '+(batch.length-locked)+' 台 · 鎖定 '+locked+' 台';
+ batchPreviewEl.textContent='先勾選修改欄位，再點「預覽影響」。';$('v11107BatchApply').disabled=true;
+ batchOverlay.hidden=false;batchDialog.focus();
+}
+$('v11107BatchEntry').addEventListener('click',batchOpen);batchDrawerButton.addEventListener('click',batchOpen);
+$('v11107BatchClose').addEventListener('click',batchClose);$('v11107BatchCancel').addEventListener('click',batchClose);
+batchOverlay.addEventListener('pointerdown',e=>e.stopPropagation());
+batchOverlay.addEventListener('click',e=>{if(e.target===batchOverlay)batchClose();});
+document.addEventListener('keydown',e=>{if(batchOverlay.hidden)return;if(e.key==='Escape'){e.preventDefault();batchClose();}if(e.key==='Tab'){const focusable=[...batchDialog.querySelectorAll('button:not([disabled]),input,textarea,select')];if(focusable.length){const first=focusable[0],last=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}}});
+batchOverlay.querySelector('.v11107-batch-options').addEventListener('input',batchInvalidate);
+batchOverlay.querySelector('.v11107-batch-options').addEventListener('change',batchInvalidate);
+$('v11107BatchReview').addEventListener('click',()=>{
+ batchOptions=batchReadOptions();batchPlan=api.previewArrayBatch(batchOptions);
+ batchPreviewEl.replaceChildren();
+ if(!batchPlan?.ok){batchPreviewEl.textContent=batchPlan?.reason||'無法預覽';$('v11107BatchApply').disabled=true;return;}
+ const title=el('strong','','將更新 '+batchPlan.count+' 台｜跳過鎖定 '+batchPlan.lockedCount+' 台');batchPreviewEl.appendChild(title);
+ const details=el('p','',batchPlan.summary.join('；'));batchPreviewEl.appendChild(details);
+ const roster=el('p','','受影響：'+batchPlan.memberNames.join('、'));batchPreviewEl.appendChild(roster);
+ if(batchPlan.lockedNames.length)batchPreviewEl.appendChild(el('p','v11107-warning','不修改鎖定：'+batchPlan.lockedNames.join('、')));
+ if(batchPlan.expectedTotal>batchPlan.total)batchPreviewEl.appendChild(el('p','v11107-warning','原始陣列應有 '+batchPlan.expectedTotal+' 台，目前只找到 '+batchPlan.total+' 台；只更新仍存在的設備。'));
+ $('v11107BatchApply').disabled=false;
+ batchPreviewEl.scrollIntoView({block:'center',behavior:'auto'});
+});
+$('v11107BatchApply').addEventListener('click',()=>{
+ if(!batchPlan?.ok||!batchOptions)return;
+ const result=api.applyArrayBatch(batchOptions,batchPlan.memberIds);
+ if(!result?.ok){batchPreviewEl.textContent=result?.reason||'更新失敗，請重新預覽';$('v11107BatchApply').disabled=true;batchPlan=null;return;}
+ batchClose();
+});
 let rotationOpen=false,rotatingDeviceId='';
 const normalizeAngle=(v)=>((Math.round(Number(v)||0)%360)+360)%360;
 const editableRotationDevice=()=>{const s=api.getSelected();if(s?.kind!=='device'||api.getRole()!=='admin'||api.getWorkspace()!=='equipment')return null;const d=api.getData().devices.find(x=>x.id===s.id);return d&&!d.locked?d:null;};
-function previewRotation(angle){const d=editableRotationDevice();if(!d)return;const g=[...document.querySelectorAll('#eqIcons [data-eq-device]')].find(el=>el.dataset.eqDevice===d.id);const rotate=[...(g?.children||[])].find(el=>el.tagName.toLowerCase()==='g'&&el.hasAttribute('transform'));if(rotate){const type=api.getType(d.type);rotate.setAttribute('transform',`rotate(${normalizeAngle(angle)}) scale(${((d.size||type?.size||100)/100)*(Number(d.widthScale??100)/100)} ${((d.size||type?.size||100)/100)*(Number(d.heightScale??100)/100)})`);}}
+function previewRotation(angle){const d=editableRotationDevice();if(!d)return;const g=[...document.querySelectorAll('#eqIcons [data-eq-device]')].find(el=>el.dataset.eqDevice===d.id);const rotate=[...(g?.children||[])].find(el=>el.tagName.toLowerCase()==='g'&&el.hasAttribute('transform'));if(rotate){const type=api.getType(d.type);rotate.setAttribute('transform',d.segment?.enabled?`rotate(${normalizeAngle(angle)})`:`rotate(${normalizeAngle(angle)}) scale(${((d.size||type?.size||100)/100)*(Number(d.widthScale??100)/100)} ${((d.size||type?.size||100)/100)*(Number(d.heightScale??100)/100)})`);}}
 function updateAngleInputs(deg){const n=normalizeAngle(deg);$('v1199AngleRange').value=String(n);$('v1199AngleNumber').value=String(n);$('v1199AngleLive').textContent=n+'°';}
 function closeRotation(){rotationOpen=false;anglePanel.hidden=true;$('v84Rotate').setAttribute('aria-expanded','false');}
 function syncRotationPanel(){const d=editableRotationDevice();if(!d||!rotationOpen||d.id!==rotatingDeviceId){closeRotation();return;}anglePanel.hidden=false;updateAngleInputs(d.rotation);}
@@ -241,7 +329,7 @@ function sync(){const data=api.getData(),a=api.getAction(),role=api.getRole(),ws
  $('v84Finish').hidden=a.action!=='route';$('v84BackPoint').hidden=a.action!=='route';$('v84Finish').disabled=a.count<2;$('v84BackPoint').disabled=a.count<1;
  $('v84Undo').disabled=api.getHistory().index<=0;$('v84Redo').disabled=api.getHistory().index>=api.getHistory().length-1;
  routeBtns.forEach(b=>b.classList.toggle('active',a.action==='route'&&a.actionType===b.dataset.startRoute));
- $('v84Selection').hidden=!isEdit||!sel||!!a.action||isMulti;if(sel){$('v84SelectedName').textContent=dev?.name||route?.name||'未選取';$('v84SelectedSubtitle').textContent=dev?(groups[api.getType(dev.type)?.group]?.label||'設備')+(dev.zone?' · '+dev.zone:''):route?'路徑節點：'+route.points.length:'';
+ $('v84Selection').hidden=!isEdit||!sel||!!a.action||isMulti; $('v11107BatchEntry').hidden=!(isEdit&&dev?.arrayBatchId); batchDrawerButton.hidden=!(isEdit&&dev?.arrayBatchId);if(sel){$('v84SelectedName').textContent=dev?.name||route?.name||'未選取';$('v84SelectedSubtitle').textContent=dev?(groups[api.getType(dev.type)?.group]?.label||'設備')+(dev.zone?' · '+dev.zone:''):route?'路徑節點：'+route.points.length:'';
  ['v84Duplicate','v84Rotate','v84Lock'].forEach(id=>$(id).hidden=!dev);$('v84Lock').textContent=dev?.locked?'解鎖':'鎖定';$('v84Rotate').disabled=!!dev?.locked;
  }
  $('v84ActiveHint').hidden=!isEdit||!a.action;
@@ -252,6 +340,7 @@ function sync(){const data=api.getData(),a=api.getAction(),role=api.getRole(),ws
  window.dispatchEvent(new Event('hw-v89-ui-sync'));
 }
 window.addEventListener('hw-v90-change',e=>{if(['selection','role','workspace','data','action'].includes(e.detail?.kind))syncRotationPanel();});
+window.addEventListener('hw-v90-change',e=>{if(!batchOverlay.hidden&&['role','workspace','selection'].includes(e.detail?.kind))batchClose();});
 api.setHook('history',sync);api.setHook('role',sync);api.setHook('workspace',sync);api.setHook('action',sync);api.setHook('data',sync);api.setHook('selection',()=>{const sel=api.getSelected();const data=api.getData();if(sel?.kind==='device'){const d=data.devices.find(x=>x.id===sel.id);if(d)markRecent(d.type);}sync();});
 api.setHook('editorOpen',()=>{if(api.getRole()!=='admin')return;inspectorOpen=true;drawer.hidden=false;drawer.classList.add('open');const item=api.getSelected();$('v84DrawerTitle').textContent=item?.kind==='route'?'編輯路徑':'編輯設備';iconEdit.hidden=item?.kind!=='device';drawer.scrollTop=0;['eqSaveDevice','eqRemoveDevice'].forEach(id=>$(id).hidden=item?.kind!=='device');['eqSaveRoute','eqRemoveRoute'].forEach(id=>$(id).hidden=item?.kind!=='route');if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');});
 api.setHook('editorClose',()=>{inspectorOpen=false;drawer.hidden=true;drawer.classList.remove('open');});

@@ -51,7 +51,7 @@ function layers(){
 }
 function search(){const data=getData(),works=arr(data.maintenance);return `${stats([['可搜尋設備',num(arr(data.devices).length),'台／點'],['可搜尋管線',num(arr(data.routes).length),'條'],['維修／巡檢單',num(works.filter(w=>!w.archived).length),'筆']])}
   <div class="v1194-work-cards"><section class="v1194-work-card"><span class="v1194-work-icon">⌖</span><div class="v1194-work-tag">CAD LOCATOR</div><h2>快速找設備位置</h2><p>用名稱、編號或區域搜尋，點選結果後直接將 CAD 放大並標示位置。</p>${button('搜尋並定位 CAD','locator','main')}</section>
-  <section class="v1194-work-card"><span class="v1194-work-icon">☷</span><div class="v1194-work-tag">FIELD RECORDS</div><h2>照片與維修紀錄</h2><p>查詢設備照片、開關標記、維修單與巡檢資訊，並可在管理者模式建立工作單。</p>${button('開啟設備／維修資料庫','records','main')}</section></div>`;}
+  <section class="v1194-work-card"><span class="v1194-work-icon">☷</span><div class="v1194-work-tag">FIELD RECORDS</div><h2>照片與維修紀錄</h2><p>查詢設備照片、開關標記、維修單與巡檢資訊，並可在管理者模式建立工作單。</p>${button('開啟設備／維修資料庫','records','main')}${button('現場巡檢與故障通報','inspection','main')}</section></div>`;}
 function health(){
  const data=getData();let problems=[],bad=0,review=0;
  try{problems=arr(window.HWSystemHealthV115?.scanProject?.(data)?.problems);bad=problems.filter(p=>p.severity==='error').length;review=problems.filter(p=>p.severity==='review').length;}catch(_){}
@@ -91,6 +91,7 @@ function launch(type){close();home.hide();
  else if(type==='backup-export'||type==='backup-import'){window.HWPortableUI?.open?.();if(type==='backup-import')window.HWPortableUI?.changeTab?.('import');}
 }
 function handleAction(action){
+ if(action==='inspection'){close();home.hide();window.HWInspectionV11108?.open?.();return;}
  if(action==='home'){close();home.show();return;}
  if(action==='map'){showMap('base');return;}
  if(action==='equipment-map'){showMap('equipment');return;}

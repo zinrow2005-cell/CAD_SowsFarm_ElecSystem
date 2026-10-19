@@ -6,7 +6,7 @@ let dbp;
 function db(){if(!dbp)dbp=new Promise((resolve,reject)=>{if(!indexedDB)return reject(Error('此瀏覽器不支援 IndexedDB'));
  const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>{req.result.createObjectStore(STORE);};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('高畫質照片資料庫無法開啟'));});return dbp;}
 function read(id){return db().then(database=>new Promise((resolve,reject)=>{const req=database.transaction(STORE,'readonly').objectStore(STORE).get(id);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);}));}
-function writeMany(assets){if(!assets.length)return Promise.resolve();return db().then(database=>new Promise((resolve,reject)=>{const tx=database.transaction(STORE,'readwrite');for(const a of assets)tx.objectStore(STORE).put(a.originalDataUrl,a.id);tx.oncomplete=()=>resolve();tx.onabort=()=>reject(tx.error||Error('高畫質照片儲存失敗'));tx.onerror=()=>{};}));}
+function writeMany(assets,purgeIds=[]){if(!assets.length&&!purgeIds.length)return Promise.resolve();return db().then(database=>new Promise((resolve,reject)=>{const tx=database.transaction(STORE,'readwrite'),store=tx.objectStore(STORE);for(const id of purgeIds)store.delete(id);for(const a of assets)store.put(a.originalDataUrl,a.id);tx.oncomplete=()=>resolve();tx.onabort=()=>reject(tx.error||Error('高畫質照片儲存失敗'));tx.onerror=()=>{};}));}
 function imageFrom(file){return new Promise((resolve,reject)=>{if(!file||!/^image\/(jpeg|png|webp|heic|heif)$/.test(file.type)&&!/\.(jpg|jpeg|png|webp|heic|heif)$/i.test(file.name||''))return reject(Error('請選擇 JPG、PNG 或 WebP 照片'));
  const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('無法讀取這張照片，請轉為 JPG 或 PNG'))};img.src=url;});}
 function encodeCanvas(canvas,quality){return canvas.toDataURL('image/jpeg',quality);}
@@ -33,7 +33,10 @@ old.withAssets=async project=>{
 old.ingest=async assets=>{if(!Array.isArray(assets))throw Error('照片備份格式無效');const originals=[];for(const a of assets){if(a.originalDataUrl!=null){if(typeof a.originalDataUrl!=='string'||a.originalDataUrl.length>LIMIT||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(a.originalDataUrl))throw Error('高解析照片格式或容量不符合限制：'+a.id);originals.push(a);}}
  // Validate previews & originals before starting writes; each IndexedDB transaction is atomic.
  for(const a of assets){if(!a||typeof a.id!=='string'||!/^[\w-]{3,100}$/.test(a.id)||typeof a.dataUrl!=='string'||a.dataUrl.length>5_000_000||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(a.dataUrl))throw Error('縮圖備份內容不正確');}
- await writeMany(originals);await baseIngest(assets);
+ // A preview-only restored photo must not display a *stale* master from an older
+ // project with the same photo ID. Purge only matching IDs, not unrelated media.
+ const previewOnlyIds=assets.filter(a=>a.originalDataUrl==null).map(a=>a.id);
+ await writeMany(originals,previewOnlyIds);await baseIngest(assets);
 };
 old.audit=async project=>{const ids=[...new Set((project.devices||[]).flatMap(d=>(d.photos||[]).map(ph=>ph.id)))];let missing=0,master=0,previewOnly=0;const problems=[];
  for(const id of ids){const preview=await baseGet(id).catch(()=>null),original=await read(id).catch(()=>null);if(!preview&&!original){missing++;problems.push(id);}else if(original)master++;else previewOnly++;}

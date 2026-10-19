@@ -110,9 +110,9 @@
       button.setAttribute('aria-pressed',String(isCurrent));
     });
     const isRoute = state.action==='route';
-    $('v1191ActionTitle').textContent = isRoute?'正在繪製線路':'正在放置設備';
+    $('v1191ActionTitle').textContent = isRoute?'正在繪製線路':state.action==='segment'?'正在標示設備區段':'正在放置設備';
     const typeLabel = api.getType(state.actionType)?.label || state.actionType || '設備';
-    $('v1191ActionSubtitle').textContent = isRoute?'已選 '+state.count+' 個節點 · 完成需至少 2 個節點':`目前類型：${typeLabel} · 點圖面定位`;
+    $('v1191ActionSubtitle').textContent = isRoute?'已選 '+state.count+' 個節點 · 完成需至少 2 個節點':state.action==='segment'?(state.count?'已選起點 · 請點選終點':'目前類型：'+typeLabel+' · 請點選起點'):`目前類型：${typeLabel} · 點圖面定位`;
     $('v1191BackPoint').hidden = !isRoute;
     $('v1191BackPoint').disabled = !isRoute || state.count===0;
     $('v1191Finish').hidden = !isRoute;
