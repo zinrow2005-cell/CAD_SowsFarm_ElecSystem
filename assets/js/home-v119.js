@@ -1,13 +1,15 @@
 /* HUWEI FARM V11.9.4: zero-mutation local overview + verified navigation to existing modules. */
 (function(){ 'use strict';
 const $=id=>document.getElementById(id);
+// Read the version from the same page title used by the CAD workspace.
+const APP_VERSION=(document.title.match(/\bV\d+\.\d+\.\d+\b/)||[])[0]||'V11.10.2';
 const hw=window.HWEquipment;
 if(!hw || !document.querySelector('.viewer')) return;
 const root=document.createElement('section');
 root.id='v119Home'; root.setAttribute('aria-label','虎尾豬場首頁儀表板');
 root.innerHTML=`<div class="v119-shell">
 <header class="v119-header">
-  <div class="v119-brand"><img src="./icons/icon-192.png" width="57" height="57" alt="虎尾豬場圖示"><div><div class="v119-kicker">HUWEI PIG FARM · V11.9.4</div><div class="v119-brand-title">虎尾豬場設備管理</div></div></div>
+  <div class="v119-brand"><img src="./icons/icon-192.png" width="57" height="57" alt="虎尾豬場圖示"><div><div class="v119-kicker">HUWEI PIG FARM · ${APP_VERSION}</div><div class="v119-brand-title">虎尾豬場設備管理</div></div></div>
   <div class="v119-meta"><span id="v119Network" class="v119-pill"><i class="v119-indicator"></i><span>本機作業</span></span><span class="v119-pill">資料來源：這台裝置</span></div>
 </header>
 <section class="v119-hero" aria-label="前往全場 CAD 圖面">

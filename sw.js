@@ -1,7 +1,7 @@
-/* 虎尾場 PWA V11.10.1 — app-shell only; never caches private device records or photos. */
+/* 虎尾場 PWA V11.10.2 — app-shell only; never caches private device records or photos. */
 'use strict';
 const CACHE_PREFIX = 'huwei-pwa-shell-';
-const CACHE_NAME = CACHE_PREFIX + 'v11.10.1';
+const CACHE_NAME = CACHE_PREFIX + 'v11.10.2';
 const APP_SHELL = [
   "./assets/js/equipment-guide-v11100.js",
   "./assets/css/equipment-guide-v11100.css",

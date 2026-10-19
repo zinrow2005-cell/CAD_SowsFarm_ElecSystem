@@ -146,8 +146,7 @@ anglePanel.querySelectorAll('[data-v1199-step]').forEach(btn=>btn.addEventListen
 anglePanel.querySelector('[data-v1199-reset]').addEventListener('click',()=>saveRotation(0));
 $('v1199CloseRotation').addEventListener('click',closeRotation);
 
-const emptystate=el('div','v84-empty-help');emptystate.id='v84Empty';emptystate.hidden=true;emptystate.innerHTML='<b>開始配置設備</b><span>由左側圖庫挑選設備圖標，然後點一下底圖即可定位。</span><button type="button" id="v84OpenPalette">開啟圖庫</button>';
-viewer.appendChild(emptystate);
+// V11.10.2: CAD stays unobstructed when no equipment has been placed.
 // Tiny touch-safe status for active placement modes.
 const banner=el('div','v84-active-hint');banner.id='v84ActiveHint';banner.hidden=true;viewer.appendChild(banner);
 // Keep source selection reachable on mobile after the icon sidebar collapses.
@@ -223,7 +222,6 @@ $('v84Finish').addEventListener('click',()=>api.finishRoute());
 $('v84BackPoint').addEventListener('click',()=>api.removeLastPoint());
 $('v84Undo').addEventListener('click',()=>api.undo());$('v84Redo').addEventListener('click',()=>api.redo());
 $('v84ToolLayers').addEventListener('click',()=>{if(window.innerWidth<=760)$('side').classList.add('open');$('v84Layers').open=true;$('v84Layers').scrollIntoView({block:'nearest'});});
-$('v84OpenPalette').addEventListener('click',()=>{$('side').classList.add('open');$('v84PaletteSearch').focus();});
 $('v84EditNow').addEventListener('click',()=>api.openEditor());
 $('v84Duplicate').addEventListener('click',()=>api.duplicate());
 $('v84Rotate').addEventListener('click',()=>{const d=editableRotationDevice();if(!d)return;if(rotationOpen){closeRotation();return;}rotatingDeviceId=d.id;rotationOpen=true;anglePanel.hidden=false;updateAngleInputs(d.rotation);$('v84Rotate').setAttribute('aria-expanded','true');});
@@ -242,7 +240,6 @@ function sync(){const data=api.getData(),a=api.getAction(),role=api.getRole(),ws
  $('v84Selection').hidden=!isEdit||!sel||!!a.action||isMulti;if(sel){$('v84SelectedName').textContent=dev?.name||route?.name||'未選取';$('v84SelectedSubtitle').textContent=dev?(groups[api.getType(dev.type)?.group]?.label||'設備')+(dev.zone?' · '+dev.zone:''):route?'路徑節點：'+route.points.length:'';
  ['v84Duplicate','v84Rotate','v84Lock'].forEach(id=>$(id).hidden=!dev);$('v84Lock').textContent=dev?.locked?'解鎖':'鎖定';$('v84Rotate').disabled=!!dev?.locked;
  }
- $('v84Empty').hidden=!isEdit||!!a.action||data.devices.length>0;
  $('v84ActiveHint').hidden=!isEdit||!a.action;
  $('v86FloatingWater').hidden=!isEdit||a.action!=='place'||a.actionType!=='threeWay';
  $('v84ActiveHint').textContent=a.action==='place'?'在底圖點一下放置「'+(api.getType(a.actionType)?.label||'設備')+'」'+($('v84Repeat').checked?' · 可連續放置':'')+' · 選取可取消':'點選底圖新增管線節點（'+a.count+' 個） · 點「完成線路」結束';
@@ -262,6 +259,6 @@ $('canvas').addEventListener('drop',e=>{const type=e.dataTransfer.getData('text/
 $('v83TabBase').addEventListener('click',()=>{drawer.hidden=true;});
 $('eqSaveType').addEventListener('click',()=>{updatePreview();renderPalette();});
 // Ensure clicks on the floating UI never start CAD panning or equipment placement.
-[toolbar,drawer,selectionBar,emptystate,floatingWater].forEach(n=>n.addEventListener('pointerdown',e=>e.stopPropagation()));
+[toolbar,drawer,selectionBar,floatingWater].forEach(n=>n.addEventListener('pointerdown',e=>e.stopPropagation()));
 updatePreview();sync();
 })();
