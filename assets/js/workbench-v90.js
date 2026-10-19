@@ -100,8 +100,12 @@ viewer.appendChild(drawer);
 // Additional controls in the device editor; no changes to the underlying CAD file.
 const iconEdit=el('fieldset','v84-icon-overrides');iconEdit.innerHTML=`<legend>圖標外觀（單一設備）</legend>
   <div class="v84-edit-grid"><label>形狀<select id="eqIconShape"><option value="circle">● 圓形</option><option value="square">■ 方形</option><option value="diamond">◆ 菱形</option><option value="hex">⬡ 六角形</option></select></label><label>顏色<input id="eqIconColor" type="color" value="#65caff"/></label><label>大小 (%)<input id="eqIconSize" type="number" min="50" max="300" step="5" value="100"/></label></div>
+  <div class="v11103-size-grid"><label>↔ 左右寬度 (%)<input id="eqIconWidth" aria-label="圖示左右寬度百分比" type="number" inputmode="numeric" min="30" max="300" step="5" value="100"/></label><label>↕ 上下高度 (%)<input id="eqIconHeight" aria-label="圖示上下高度百分比" type="number" inputmode="numeric" min="30" max="300" step="5" value="100"/></label></div>
+  <p class="v11103-size-note">大小為整體比例；寬度和高度可再各自調整，100% 為原比例。圖示旋轉後會保留此寬高形狀，吸附也依新外框計算。</p>
   <div class="v84-check-grid"><label><input id="eqIconLabel" type="checkbox" checked/> 顯示名稱</label><label><input id="eqIconLocked" type="checkbox"/> 鎖定位置</label></div>`;
-$('eqEditor').insertBefore(iconEdit,$('eqEditor').querySelector('.v83-spec-header'));
+// Keep size controls immediately visible in the edit drawer. Other advanced
+// device details stay in their existing collapsible section.
+drawer.insertBefore(iconEdit,drawer.children[1]);
 // Add custom type visual designer before original notes and specs.
 const iconDesign=el('div','v84-icon-design');iconDesign.innerHTML=`<div class="v84-design-visual"><div class="v84-design-preview" id="v84DesignPreview">閥</div><div><b>圖標即時預覽</b><small>建立後可重複放置，也能單獨調整每個圖標</small></div></div>
 <div class="v84-edit-grid"><label>外框形狀<select id="eqCustomShape"><option value="circle">● 圓形</option><option value="square">■ 圓角方形</option><option value="diamond">◆ 菱形</option><option value="hex">⬡ 六角形</option></select></label><label>標記顏色<input id="eqCustomColor" type="color" value="#65caff"/></label><label>預設尺寸 (%)<input id="eqCustomSize" type="number" min="50" max="300" step="5" value="100"/></label></div>
@@ -132,7 +136,7 @@ selectionBar.appendChild(anglePanel);
 let rotationOpen=false,rotatingDeviceId='';
 const normalizeAngle=(v)=>((Math.round(Number(v)||0)%360)+360)%360;
 const editableRotationDevice=()=>{const s=api.getSelected();if(s?.kind!=='device'||api.getRole()!=='admin'||api.getWorkspace()!=='equipment')return null;const d=api.getData().devices.find(x=>x.id===s.id);return d&&!d.locked?d:null;};
-function previewRotation(angle){const d=editableRotationDevice();if(!d)return;const g=[...document.querySelectorAll('#eqIcons [data-eq-device]')].find(el=>el.dataset.eqDevice===d.id);const rotate=[...(g?.children||[])].find(el=>el.tagName.toLowerCase()==='g'&&el.hasAttribute('transform'));if(rotate){const type=api.getType(d.type);rotate.setAttribute('transform',`rotate(${normalizeAngle(angle)}) scale(${(d.size||type?.size||100)/100})`);}}
+function previewRotation(angle){const d=editableRotationDevice();if(!d)return;const g=[...document.querySelectorAll('#eqIcons [data-eq-device]')].find(el=>el.dataset.eqDevice===d.id);const rotate=[...(g?.children||[])].find(el=>el.tagName.toLowerCase()==='g'&&el.hasAttribute('transform'));if(rotate){const type=api.getType(d.type);rotate.setAttribute('transform',`rotate(${normalizeAngle(angle)}) scale(${((d.size||type?.size||100)/100)*(Number(d.widthScale??100)/100)} ${((d.size||type?.size||100)/100)*(Number(d.heightScale??100)/100)})`);}}
 function updateAngleInputs(deg){const n=normalizeAngle(deg);$('v1199AngleRange').value=String(n);$('v1199AngleNumber').value=String(n);$('v1199AngleLive').textContent=n+'°';}
 function closeRotation(){rotationOpen=false;anglePanel.hidden=true;$('v84Rotate').setAttribute('aria-expanded','false');}
 function syncRotationPanel(){const d=editableRotationDevice();if(!d||!rotationOpen||d.id!==rotatingDeviceId){closeRotation();return;}anglePanel.hidden=false;updateAngleInputs(d.rotation);}
@@ -249,7 +253,7 @@ function sync(){const data=api.getData(),a=api.getAction(),role=api.getRole(),ws
 }
 window.addEventListener('hw-v90-change',e=>{if(['selection','role','workspace','data','action'].includes(e.detail?.kind))syncRotationPanel();});
 api.setHook('history',sync);api.setHook('role',sync);api.setHook('workspace',sync);api.setHook('action',sync);api.setHook('data',sync);api.setHook('selection',()=>{const sel=api.getSelected();const data=api.getData();if(sel?.kind==='device'){const d=data.devices.find(x=>x.id===sel.id);if(d)markRecent(d.type);}sync();});
-api.setHook('editorOpen',()=>{if(api.getRole()!=='admin')return;inspectorOpen=true;drawer.hidden=false;drawer.classList.add('open');const item=api.getSelected();$('v84DrawerTitle').textContent=item?.kind==='route'?'編輯路徑':'編輯設備';drawer.scrollTop=0;['eqSaveDevice','eqRemoveDevice'].forEach(id=>$(id).hidden=item?.kind!=='device');['eqSaveRoute','eqRemoveRoute'].forEach(id=>$(id).hidden=item?.kind!=='route');if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');});
+api.setHook('editorOpen',()=>{if(api.getRole()!=='admin')return;inspectorOpen=true;drawer.hidden=false;drawer.classList.add('open');const item=api.getSelected();$('v84DrawerTitle').textContent=item?.kind==='route'?'編輯路徑':'編輯設備';iconEdit.hidden=item?.kind!=='device';drawer.scrollTop=0;['eqSaveDevice','eqRemoveDevice'].forEach(id=>$(id).hidden=item?.kind!=='device');['eqSaveRoute','eqRemoveRoute'].forEach(id=>$(id).hidden=item?.kind!=='route');if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');});
 api.setHook('editorClose',()=>{inspectorOpen=false;drawer.hidden=true;drawer.classList.remove('open');});
 api.setHook('designerOpen',openDesigner);
 // Desktop drag-and-drop, in addition to touch-friendly 'choose then tap'.

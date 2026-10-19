@@ -1,4 +1,4 @@
-/* V11.9.8 — continuous outline-to-outline magnetic snapping.
+/* V11.10.3 — continuous outline-to-outline magnetic snapping.
  * Every visible segment is a snap target, not just corners or center-aligned anchors.
  * DisplayX/displayY only: real CAD device coordinates and route endpoints stay unchanged.
  */
@@ -9,9 +9,13 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(v,b));
 const dot=(p,n)=>p.x*n.x+p.y*n.y;
 const meta=(d,types)=>typeof types==='function'?(types(d.type)||{}):(types?.[d.type]||{});
 const size=(d,types)=>clamp(Number(d.size||meta(d,types).size||100)/100,.5,3);
-const clearance=(a,b,types)=>round(clamp(.045*Math.min(size(a,types),size(b,types)),.025,.095));
+const axis=(d,k)=>clamp(Number(d[k]??100)/100,.30,3);
+const scales=(d,types)=>({x:size(d,types)*axis(d,'widthScale'),y:size(d,types)*axis(d,'heightScale')});
+const maxSize=(d,types)=>{const v=scales(d,types);return Math.max(v.x,v.y);};
+const minSize=(d,types)=>{const v=scales(d,types);return Math.min(v.x,v.y);};
+const clearance=(a,b,types)=>round(clamp(.045*Math.min(minSize(a,types),minSize(b,types)),.025,.095));
 const points=(d,types)=>{
- const s=size(d,types),sh=d.shape||meta(d,types).shape||'circle';
+ const sc=scales(d,types),sh=d.shape||meta(d,types).shape||'circle';
  let raw;
  if(sh==='diamond'){
   const r=1.185;raw=[{x:0,y:-r},{x:r,y:0},{x:0,y:r},{x:-r,y:0}];
@@ -24,11 +28,11 @@ const points=(d,types)=>{
   raw=Array.from({length:48},(_,i)=>{const a=2*Math.PI*i/48;return{x:.975*Math.cos(a),y:.975*Math.sin(a)};});
  }
  const theta=Number(d.rotation||0)*Math.PI/180,c=Math.cos(theta),sn=Math.sin(theta);
- return raw.map(p=>({x:s*(p.x*c-p.y*sn),y:s*(p.x*sn+p.y*c)}));
+ return raw.map(p=>{const x=p.x*sc.x,y=p.y*sc.y;return{x:x*c-y*sn,y:x*sn+y*c};});
 };
 const bounds=poly=>poly.reduce((b,v)=>({minX:Math.min(b.minX,v.x),maxX:Math.max(b.maxX,v.x),minY:Math.min(b.minY,v.y),maxY:Math.max(b.maxY,v.y)}),{minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity});
 function regions(d,types){const b=bounds(points(d,types));return[{x0:b.minX,x1:b.maxX,y0:b.minY,y1:b.maxY,part:'icon'}];}
-function dims(d,types){const b=bounds(points(d,types));return{...b,x:Math.max(-b.minX,b.maxX),y:Math.max(-b.minY,b.maxY),size:size(d,types),regions:regions(d,types)};}
+function dims(d,types){const b=bounds(points(d,types));return{...b,x:Math.max(-b.minX,b.maxX),y:Math.max(-b.minY,b.maxY),size:size(d,types),sizeX:scales(d,types).x,sizeY:scales(d,types).y,regions:regions(d,types)};}
 function project(poly,x,y,axis){let min=Infinity,max=-Infinity;for(const p of poly){const v=(p.x+x)*axis.x+(p.y+y)*axis.y;min=Math.min(min,v);max=Math.max(max,v);}return{min,max};}
 function polygonCollision(a,polyA,b,polyB,gap){
  const ba=bounds(polyA),bb=bounds(polyB);
@@ -52,11 +56,11 @@ function solve(p,dev,others,types,opts={}){
  const want={x:round(Number(p.x)),y:round(Number(p.y))};
  if(!Number.isFinite(want.x)||!Number.isFinite(want.y)||!inside(want,limit))return{ok:false,reason:'out-of-bounds'};
  if(opts.enabled===false)return{ok:true,...want,snapped:false,avoid:false};
- const moving={...dev,...want},mp=points(moving,types),mb=bounds(mp),ms=size(moving,types);
+ const moving={...dev,...want},mp=points(moving,types),mb=bounds(mp),ms=maxSize(moving,types);
  // Lazily build expensive rotated polygons only for objects near a candidate.
  // Large farms may have hundreds of devices elsewhere on the CAD: distant icons
  // must not slow every pointermove on phones and tablets.
- const around=(others||[]).filter(d=>d.id!==dev.id).map(d=>({d,poly:null,scale:size(d,types),gap:clearance(moving,d,types)}));
+ const around=(others||[]).filter(d=>d.id!==dev.id).map(d=>({d,poly:null,scale:maxSize(d,types),gap:clearance(moving,d,types)}));
  const getPoly=o=>o.poly||(o.poly=points(o.d,types));
  const free=pt=>inside(pt,limit)&&!around.some(o=>{
   // Conservative AABB prefilter before building the target polygon.
@@ -120,7 +124,7 @@ function solve(p,dev,others,types,opts={}){
  candidates.sort((a,b)=>a.dist-b.dist||(a.style==='edge'?-1:1));
  if(!overlapped){
   for(const c of candidates){
-   const targetScale=size(c.other,types);
+   const targetScale=maxSize(c.other,types);
    if(c.dist>clamp(.34*(ms+targetScale),.35,2.2))break;
    if(free(c))return{ok:true,x:c.x,y:c.y,snapped:true,avoid:false,targetId:c.other.id,axis:c.style,edge:c.edgeIndex};
   }
@@ -143,5 +147,5 @@ function solve(p,dev,others,types,opts={}){
  return{ok:false,reason:'no-space'};
 }
 function overlapsFor(dev,devices,types){return(devices||[]).filter(d=>d.id!==dev.id&&collision(dev,d,types));}
-window.HWIconMagnet={solve,collision,dims,regions,clearance,overlapsFor,version:'V11.9.8'};
+window.HWIconMagnet={solve,collision,dims,regions,clearance,overlapsFor,version:'V11.10.3'};
 })();

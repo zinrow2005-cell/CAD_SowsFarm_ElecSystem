@@ -13,7 +13,7 @@ const modules={
 };
 const overlay=document.createElement('section');overlay.id='v1194Hub';overlay.hidden=true;overlay.setAttribute('aria-label','獨立功能工作區');
 overlay.innerHTML=`<div class="v1194-frame">
- <header class="v1194-nav"><div class="v1194-brand"><span class="v1194-brand-icon">▦</span><span><b>HUWEI PIG FARM</b><small>設備配置管理平台 · V11.9.9</small></span></div><div class="v1194-nav-actions"><button type="button" data-hub-action="home">⌂ 返回首頁</button><button type="button" class="v1194-nav-map" data-hub-action="map">↗ CAD 全場圖</button></div></header>
+ <header class="v1194-nav"><div class="v1194-brand"><span class="v1194-brand-icon">▦</span><span><b>HUWEI PIG FARM</b><small>設備配置管理平台 · ${(document.title.match(/\bV\d+\.\d+\.\d+\b/)||[])[0]||'V11.10.3'}</small></span></div><div class="v1194-nav-actions"><button type="button" data-hub-action="home">⌂ 返回首頁</button><button type="button" class="v1194-nav-map" data-hub-action="map">↗ CAD 全場圖</button></div></header>
  <nav class="v1194-tabs" aria-label="功能工作區切換">
   <button type="button" data-hub-to="equipment">⚙ 設備</button><button type="button" data-hub-to="layers">▦ 圖層</button><button type="button" data-hub-to="search">⌕ 搜尋維修</button><button type="button" data-hub-to="health">✓ 健檢</button><button type="button" data-hub-to="backup">⇩ 備份</button>
  </nav>

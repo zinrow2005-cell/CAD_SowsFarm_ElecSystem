@@ -2,7 +2,7 @@
 (function(){ 'use strict';
 const $=id=>document.getElementById(id);
 // Read the version from the same page title used by the CAD workspace.
-const APP_VERSION=(document.title.match(/\bV\d+\.\d+\.\d+\b/)||[])[0]||'V11.10.2';
+const APP_VERSION=(document.title.match(/\bV\d+\.\d+\.\d+\b/)||[])[0]||'V11.10.3';
 const hw=window.HWEquipment;
 if(!hw || !document.querySelector('.viewer')) return;
 const root=document.createElement('section');
