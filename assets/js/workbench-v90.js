@@ -28,7 +28,7 @@ sheet.innerHTML=`
     <div class="v84-quickzone"><div class="v84-chip-title">最近使用</div><div class="v84-recent" id="v84Recent"></div></div>
     <div class="v84-palette" id="v84Palette" aria-label="可使用的設備圖標"></div>
     <label class="v84-repeat"><input type="checkbox" id="v84Repeat"/> 連續放置相同圖標 <span>（適合多台風扇、分電盤）</span></label>
-    <div class="hw-segment-quick"><strong>區段型設備｜沿牆兩點放置</strong><p>水簾不再硬拉長圖示。點起點、點終點，產生獨立長條設備。</p><div class="hw-segment-actions"><button type="button" id="hwCurtainSegment">▥ 兩點放置水簾</button><button type="button" id="hwFanArray">◉ 兩點排列風扇</button><label><input type="checkbox" id="hwWallSnap" checked> 自動對齊附近牆線方向（約 ±15°）</label></div></div>
+    <div class="hw-segment-quick"><strong>區段型設備｜自由角度・兩點放置</strong><p>水簾不再硬拉長圖示。點起點、點終點，產生獨立長條設備。</p><div class="hw-segment-actions"><button type="button" id="hwCurtainSegment">▥ 兩點放置水簾</button><button type="button" id="hwFanArray">◉ 兩點排列風扇</button><label><input type="checkbox" id="hwWallSnap"> 自行選擇沿牆吸附（預設關閉，約 ±5°）</label></div></div>
     <div class="v84-route-tile"><div class="v84-section-label"><strong>繪製水管／電線</strong><span>依序點圖面，建立起訖連接</span></div><div class="v84-route-actions">
       <button type="button" data-start-route="water">水管</button><button type="button" data-start-route="electric">電線</button><button type="button" data-start-route="feed">飼料管</button></div><label class="v84-repeat"><input type="checkbox" id="v84Ortho"/> 水平／垂直轉折優先</label></div>
   </div>
@@ -62,6 +62,7 @@ const legacyHost=el('div','v84-legacy-host');legacyHost.hidden=true;sheet.append
 $('v84AdminLower').appendChild(admin);
 $('hwFanArray')?.addEventListener('click',()=>{if(api.getRole()!=='admin')return;window.HWEquipmentGuide?.request('fan',()=>api.begin('fan','array'),{preferArray:true})||api.begin('fan','array');});
 $('hwCurtainSegment')?.addEventListener('click' ,()=>{if(api.getRole()!=='admin')return;window.HWEquipmentGuide?.request('curtain',()=>api.begin('curtain','segment'),{preferSegment:true})||api.begin('curtain','segment');});
+$('hwWallSnap')?.addEventListener('change',e=>api.setSegmentWallSnap?.(e.target.checked));
 const readonly=$('v84ReadOnly'),baseAdmin=$('v84Admin'),lower=$('v84AdminLower');
 layers.forEach(n=>$('v84LayersContents').appendChild(n));
 const modes=el('div','v88-label-control');modes.innerHTML='<div class="v88-label-head"><strong>圖面設備標示</strong><small>只改顯示，不修改設備資料</small></div><div class="v88-label-options" role="group" aria-label="設備名稱顯示模式"><button type="button" data-v88-label="smart">智慧顯示</button><button type="button" data-v88-label="all">全部名稱</button><button type="button" data-v88-label="off">僅圖標</button></div>';

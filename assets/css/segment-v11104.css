@@ -12,3 +12,14 @@
 .hw-segment-check{display:flex;gap:7px;align-items:center;min-height:38px}.hw-segment-check input{width:18px;height:18px}
 .hw-segment-hint{font-size:11px;color:#a8d3db;line-height:1.6;margin:4px 0}
 @media(max-width:480px){.hw-segment-grid{grid-template-columns:1fr}.hw-segment-actions{display:grid}}
+
+/* V11.11.4: free-angle placement with explicit optional wall alignment. */
+#hwSegmentAngleBar[hidden]{display:none!important}
+#hwSegmentAngleBar{position:absolute;z-index:14;right:14px;top:142px;width:min(270px,calc(100% - 28px));box-sizing:border-box;border:1px solid #66d6c5;border-radius:12px;padding:11px 12px;color:#eafffa;background:#092b3def;box-shadow:0 10px 26px #0007;pointer-events:auto;}
+#hwSegmentAngleBar .hw-angle-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px;font-size:13px;}
+#hwSegmentModeText{color:#8df6d9}#hwSegmentAngleBar.is-wall #hwSegmentModeText{color:#ffca80}
+#hwSegmentAngleValue{color:#ecf9ff;font-variant-numeric:tabular-nums;font-size:12px;}
+#hwSegmentAngleBar .hw-angle-toggle{display:flex;align-items:center;gap:9px;font-size:13px;line-height:1.3;cursor:pointer;padding:8px;border-radius:8px;background:#16485c;}
+#hwSegmentAngleBar input{width:19px;height:19px;accent-color:#64e0c4;margin:0;}
+#hwSegmentAngleBar small{display:block;margin-top:7px;color:#b1d9e5;line-height:1.45;font-size:11px;}
+@media(max-width:760px){#hwSegmentAngleBar{top:auto;right:8px;bottom:calc(95px + env(safe-area-inset-bottom, 0px));width:min(270px,calc(100% - 16px));padding:9px 10px;}#hwSegmentAngleBar small{display:none}}
