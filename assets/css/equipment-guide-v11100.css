@@ -12,3 +12,11 @@
 @media(max-width:480px){.v11100-backdrop{padding:10px}.v11100-card{max-height:min(90dvh,610px);border-radius:16px}.v11100-hero{padding:5px 16px 12px;gap:12px}.v11100-art{width:64px;height:64px}.v11100-art svg{width:45px;height:45px}.v11100-names h2{font-size:20px}.v11100-header{padding:11px 12px 7px}.v11100-body{padding:12px 15px;gap:9px}.v11100-footer{padding:11px 12px calc(10px + env(safe-area-inset-bottom))}}
 
 body.v11100-dialog-open{overflow:hidden}
+
+/* V11.11.8: a compact source selector that appears only for water outlets */
+.v11100-water-source{margin:9px 0;padding:10px 12px;border:1px solid #367384;border-radius:12px;color:#d5edf1}
+.v11100-water-source[hidden]{display:none!important}
+.v11100-water-source legend{font-size:13px;font-weight:700;padding:0 6px;color:#9cebd8}
+.v11100-source-row{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;white-space:nowrap;font-size:13px}
+.v11100-source-row input{accent-color:#63ddc5;width:16px;height:16px}
+.v11100-source-warning{color:#ffa68e;font-size:12px;margin:4px 0}

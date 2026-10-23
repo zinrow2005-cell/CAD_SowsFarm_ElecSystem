@@ -14,10 +14,12 @@ const entries={
  pump:['用馬達提供水壓或輸送水的泵浦。','標記抽水、加壓、循環供水泵。','地下水井是水源；泵浦才是提供抽送動力的設備。'],
  meter:['用於量測供水量的水表或計量表。','記錄各棟、分路或總進水水表位置。','圖示不會自動讀取流量，可另行登錄讀數。'],
  manifold:['把單一路供水分配到多條支管的分配器。','例如母豬舍不同排或不同區域的分水歧管。','若只需要記錄水管分叉座標，可用「水管分支接點」。'],
- waterPoint:['水管供水出口或銜接位置。','標註各棟給水口、末端分配點。','若是實際飲水嘴，請選「飲水器」。'],
+ waterPoint:['水管接點或分支供水位置。','用在一般水管給水連接點。','如果要標註實際有水可以取用的出水位置，請選「出水口」。'],
+ waterOutlet:['實際可取水、接水或出水的管線出口。','可標註地下水、水塔水或自來水的出水口，放置時勾選來源（可複選）。','所選水源是人工標記；不代表閥門已開、管路已核對或目前實際有水。'],
  drainPoint:['污水、清洗水或其他排水的排放位置。','可用於落水口、排水管銜接處。','不是污水處理廠本身；請另外註明去向。'],
  flushPoint:['供水管線上的沖洗或清管位置。','標註可接水管清洗、放水沖洗的區域。','與一般給水點不同，重點是沖洗作業用途。'],
  waterJunction:['只標示水管分叉、接頭或 T 字連接的位置。','適合沒有獨立設備、但要準確繪製水路拓樸的節點。','本圖示是管線節點，不是可操作的實體閥門。'],
+ transformer:['變壓或變電設備的配置位置。','記錄變電器位置、額定電壓與相關電力管線。','請依銘牌及現場接線核對；標示本身不表示已帶電。'],
  panel:['全場主要配電盤，集中管理大型電力迴路。','標記主進線、全場電力配電盤，方便追蹤下游分盤。','與區域分電盤不同；實際配電層級仍須依現場核對。'],
  subPanel:['從主配電盤分出的棟舍或區域配電盤。','例如產房、保育舍各自的分電盤。','可用設備照片標記內部斷路器及迴路。'],
  controlBox:['控制風扇、水泵或其他機械的控制箱。','例如自動溫控、供水及設備控制電箱。','控制箱與配電盤用途可能不同，請依實物選擇。'],
@@ -77,6 +79,15 @@ const body=E('div','v11100-body');
 const purpose=E('div','v11100-section');const purposeTitle=E('strong','','這是什麼設備？');const purposeText=E('p','');purposeText.id='v11100Purpose';purpose.append(purposeTitle,purposeText);
 const usage=E('div','v11100-section');const usageTitle=E('strong','','什麼時候使用？');const usageText=E('p','');usage.append(usageTitle,usageText);
 const note=E('div','v11100-note');const noteTitle=E('strong','','使用提醒');const noteText=E('p','');note.append(noteTitle,noteText);body.append(purpose,usage,note);
+const waterOutletChoices=E('fieldset','v11100-water-source');waterOutletChoices.hidden=true;
+const sourceLegend=E('legend','','出水口來源（可複選）');waterOutletChoices.appendChild(sourceLegend);
+const outletChecks={};
+for(const [id,text] of [['groundwater','地下水'],['tower','水塔水'],['tap','自來水']]){
+ const row=E('label','v11100-source-row');const input=E('input');input.type='checkbox';input.value=id;outletChecks[id]=input;
+ row.append(input,document.createTextNode(text));waterOutletChoices.appendChild(row);
+}
+const outletWarning=E('p','v11100-source-warning','請至少勾選一種出水來源');outletWarning.hidden=true;waterOutletChoices.appendChild(outletWarning);
+body.appendChild(waterOutletChoices);
 const footer=E('div','v11100-footer');const cancel=E('button','v11100-cancel','取消');const confirm=E('button','v11100-confirm','確認使用・開始放置');cancel.type=confirm.type='button';const arrayBtn=E('button','v11100-confirm','改用陣列・兩點放置');arrayBtn.type='button';arrayBtn.hidden=true;const segmentBtn=E('button','v11100-confirm','改用長條・兩點放置');segmentBtn.type='button';segmentBtn.hidden=true;footer.append(cancel,arrayBtn,segmentBtn,confirm);
 dialog.append(header,hero,body,footer);overlay.appendChild(dialog);document.body.appendChild(overlay);
 let pending=null,prevFocus=null;
@@ -86,9 +97,17 @@ function infoFor(t){let item=entries[t.type];if(item)return item;
  return [own||'這是你自訂的「'+t.label+'」設備種類，可用來管理圖面上的實際設備。','在 CAD 上標記「'+t.label+'」位置，之後可補充規格、照片與設備資料。','自訂設備｜'+group+'；如用途不夠清楚，可至左側「自訂設備圖庫」修改預設說明。'];}
 function request(type,cb,opts={}){const t=hw.getType(type);if(!t||hw.getRole()!=='admin')return false;if(pending)dismiss();prevFocus=document.activeElement;pending={type,cb};
  art.replaceChildren();const svg=window.HWIconArt?.draw(t.type,t.graphic);if(svg)art.appendChild(svg);else art.appendChild(E('span','',t.symbol||'設'));
+ waterOutletChoices.hidden=type!=='waterOutlet';outletWarning.hidden=true;Object.values(outletChecks).forEach(x=>{x.checked=false;});
  const info=infoFor(t);name.textContent=t.label;typeText.textContent=(groupTitles[t.group]||'設備')+' · CAD 圖面標記';purposeText.textContent=info[0];usageText.textContent=info[1];noteText.textContent=info[2];const supported=['curtain','airInlet','airOutlet','feedLine','feedAuger','feedTrough','mist','ventWall','cableTrunk','warningZone'];arrayBtn.hidden=!!opts.drop||!!opts.preferArray||!['fan','smallFan','guideFan','ceilingFan','roofFan','lighting','drinker','sprayer'].includes(type);segmentBtn.hidden=!!opts.drop||!!opts.preferSegment||!supported.includes(type);confirm.textContent=opts.preferArray?'確認・兩點建立陣列':opts.preferSegment?'確認・兩點放置長條':opts.drop?'確認使用・放置於此位置':'確認使用・一般圖示';
  overlay.hidden=false;overlay.setAttribute('aria-hidden','false');document.body.classList.add('v11100-dialog-open');confirm.focus({preventScroll:true});return true;}
-function approve(){const run=pending?.cb;dismiss();if(typeof run==='function')run();}
+function approve(){
+ if(pending?.type==='waterOutlet'){
+  const selected=Object.entries(outletChecks).filter(([,input])=>input.checked).map(([id])=>id);
+  if(!selected.length){outletWarning.hidden=false;return;}
+  hw.setPlacementSources(selected);
+ }
+ const run=pending?.cb;dismiss();if(typeof run==='function')run();
+}
 arrayBtn.addEventListener('click',()=>{const type=pending?.type;dismiss();if(type)hw.begin(type,'array');});
 segmentBtn.addEventListener('click',()=>{const type=pending?.type;dismiss();if(type)hw.begin(type,'segment');});
 close.addEventListener('click',dismiss);cancel.addEventListener('click',dismiss);confirm.addEventListener('click',approve);
