@@ -91,3 +91,69 @@ document.querySelector('[data-role="admin"]')?.addEventListener('click',()=>{if(
 $('v83TabBase')?.addEventListener('click',()=>{if(api.getAction().action==='route')api.cancelAction();sync();});
 sync();
 })();
+
+
+/* V11.12.0 — Left navigation: group existing wired controls, without recreating
+ * buttons or changing their data contracts. Runs after the original modules have
+ * registered their click handlers. Every node is moved, not cloned.
+ */
+(function(){'use strict';
+  function compactNavigation(){
+    const panel=document.getElementById('v83EquipPanel');
+    const start=document.getElementById('v95Start');
+    if(!panel||!start||document.getElementById('hw120Groups'))return;
+    const container=document.createElement('div');container.id='hw120Groups';container.className='hw120-groups';
+    const configs=[
+      {id:'hw120Find',title:'圖層・搜尋・欄格',desc:'圖面顯示、設備與維修查詢、欄位定位',open:true,
+        items:[['v84Layers','圖層與設備顯示'],['v84Items','設備／線路快速搜尋'],['v114Launch','設備檔案與維修紀錄'],['v104EquipOpen','欄位容量與編號'],['v109EquipOpen','欄格定位與服務範圍']]},
+      {id:'hw120Systems',title:'全場系統・水電關聯',desc:'系統架構、供水、配電、通風與送料',
+        items:[['v116Launch','棟舍子系統架構'],['hw110Side','水電與設備關聯追蹤'],['v110Launch','三水源與供水管線'],['v113Launch','配電箱與控制迴路'],['v112VentLaunch','通風設備與水簾'],['v111FeedNetworkLaunch','飼料設備與送料路徑']]},
+      {id:'hw120Manage',title:'巡檢・備份・進階設定',desc:'巡檢報修、專案備份、模板與選用雲端',
+        items:[['hw108Launch','現場巡檢與維修'],['v117Launch','完整專案備份／還原'],['v95Advanced','設備模板與進階工具'],['v93CloudPanel','雲端工作區（選用）']]}
+    ];
+    const groups=[];
+    for(const cfg of configs){
+      const fold=document.createElement('details');fold.className='hw120-group';fold.id=cfg.id;fold.open=!!cfg.open;
+      const summary=document.createElement('summary');summary.className='hw120-summary';summary.innerHTML='<span class="hw120-sum-title"></span><small></small><span class="hw120-chevron" aria-hidden="true">⌄</span>';
+      summary.querySelector('.hw120-sum-title').textContent=cfg.title;
+      summary.querySelector('small').textContent=cfg.desc;
+      const body=document.createElement('div');body.className='hw120-body';
+      for(const [id,label] of cfg.items){
+        const item=document.getElementById(id);if(!item)continue;
+        if(item.tagName==='BUTTON'){
+          item.classList.add('hw120-row');
+          if(id==='v114Launch')item.textContent='⌕ '+label;
+          if(id==='v109EquipOpen')item.textContent='⌕ '+label;
+          if(id==='hw110Side')item.textContent='⌁ '+label;
+          if(id==='v113Launch')item.textContent='⚡ '+label;
+          if(id==='v112VentLaunch')item.textContent='❂ '+label;
+          if(id==='v111FeedNetworkLaunch')item.textContent='▰ '+label;
+          if(id==='v104EquipOpen')item.textContent='▦ '+label;
+        } else if(id==='v84Layers'){
+          item.querySelector('summary')?.replaceChildren(document.createTextNode('圖層與設備名稱'));
+        } else if(id==='v84Items'){
+          const summary=item.querySelector('summary');if(summary){
+            const badge=summary.querySelector('#v84ListCount');
+            summary.replaceChildren(document.createTextNode('設備／線路快速搜尋 '));if(badge)summary.appendChild(badge);
+          }
+        } else if(id==='v95Advanced'){
+          const title=item.querySelector('.v95-group-title'),sub=item.querySelector('.v95-group-sub');
+          if(title)title.textContent='設備模板與進階工具';
+          if(sub)sub.textContent='精準排列 · 範本 · 舊版相容工具';
+        }
+        body.appendChild(item);
+      }
+      fold.append(summary,body);container.appendChild(fold);groups.push(fold);
+      fold.addEventListener('toggle',()=>{if(fold.open)for(const other of groups){if(other!==fold)other.open=false;}});
+    }
+    start.after(container);
+    function reveal(groupId){const fold=document.getElementById(groupId);if(fold){fold.open=true;}}
+    document.getElementById('v95Find')?.addEventListener('click',()=>reveal('hw120Find'),true);
+    document.getElementById('v84ToolLayers')?.addEventListener('click',()=>reveal('hw120Find'),true);
+    // Disclose nested ancestor whenever a programmatic shortcut focuses it.
+    const item=document.getElementById('v84Items');const layer=document.getElementById('v84Layers');
+    for(const node of [item,layer])node?.addEventListener('toggle',()=>{if(node.open)reveal('hw120Find');});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',compactNavigation,{once:true});
+  else compactNavigation();
+})();

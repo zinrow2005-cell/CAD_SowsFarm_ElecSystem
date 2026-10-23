@@ -43,6 +43,24 @@ function equalExceptRootTimestamp(a,b){
 function cleanProject(project){const p=JSON.parse(JSON.stringify(project));delete p.photoAssets;delete p.photoManifest;delete p.portable;return p;}
 async function encrypt(bytes,key){const iv=cryptoProvider().getRandomValues(new Uint8Array(12));const body=new Uint8Array(await cryptoProvider().subtle.encrypt({name:'AES-GCM',iv},key,bytes));return{iv:b64(iv),body};}
 async function decrypt(file,offset,entry,key){const iv=unb64(entry.iv);if(iv.length!==12)throw Error('加密 IV 無效');const buf=await file.slice(offset,offset+entry.length).arrayBuffer();try{return new Uint8Array(await cryptoProvider().subtle.decrypt({name:'AES-GCM',iv},key,buf));}catch(e){throw Error('密碼錯誤、備份受損或驗證未通過（區塊 '+entry.index+'）');}}
+// V11.11.9: a missing compatibility preview must not block a FULL backup
+// if the authenticated master still exists. Generate an in-memory JPEG only;
+// do not change IndexedDB or the original photo. Every image is hashed later.
+async function recoverPreview(master,id){
+ if(typeof master!=='string'||!/^data:image\/(?:jpeg|png|webp);base64,/.test(master))throw Error('照片 '+id+' 的原圖格式不支援救援');
+ if(typeof root.document==='undefined')throw Error('此瀏覽器無法從原圖產生縮圖');
+ const image=new Image();image.decoding='async';
+ await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('照片 '+id+' 的原圖無法顯示'));image.src=master;});
+ const w=image.naturalWidth,h=image.naturalHeight;
+ if(!w||!h||w*h>50000000)throw Error('照片 '+id+' 的原圖尺寸無效或過大');
+ const c=root.document.createElement('canvas'),scale=Math.min(1,1200/Math.max(w,h));
+ c.width=Math.max(1,Math.round(w*scale));c.height=Math.max(1,Math.round(h*scale));
+ const ctx=c.getContext('2d',{alpha:false});if(!ctx)throw Error('照片縮圖轉換功能無法使用');
+ ctx.drawImage(image,0,0,c.width,c.height);
+ let value='';for(const q of [.78,.7,.62,.52]){value=c.toDataURL('image/jpeg',q);if(value.length<=5000000)break;}
+ if(value.length>5000000)throw Error('照片 '+id+' 無法縮至備份格式上限');
+ return value;
+}
 async function exportArchive({project,photos,stallCapacity,stallLinks,password,onProgress}){
  if(!project||project.app!=='HuweiEquipment'||!Array.isArray(project.devices)||!Array.isArray(project.routes))throw Error('不是有效的虎尾場專案');
  if(!photos?.getPreview||!photos?.getOriginal)throw Error('照片元件尚未正確載入');
@@ -50,8 +68,11 @@ async function exportArchive({project,photos,stallCapacity,stallLinks,password,o
  const descriptors=[],media=[],all=ids.length,counts={master:0,previewOnly:0};let rawBytes=0;
  for(let i=0;i<ids.length;i++){
   const id=ids[i];progress(onProgress,'正在核對照片 '+(i+1)+'／'+all,i+1,all);
-  let preview=await photos.getPreview(id);const master=await photos.getOriginal(id);
-  if(!preview){throw Error('照片 '+id+' 缺少縮圖，請先執行照片完整性檢查或使用舊版修復功能');}
+  let preview=null,master=null,previewError=null,masterError=null;
+  try{preview=await photos.getPreview(id);}catch(e){previewError=e;}
+  try{master=await photos.getOriginal(id);}catch(e){masterError=e;}
+  if(!preview&&master){progress(onProgress,'從原圖臨時重建縮圖：'+id,i+1,all);preview=await recoverPreview(master,id);}
+  if(!preview)throw Error('照片 '+id+' 無法讀取原圖或縮圖；縮圖：'+(previewError?.message||'不存在')+'；原圖：'+(masterError?.message||'不存在')+'。為避免遺漏照片，不能宣稱完整備份');
   for(const [kind,source] of [['preview',preview],['master',master]]){
    if(!source)continue;const{bytes,mime}=decodePhoto(source);rawBytes+=bytes.length;
    if(rawBytes>MAX_ARCHIVE-10*1024*1024)throw Error('照片總量超過 350 MB；請改在電腦分組封存');

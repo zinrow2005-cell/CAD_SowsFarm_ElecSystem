@@ -1,4 +1,4 @@
-/* V11.11.3 portable backup user interface — an explicit, offline-first workflow. */
+/* V11.11.9 portable backup user interface — an explicit, offline-first workflow. */
 (function(){'use strict';
 const hw=window.HWEquipment,media=window.HWPhotoStore,core=window.HWPortableCore;
 if(!hw||!media||!core)return;
@@ -14,7 +14,7 @@ ui.innerHTML=`<section class="v117-panel" role="dialog" aria-modal="true" aria-l
  <p class="v117-help">所有照片將逐張加密，包含高解析主圖（若有）及相容縮圖。匯出完成後請確認資料夾內的 .hwpack 檔案存在。檔案不會自動同步到其他裝置。</p>
  <label>設定至少 12 字元的備份密碼<input type="password" id="v117ExportPass" autocomplete="new-password" maxlength="200" placeholder="請使用不容易猜的長密碼"></label>
  <label>再次輸入密碼<input type="password" id="v117ExportAgain" autocomplete="new-password" maxlength="200" placeholder="確認密碼"></label>
- <div class="v117-actions"><button type="button" id="v117Export" class="v117-primary">① 製作加密備份檔</button><button type="button" id="v117Save" class="v117-primary" hidden>② 儲存到我的檔案夾</button></div><p class="v11111-verified" id="v11111ExportVerified" hidden role="status"></p>
+ <div class="v117-actions"><button type="button" id="v117Export" class="v117-primary">① 建立並驗證加密備份</button><button type="button" id="v117Save" class="v117-primary" hidden>② 儲存備份到指定資料夾</button><a id="v11119Download" class="v11119-download" href="#" download hidden>② 直接下載 .hwpack（備援）</a></div><p class="v11119-notice">請依序完成兩步：先產生備份，出現第二步後務必按下載或儲存。只完成加密不代表檔案已儲存到裝置。</p><p class="v11111-verified" id="v11111ExportVerified" hidden role="status"></p>
  </div>
  <div id="v117ImportArea" hidden>
  <p class="v117-help">先選擇 .hwpack，輸入密碼。系統會驗證**所有照片**與專案版本並展示數量，驗證完成前絕不修改目前資料。</p>
@@ -57,7 +57,16 @@ const mobileBar=document.querySelector('.mobilebar');if(mobileBar){const m=el('b
 if(top){const direct=el('button','v117-direct','▣ V11.7 完整專案匯入／匯出');direct.type='button';direct.addEventListener('click',open);top.prepend(direct);
  const old=top.querySelector('.v92-card');if(old){const adv=el('details','v117-old'),sum=el('summary','', '舊版 .hwb 備份相容工具（點擊展開）');adv.append(sum,old);top.appendChild(adv);}}
 const message=(s,bad=false)=>{$('v117Status').textContent=s;$('v117Status').dataset.error=bad?'true':'false';};
-let mode='export',review=null,prepared=null,busy=false,priorFocus=null;
+let mode='export',review=null,prepared=null,busy=false,priorFocus=null,downloadUrl=null;
+function releaseDownload(){
+ const link=$('v11119Download');if(link){link.hidden=true;link.removeAttribute('href');link.removeAttribute('download');}
+ if(downloadUrl){URL.revokeObjectURL(downloadUrl);downloadUrl=null;}
+}
+function enableDownload(file){
+ releaseDownload();downloadUrl=URL.createObjectURL(file.blob);
+ const link=$('v11119Download');link.href=downloadUrl;link.download=file.name;link.hidden=false;
+}
+
 // V11.11.3: the acceptance report is ephemeral, per backup and per device.
 let accept={comparisonOk:false,storageOk:false,storageChecked:false,photosReady:false,photoCount:0,sampleCount:0,sampleViewed:0,sourceFile:null};
 function resetAcceptance(){
@@ -73,60 +82,83 @@ function resetAcceptance(){
 function counts(p){const c=core.totals(p);return `設備 ${c.devices} 台／管線 ${c.routes} 條／照片 ${c.photos} 張／照片標記 ${c.markers} 處\n系統節點 ${c.systems} 個／維修紀錄 ${c.maintenance} 筆／欄格關聯 ${c.stallLinks} 個`}
 function coverageText(project,capacity,links){const c=core.coverage(project,capacity,links);return `資料類別核對｜已巡檢 ${c.inspected} 台／異常 ${c.abnormal} 台／待結案 ${c.workOrdersOpen} 筆\n陣列群組標示 ${c.arrays} 組／拆分設備 ${c.arrayMembers} 台／區段設備 ${c.segments} 個\n自訂圖示 ${c.customTypes} 種／設備樣板 ${c.templates} 個／配電端子 ${c.circuitTerminals} 個\n已填起訖設備管線 ${c.routeEndpoints} 條／欄位容量設定 ${c.capacitySaved?'有':'無'}／欄格設備關聯 ${c.stallLinksSaved?'有':'無'}`;}
 function setBusy(v){busy=!!v;ui.querySelectorAll('button').forEach(b=>{if(b.id!=='v117Close')b.disabled=busy;});$('v117Close').disabled=busy;}
-function changeTab(next){if(busy)return;resetAcceptance();mode=next;review=null;prepared=null;$('v117Save').hidden=true;$('v117Review').hidden=true;$('v11112Result').hidden=true;$('v11111ExportVerified').hidden=true;$('v117ExportArea').hidden=next!=='export';$('v117ImportArea').hidden=next!=='import';$('v117ModeExport').classList.toggle('active',next==='export');$('v117ModeImport').classList.toggle('active',next==='import');$('v117Typed').value='';$('v117Agreement').checked=false;message(next==='export'?'請確認照片齊全並設定備份密碼。':'選擇 .hwpack 後先預覽，不會立刻覆蓋本機。');}
+function changeTab(next){if(busy)return;releaseDownload();resetAcceptance();mode=next;review=null;prepared=null;$('v117Save').hidden=true;$('v117Review').hidden=true;$('v11112Result').hidden=true;$('v11111ExportVerified').hidden=true;$('v117ExportArea').hidden=next!=='export';$('v117ImportArea').hidden=next!=='import';$('v117ModeExport').classList.toggle('active',next==='export');$('v117ModeImport').classList.toggle('active',next==='import');$('v117Typed').value='';$('v117Agreement').checked=false;message(next==='export'?'請確認照片齊全並設定備份密碼。':'選擇 .hwpack 後先預覽，不會立刻覆蓋本機。');}
 function open(){priorFocus=document.activeElement;ui.hidden=false;hw.setWorkspace('equipment');changeTab('export');try{const p=hw.getData();$('v117Current').textContent='目前裝置\n'+counts({...p,stallLinks:window.HWStallLinks?.getBackupData?.()});$('v11111LocalCoverage').textContent=coverageText(p,window.HWStallCapacity?.getBackupData?.(),window.HWStallLinks?.getBackupData?.());$('v118PreflightResult').textContent='尚未執行備份前檢查。';}catch(e){$('v117Current').textContent='無法讀取設備資料：'+e.message;}ui.querySelector('.v117-panel').focus();$('side')?.classList.remove('open');}
-function close(){if(busy)return;resetAcceptance();ui.hidden=true;review=null;prepared=null;$('v117Save').hidden=true;$('v117ExportPass').value='';$('v117ExportAgain').value='';$('v117ImportPass').value='';$('v117File').value='';$('v117Typed').value='';priorFocus?.focus?.();}
+function close(){if(busy)return;releaseDownload();resetAcceptance();ui.hidden=true;review=null;prepared=null;$('v117Save').hidden=true;$('v117ExportPass').value='';$('v117ExportAgain').value='';$('v117ImportPass').value='';$('v117File').value='';$('v117Typed').value='';priorFocus?.focus?.();}
 launch.addEventListener('click',open);$('v117Close').onclick=close;
 ui.addEventListener('click',e=>{if(e.target===ui)close();});document.addEventListener('keydown',e=>{if(!ui.hidden&&e.key==='Escape'){e.preventDefault();close();}});
 async function runPreflight(){
  const output=$('v118PreflightResult'),button=$('v118Preflight');button.disabled=true;
  output.textContent='正在逐張核對本機照片及設備關聯…';
  try{
-  const p=hw.getData(),audit=await media.audit(p),report=window.HWSystemHealthV115?.scanProject?.(p);
+  const p=hw.getData(),photoIds=[...new Set((p.devices||[]).flatMap(d=>(d.photos||[]).map(ph=>ph.id)))];
+  const audit={total:photoIds.length,master:0,previewOnly:0,missing:0,problems:[]},missingPreviews=[],recoverable=[],unfixable=[],storageErrors=[];
+  // Query independently: IndexedDB preview access can fail while masters survive.
+  for(const id of photoIds){
+   let preview=null,original=null;
+   try{preview=await media.getPreview(id);}catch(e){storageErrors.push('縮圖 '+id+'：'+(e?.message||e));}
+   try{original=await media.getOriginal(id);}catch(e){storageErrors.push('原圖 '+id+'：'+(e?.message||e));}
+   if(!preview)missingPreviews.push(id);
+   if(!preview&&!original){audit.missing++;audit.problems.push(id);unfixable.push(id);}
+   else if(original){audit.master++;if(!preview)recoverable.push(id);}
+   else audit.previewOnly++;
+  }
+  // A nonessential system-health scan must not prevent a readable backup.
+  let report=null,scanError='';
+  try{report=window.HWSystemHealthV115?.scanProject?.(p);}catch(e){scanError=e?.message||String(e);}
   const problems=report?.problems||[],broken=problems.filter(x=>x.severity==='error'),waiting=problems.filter(x=>x.severity==='review');
   const markers=(p.devices||[]).reduce((n,d)=>n+(d.photos||[]).reduce((a,ph)=>a+(ph.markers||[]).length,0),0);
-  const photoIds=[...new Set((p.devices||[]).flatMap(d=>(d.photos||[]).map(ph=>ph.id)))],missingPreviews=[];
-  for(const id of photoIds){if(!await media.getPreview(id))missingPreviews.push(id);}
   const lines=[`照片 ${audit.total} 張｜高畫質 ${audit.master} 張｜僅縮圖 ${audit.previewOnly} 張｜缺失 ${audit.missing} 張`,
    `開關／設備照片標記 ${markers} 處｜資料異常 ${broken.length} 筆｜現場待核對 ${waiting.length} 筆`];
-  if(audit.missing)lines.push('⚠ 缺失照片 ID：'+audit.problems.slice(0,5).join('、')+'。請先補回照片，否則完整備份不能成功。');
-  if(missingPreviews.length)lines.push('⚠ 有 '+missingPreviews.length+' 張照片缺少相容縮圖（ID：'+missingPreviews.slice(0,4).join('、')+'）；即使尚有原圖，也需先重新建立縮圖才能製作完整備份。');
-  if(broken.length)lines.push('⚠ 資料關聯異常：'+broken.slice(0,4).map(x=>x.text).join('；')+'。備份不會自動改動這些資料。');
-  if(!audit.missing&&!missingPreviews.length&&!broken.length)lines.push('✓ 本機照片及已登錄關聯未發現可辨識的缺失；仍需將備份在另一裝置試還原。');
-  output.textContent=lines.join('\n');output.dataset.status=(audit.missing||missingPreviews.length)?'error':broken.length?'warning':'ok';
-  return {audit,broken,waiting,missingPreviews};
+  if(recoverable.length)lines.push('ⓘ '+recoverable.length+' 張照片只有原圖；製作備份時會在記憶體臨時重建縮圖，原始資料不變。');
+  if(unfixable.length)lines.push('⚠ 原圖與縮圖皆無法讀取：'+unfixable.slice(0,5).join('、')+'（共 '+unfixable.length+' 張）。為避免偽稱完整備份，這些照片未修復前會阻擋匯出。');
+  if(storageErrors.length)lines.push('⚠ 照片儲存讀取問題：'+storageErrors.slice(0,3).join('；')+'。如果仍能讀取原圖，可臨時重建縮圖。');
+  if(broken.length)lines.push('⚠ 資料關聯異常：'+broken.slice(0,4).map(x=>x.text).join('；')+'。本功能不會偷偷修改關聯。');
+  if(scanError)lines.push('ⓘ 額外的系統健康檢查無法執行：'+scanError+'（不影響已核對的照片備份）。');
+  if(!audit.missing&&!storageErrors.length&&!broken.length)lines.push('✓ 所需設備照片可讀取；仍須下載 .hwpack 並在另一台裝置確認。');
+  output.textContent=lines.join('\n');output.dataset.status=unfixable.length?'error':(broken.length||recoverable.length||storageErrors.length||scanError)?'warning':'ok';
+  return {audit,broken,waiting,missingPreviews,recoverable,unfixable};
  }catch(e){output.textContent='⚠ 健檢失敗：'+(e?.message||e);output.dataset.status='error';throw e;
  }finally{button.disabled=false;}
 }
 $('v118Preflight').onclick=async()=>{try{await runPreflight();}catch(e){message('健檢未完成：'+e.message,true);}};
 $('v117ModeExport').onclick=()=>changeTab('export');$('v117ModeImport').onclick=()=>changeTab('import');$('v117File').onchange=()=>{resetAcceptance();review=null;$('v117Review').hidden=true;$('v11112Result').hidden=true;};
 async function saveBlob(blob,name){
- // Desktop Chrome / Edge: explicitly choose a folder and filename.
+ // Only the second user gesture can open a file picker. On browsers without a
+ // usable File System Access API, keep a PERSISTENT anchor to the verified blob.
  if(typeof window.showSaveFilePicker==='function'){
-  const handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:'虎尾場完整設備備份',accept:{'application/octet-stream':['.hwpack']}}]});
-  const writable=await handle.createWritable();try{await writable.write(blob);await writable.close();}catch(e){try{await writable.abort();}catch(_){}throw e;}return'已寫入指定資料夾：'+handle.name;
+  try{
+   const handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:'虎尾場完整設備備份',accept:{'application/octet-stream':['.hwpack']}}]});
+   const writable=await handle.createWritable();try{await writable.write(blob);await writable.close();}catch(e){try{await writable.abort();}catch(_){}throw e;}
+   return '✓ 備份檔已寫入：'+handle.name+'。請到該資料夾確認檔案大小。';
+  }catch(e){
+   if(e?.name==='AbortError')throw Error('已取消儲存位置選擇；備份還在目前視窗，請再次按儲存或點下方「直接下載」');
+   // Picker unavailable or rejected by this browser: do not drop the prepared
+   // archive and never pretend that a download succeeded.
+   return '瀏覽器無法使用資料夾選擇器（'+(e?.message||'不支援')+'）。請改按下方「② 直接下載 .hwpack（備援）」；加密備份仍安全保留在目前視窗。';
+  }
  }
- // iPhone / iPad Safari: downloads go to Files / Downloads; can be moved afterwards.
- const href=URL.createObjectURL(blob);try{const a=document.createElement('a');a.href=href;a.download=name;document.body.appendChild(a);a.click();a.remove();}finally{setTimeout(()=>URL.revokeObjectURL(href),60000);}return'已啟動下載 '+name+'。請到「檔案」／下載項目確認檔案確實存在。';
+ return '此瀏覽器請點下方「② 直接下載 .hwpack（備援）」；如果是 iPhone／iPad，下載後請到「檔案」App 檢查。';
 }
 function updater(s,n,total){message(s+(total?` （${n}/${total}）`:''));}
 $('v117Export').onclick=async()=>{if(busy)return;try{
  if(hw.getRole()!=='admin')throw Error('請先切換本機管理者模式');
  const pass=$('v117ExportPass').value;if(pass!==$('v117ExportAgain').value)throw Error('兩次密碼不同');if(pass.length<12)throw Error('密碼至少 12 個字元');
- const check=await runPreflight();if(check.audit.missing||check.missingPreviews.length)throw Error('有缺失照片或縮圖（照片 '+check.audit.missing+' 張、縮圖 '+check.missingPreviews.length+' 張）；請先修復再匯出');const state=hw.getStorageState?.();if(state?.dirty)message('注意：本機自動儲存失敗，將從記憶體建立緊急完整備份，完成後請立即確認下載。',true);
- prepared=null;$('v117Save').hidden=true;$('v11111ExportVerified').hidden=true;setBusy(true);
+ const check=await runPreflight();if(check.audit.missing||check.unfixable.length)throw Error('有照片原圖與縮圖皆缺失（'+check.unfixable.slice(0,5).join('、')+'），不能建立完整備份；未遺失的設備資料不會被清除');const state=hw.getStorageState?.();if(state?.dirty)message('注意：本機自動儲存失敗，將從記憶體建立緊急完整備份，完成後請立即確認下載。',true);
+ releaseDownload();prepared=null;$('v117Save').hidden=true;$('v11111ExportVerified').hidden=true;setBusy(true);
  const result=await core.exportArchive({project:hw.getData(),photos:media,stallCapacity:window.HWStallCapacity?.getBackupData?.(),stallLinks:window.HWStallLinks?.getBackupData?.(),password:pass,onProgress:updater});
  // V11.11.2: verify the just-created encrypted archive, including every photo
  // and all saved project modules, *before* enabling the save button.
  const checked=await core.inspectArchive({file:result.blob,password:pass,validateData:hw.validateData,onProgress:updater});
- const expected=core.coverage(hw.getData(),window.HWStallCapacity?.getBackupData?.(),window.HWStallLinks?.getBackupData?.());
+ const expected=core.coverage(hw.validateData(hw.getData()),window.HWStallCapacity?.getBackupData?.(),window.HWStallLinks?.getBackupData?.());
  const actual=core.coverage(checked.validated.project,checked.meta.project.stallCapacity,checked.meta.project.stallLinks);
  if(JSON.stringify(expected)!==JSON.stringify(actual))throw Error('匯出後資料類別與筆數不一致，已禁止儲存；請先檢查專案');
- prepared=result;$('v117Save').hidden=false;
+ prepared=result;enableDownload(result);$('v117Save').hidden=false;
  $('v11111ExportVerified').textContent='✓ 匯出後已重新解密並驗證 '+checked.validated.images.length+' 個照片加密區塊、專案資料及所有資料類別。仍請確認下載檔案存在，並在另一台裝置試還原。';$('v11111ExportVerified').hidden=false;
  $('v117ExportPass').value='';$('v117ExportAgain').value='';
- message('加密完成，請立即按 ②「儲存到我的檔案夾」。檔案大小：'+(result.blob.size/1048576).toFixed(1)+' MB；高解析原圖 '+result.master+' 張，僅縮圖 '+result.previewOnly+' 張。尚未儲存前請勿關閉此視窗。');
+ message('✓ 加密與解密驗證完成，但還沒下載！請點 ②「儲存到指定資料夾」或「直接下載 .hwpack」。檔案大小：'+(result.blob.size/1048576).toFixed(1)+' MB；高解析原圖 '+result.master+' 張，僅縮圖 '+result.previewOnly+' 張。請確認檔案出現在裝置檔案夾，再關閉視窗。');$('v11119Download').scrollIntoView({block:'nearest'});
  }catch(e){message('匯出未完成：'+e.message,true);}finally{setBusy(false);}};
+$('v11119Download').addEventListener('click',()=>{if(!prepared)return;message('已請瀏覽器下載 '+prepared.name+'；請到下載項目或「檔案」確認實際存在且大小約 '+(prepared.blob.size/1048576).toFixed(1)+' MB。未確認前不要清除原裝置資料。');});
 $('v117Save').onclick=async()=>{if(!prepared||busy)return;try{setBusy(true);const msg=await saveBlob(prepared.blob,prepared.name);message(msg+'\n保留密碼，並在另一台裝置測試還原後，才能視為有效備份。');}catch(e){message('尚未完成儲存：'+e.message+'；你仍可再次按下儲存按鈕。',true);}finally{setBusy(false);}};
 $('v117Inspect').onclick=async()=>{if(busy)return;try{
  if(hw.getRole()!=='admin')throw Error('請先切換本機管理者模式');const file=$('v117File').files?.[0];if(!file)throw Error('請選擇 .hwpack 完整備份檔');

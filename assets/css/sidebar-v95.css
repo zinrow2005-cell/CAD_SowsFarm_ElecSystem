@@ -75,3 +75,26 @@
 #v95Feed.is-active{border-color:#ffc49e;background:#593c32}
 #v95Feed>span{color:#f19f72}
 #v83EquipPanel .v84-route-actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+
+/* V11.12.0 compact, progressive left navigation; no functionality removed. */
+#hw120Groups{display:grid;gap:9px;margin:9px 0 14px;min-width:0}
+.hw120-group{min-width:0;border:1px solid #335b6e;background:#0e2939;border-radius:12px;overflow:hidden}
+.hw120-summary{list-style:none;cursor:pointer;padding:12px 30px 11px 12px;position:relative;display:flex;flex-direction:column;gap:3px;min-height:49px}
+.hw120-summary::-webkit-details-marker{display:none}
+.hw120-summary .hw120-sum-title{color:#e7f8fa;font-size:12px;font-weight:800;letter-spacing:.015em}
+.hw120-summary small{color:#9fbfcb;font-size:10px;line-height:1.45}
+.hw120-summary .hw120-chevron{position:absolute;right:13px;top:15px;color:#8fdecf;transform:rotate(-90deg);font-size:16px}
+.hw120-group[open]>.hw120-summary .hw120-chevron{transform:rotate(0deg)}
+.hw120-body{border-top:1px solid #284d60;padding:7px 9px 9px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.hw120-body > button.hw120-row{margin:0!important;box-sizing:border-box;width:100%!important;min-width:0;max-width:100%;min-height:40px;font-size:12px!important;line-height:1.45;text-align:left;overflow-wrap:anywhere;display:flex;align-items:center;gap:8px;padding:9px 10px!important;border-radius:9px}
+.hw120-body #v110Launch{margin:0!important;width:100%;min-height:44px}
+.hw120-body #v110Launch small{font-size:10px}
+.hw120-body #v84Layers,.hw120-body #v84Items{margin:0!important;border-color:#365b6b}
+.hw120-body #v95Advanced,.hw120-body #v93CloudPanel{margin:0!important}
+.hw120-body #v95Advanced .v95-group-summary{padding:10px 12px!important}
+.hw120-body > button:focus-visible,.hw120-summary:focus-visible{outline:2px solid #87e8da;outline-offset:2px}
+@media (max-width:760px){
+ .hw120-summary{min-height:48px;padding-top:11px;padding-bottom:11px}
+ .hw120-body > button.hw120-row{min-height:44px;font-size:12px!important}
+}
