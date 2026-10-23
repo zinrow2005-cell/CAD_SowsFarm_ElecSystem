@@ -310,3 +310,26 @@
 .v11103-size-grid input:focus-visible{outline:2px solid #6de4d2;outline-offset:1px}
 .v11103-size-note{font-size:11px;line-height:1.6;color:#a9d0d8;margin:8px 0 12px}
 @media(max-width:360px){.v11103-size-grid{gap:7px}.v11103-size-grid input{padding:7px}}
+
+/* V11.11.7 — Tool/icon glyphs are 75% of former size; keep button hit areas.
+   This affects controls and palette graphics, NOT CAD placed-device dimensions. */
+.v84-item-icon,.v84-design-preview{width:26.25px;height:26.25px;font-size:10.5px}
+.v84-recent-chip .v84-item-icon{width:18px;height:18px;font-size:7.5px}
+.v84-symbol{font-size:10.5px}
+.v84-tool.icon-only{font-size:15.75px}
+.v83-tab-icon{font-size:12px}
+.viewer .tool{font-size:13.5px}
+.v119-card-icon{font-size:18px}
+.v119-mobile-nav span{font-size:14.25px}
+.v1192-result-icon{font-size:15px}
+.v1194-head-icon{font-size:22.5px}
+.v84-device-tile .v88-pictogram svg,.v84-device-tile .v84-item-icon svg{max-width:100%;max-height:100%}
+.hw-array-grip{cursor:crosshair;touch-action:none}
+.hw-array-grip-hit{pointer-events:all}
+.v11117-live-size{padding:9px 8px;border:1px solid #3a7080;border-radius:10px;margin:7px 0;background:#102f41}
+.v11117-live-size>label{color:#c7f6e8;font-size:11px;font-weight:700;display:block}
+.v11117-live-size input[type="range"]{display:block;accent-color:#65dbc4;width:100%;height:22px;margin:3px 0 6px;cursor:pointer;touch-action:pan-y}
+.v11117-live-size .v11103-size-grid{margin-top:6px}
+#hwLiveAppearanceHint{display:block;color:#78e6c9;font-size:11px;line-height:1.55}
+#hwLiveAppearanceHint[hidden]{display:none}
+@media(max-width:760px){.v84-tool.icon-only{font-size:13.5px}.viewer .tool{font-size:13.5px}.v119-mobile-nav span{font-size:14.25px}.v84-device-tile .v84-item-icon{width:26.25px;height:26.25px}}

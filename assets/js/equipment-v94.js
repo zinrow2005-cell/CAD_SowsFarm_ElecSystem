@@ -74,7 +74,12 @@ const validSize=v=>Math.max(50,Math.min(300,Number(v)||100));
 const validAxis=v=>v==null||v===''?100:Math.max(30,Math.min(300,Math.round(Number(v)||100)));
 const iconAxis=(d,k)=>validAxis(d[k])/100;
 const ARRAY_TYPES=new Set(['fan','smallFan','guideFan','ceilingFan','roofFan','lighting','drinker','sprayer']);
-const validArray=raw=>{if(!raw||typeof raw!=='object'||raw.enabled!==true)return null;const num=(v,a,b,d)=>Number.isFinite(Number(v))?Math.min(b,Math.max(a,Number(v))):d;return{enabled:true,count:Math.round(num(raw.count,2,20,3)),spacing:num(raw.spacing,1.3,6,2.3),labelPosition:['top','bottom','off'].includes(raw.labelPosition)?raw.labelPosition:'bottom'};};
+// V11.11.6: gap controls array span; individual fan glyphs retain fixed 1.36 CAD-unit size.
+const ARRAY_GLYPH_ENVELOPE=1.65, ARRAY_MIN_GAP=1.3, ARRAY_DRAG_MIN_GAP=1.55, ARRAY_MAX_SPAN=65;
+const arrayMaxGap=count=>Math.min(25,(ARRAY_MAX_SPAN-ARRAY_GLYPH_ENVELOPE)/(count-1));
+const validArray=raw=>{if(!raw||typeof raw!=='object'||raw.enabled!==true)return null;const num=(v,a,b,d)=>Number.isFinite(Number(v))?Math.min(b,Math.max(a,Number(v))):d;
+ const count=Math.round(num(raw.count,2,20,3));
+ return{enabled:true,count,spacing:num(raw.spacing,ARRAY_MIN_GAP,arrayMaxGap(count),2.3),labelPosition:['top','bottom','off'].includes(raw.labelPosition)?raw.labelPosition:'bottom'};};
 const arrayLength=a=>a?1.65+(a.count-1)*a.spacing:0;
 const SEGMENT_TYPES=new Set(['curtain','airInlet','airOutlet','feedLine','feedAuger','feedTrough','mist','ventWall','cableTrunk','warningZone']);
 const validSegment=raw=>{if(!raw||typeof raw!=='object'||raw.enabled!==true)return null;
@@ -96,6 +101,7 @@ const $=(id)=>document.getElementById(id);
 const map=$('plan'),canvas=$('canvas'),icons=$('eqIcons'),routesSvg=$('eqRoutes'),preview=$('eqPreview');
 const initial={app:'HuweiEquipment',version:'V11.6',updatedAt:'',customTypes:[],devices:[],routes:[],templates:[],maintenance:[],systemNodes:[]};
 let data=JSON.parse(JSON.stringify(initial));
+let appearanceDraft=null;
 let currentRole='staff', selected=null, action=null, actionType='',drawing=[], segmentHover=null, segmentHoverRaw=null, wallSnapMode=false, pointerDown=null, loadSource='尚未設定';
 let history=[],historyIndex=-1,orthogonal=false,repeatPlacement=false,editorOpened=false;
 let placementSources=[],activeTemplate=null;
@@ -274,7 +280,38 @@ function nameplateLocation(d,sizeX,sizeY,width){
  }
  return best;
 }
-function renderIcons(){icons.replaceChildren();v115IconById.clear();for(const d of data.devices){const type=byType[d.type]||builtins.other,gname=type.group;if(!groupVisible(gname))continue;
+// Live SVG appearance preview: no storage writes, no history and no mutation
+// until the user clicks Save. Closing the editor discards all draft appearance.
+function previewAppearance(){
+ const d=selected?.kind==='device'&&data.devices.find(x=>x.id===selected.id);
+ if(!d||currentRole!=='admin'||!editorOpened||d.locked)return false;
+ const val=(id,fallback)=>{const n=Number($(id)?.value);return Number.isFinite(n)?n:fallback;};
+ const props={
+  size:validSize(val('eqIconSize',d.size||byType[d.type].size||100)),
+  widthScale:validAxis(val('eqIconWidth',validAxis(d.widthScale))),
+  heightScale:validAxis(val('eqIconHeight',validAxis(d.heightScale))),
+  rotation:((val('eqRotation',d.rotation)%360)+360)%360,
+  shape:$('eqIconShape')?.value||d.shape,
+  color:$('eqIconColor')?.value||d.color,
+  showLabel:$('eqIconLabel')?.checked??d.showLabel
+ };
+ const mode=$('hwSegmentMode')?.value;
+ if(SEGMENT_TYPES.has(d.type)&&mode==='bar')props.segment=validSegment({enabled:true,length:val('hwSegmentLength',6),thickness:val('hwSegmentThickness',.65),pattern:$('hwSegmentPattern')?.value,cap:$('hwSegmentCap')?.value,labelPosition:$('hwSegmentLabel')?.value,centerGlyph:$('hwSegmentGlyph')?.checked});
+ else if(SEGMENT_TYPES.has(d.type)&&mode==='icon')props.segment=null;
+ if(ARRAY_TYPES.has(d.type)&&$('hwArrayMode')?.value==='array')props.array=validArray({enabled:true,count:val('hwArrayCount',3),spacing:val('hwArraySpacing',2.3),labelPosition:$('hwArrayLabel')?.value});
+ else if(ARRAY_TYPES.has(d.type))props.array=null;
+ appearanceDraft={id:d.id,props};
+ renderIcons();
+ if($('hwLiveAppearanceHint'))$('hwLiveAppearanceHint').hidden=false;
+ return true;
+}
+function discardAppearancePreview(){
+ if(!appearanceDraft)return;
+ appearanceDraft=null;
+ if($('hwLiveAppearanceHint'))$('hwLiveAppearanceHint').hidden=true;
+ renderIcons();
+}
+function renderIcons(){icons.replaceChildren();v115IconById.clear();for(const stored of data.devices){const d=appearanceDraft&&appearanceDraft.id===stored.id&&editorOpened?{...stored,...appearanceDraft.props}:stored;const type=byType[d.type]||builtins.other,gname=type.group;if(!groupVisible(gname))continue;
  const selectedIcon=(selected?.kind==='device'&&selected.id===d.id)||selectedIds.has(d.id);
  const size=(d.size||type.size||100)/100,sizeX=size*iconAxis(d,'widthScale'),sizeY=size*iconAxis(d,'heightScale'),shape=d.shape||type.shape||'circle',color=d.color||type.color||groups[gname].color;
  const dx=iconX(d),dy=iconY(d);
@@ -342,6 +379,18 @@ function renderIcons(){icons.replaceChildren();v115IconById.clear();for(const d 
  g.addEventListener('click',e=>{
  if(!action&&e.detail!==0)return; // V11.8.5 pointerup handles single click/tap after pan detection.
  e.stopPropagation();if(action==='route'){addRoutePoint(e,d.id);return;}if(action==='place')return;if(multiSelectMode||(currentRole==='admin'&&e.shiftKey)){if(!multiSelectMode)setMultiMode(true);toggleMany(d.id);return;}select('device',d.id);});
+ // All long-format equipment uses free 360° end grips (no forced vertical axis).
+ if((arr||seg)&&selectedIcon&&currentRole==='admin'&&!d.locked&&!action&&!multiSelectMode){
+  for(const side of [-1,1]){
+   const hg=node('g',{class:'hw-array-grip',transform:`rotate(${d.rotation||0}) translate(${(side*visualLength/2).toFixed(4)} 0)`,'data-array-end':side,'role':'button','aria-label':side<0?'自由角度拖曳起端':'自由角度拖曳末端'});
+   hg.appendChild(node('circle',{r:'.48',fill:'transparent',stroke:'none',class:'hw-array-grip-hit'}));
+   hg.appendChild(node('circle',{r:'.20',fill:'#f7fffb',stroke:'#21bfa6','stroke-width':'.09',class:'hw-array-grip-dot','pointer-events':'none'}));
+   hg.appendChild(node('path',{d:'M-.07 -.07 L.07 .07 M-.07 .07 L.07 -.07',stroke:'#157f76','stroke-width':'.045','pointer-events':'none'}));
+   hg.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();});
+   hg.addEventListener('pointerdown',ev=>startLinearEndDrag(ev,d.id,side,seg?'segment':'array'));
+   g.appendChild(hg);
+  }
+ }
  g.addEventListener('pointerdown',e=>{
  // V11.9.5: admin + unlocked equipment -> ordinary mouse/stylus/touch drag.
  // Panning on empty CAD remains unchanged; locked objects and staff still pan.
@@ -425,6 +474,49 @@ function setSegmentWallSnap(enabled){
  if(drawing.length&&segmentHoverRaw){segmentHover=wallAlignedEnd(drawing[0],segmentHoverRaw);}
  renderPreview();return wallSnapMode;
 }
+// V11.11.7: free-angle end handles for BOTH segments and arrays.
+// The opposite endpoint stays fixed visually; no wall, grid or icon magnet may
+// override the angle. Physical equipment coordinates and route links are untouched.
+function startLinearEndDrag(e,id,side,kind){
+ if(e.button!==0||e.isPrimary===false||currentRole!=='admin'||action||multiSelectMode)return;
+ const d=data.devices.find(v=>v.id===id),spec=d&&validSegment(kind==='segment'?d.segment:null)||d&&validArray(kind==='array'?d.array:null);
+ if(!d||d.locked||!spec)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ const before={x:iconX(d),y:iconY(d),rotation:num(d.rotation)||0,segment:clone(d.segment),array:clone(d.array)};
+ const length=kind==='array'?arrayLength(spec):spec.length;
+ const rad=before.rotation*Math.PI/180,ax={x:Math.cos(rad),y:Math.sin(rad)};
+ const fixed={x:before.x-side*ax.x*length/2,y:before.y-side*ax.y*length/2};
+ let changed=false,ended=false;
+ try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+ canvas.classList.add('hw-array-resizing');
+ function move(ev){
+  if(ended||ev.pointerId!==e.pointerId)return;
+  ev.preventDefault();ev.stopPropagation();
+  const pt=svgPoint(ev),vx=pt.x-fixed.x,vy=pt.y-fixed.y,rawLength=Math.hypot(vx,vy);
+  if(rawLength<.001)return;
+  const minLength=kind==='array'?ARRAY_GLYPH_ENVELOPE+(spec.count-1)*ARRAY_DRAG_MIN_GAP:.6;
+  const maxLength=kind==='array'?Math.min(ARRAY_MAX_SPAN,ARRAY_GLYPH_ENVELOPE+(spec.count-1)*arrayMaxGap(spec.count)):45;
+  const targetLength=Math.max(minLength,Math.min(maxLength,rawLength));
+  const nx=vx/rawLength,ny=vy/rawLength;
+  const actualLength=kind==='array'?ARRAY_GLYPH_ENVELOPE+(spec.count-1)*Math.max(ARRAY_DRAG_MIN_GAP,Math.min(arrayMaxGap(spec.count),(targetLength-ARRAY_GLYPH_ENVELOPE)/(spec.count-1))):targetLength;
+  const moving={x:fixed.x+nx*actualLength,y:fixed.y+ny*actualLength};
+  const center={x:roundPos((fixed.x+moving.x)/2),y:roundPos((fixed.y+moving.y)/2)};
+  if(!inMap(center.x,center.y)||!inMap(moving.x,moving.y)||!inMap(fixed.x,fixed.y))return;
+  // + endpoint is along +X of the group; - endpoint is along -X.
+  const angle=((Math.atan2(side*ny,side*nx)*180/Math.PI)%360+360)%360;
+  d.rotation=roundPos(angle);d.displayX=center.x;d.displayY=center.y;
+  if(kind==='array')d.array={...spec,spacing:roundPos((actualLength-ARRAY_GLYPH_ENVELOPE)/(spec.count-1))};
+  else d.segment={...spec,length:roundPos(actualLength)};
+  changed=changed||Math.abs(d.rotation-before.rotation)>.01||Math.hypot(center.x-before.x,center.y-before.y)>.01;
+  renderIcons();
+ }
+ function cleanup(){window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',cancel);canvas.classList.remove('hw-array-resizing');try{if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);}catch(_){}}
+ function revert(){d.displayX=before.x;d.displayY=before.y;d.rotation=before.rotation;d.segment=before.segment;d.array=before.array;}
+ function up(ev){if(ended||ev.pointerId!==e.pointerId)return;ended=true;cleanup();if(changed){save();fillEditor();notify((kind==='array'?'陣列':'長條')+'自由角度 '+d.rotation.toFixed(1)+'°，排列長度已更新');}renderAll();}
+ function cancel(ev){if(ended||ev.pointerId!==e.pointerId)return;ended=true;cleanup();revert();renderAll();}
+ window.addEventListener('pointermove',move,{passive:false});window.addEventListener('pointerup',up);window.addEventListener('pointercancel',cancel);
+}
+function startArrayEndDrag(e,id,side){return startLinearEndDrag(e,id,side,'array');}
 function renderPreview(){preview.replaceChildren();updateAngleBar();
  if((action==='segment'||action==='array')&&drawing.length&&segmentHover){const a=drawing[0],b=segmentHover;const l=Math.hypot(b.x-a.x,b.y-a.y);if(l>.1){preview.appendChild(node('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#7de9d5','stroke-width':'.38','stroke-opacity':'.38'}));preview.appendChild(node('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#d9fff5','stroke-width':'.06','stroke-dasharray':'.26 .12'}));preview.appendChild(node('circle',{cx:a.x,cy:a.y,r:'.19',fill:'#8cf4d9'}));preview.appendChild(node('circle',{cx:b.x,cy:b.y,r:'.19',fill:'#8cf4d9'}));}return;}
  if(action!=='route'||!drawing.length)return;preview.appendChild(node('polyline',{points:pathCoords(drawing),fill:'none',stroke:groups[actionType].color,'stroke-width':'.18','stroke-dasharray':'.35 .2'}));drawing.forEach(p=>{const q=routePoint(p);preview.appendChild(node('circle',{cx:q.x,cy:q.y,r:'.22',fill:groups[actionType].color}));});}
@@ -507,7 +599,7 @@ function addRoutePoint(e,explicitId){
  }
 }
 function cancelAction(){action=null;actionType='';drawing=[];segmentHover=null;segmentHoverRaw=null;$('eqPlaceTip').hidden=true;$('eqAddDevice').classList.remove('active');$('eqStartRoute').classList.remove('active');$('eqFinishRoute').disabled=true;$('eqRoutePoints').textContent='0 個節點';renderPreview();fire('action');}
-function roleSet(role){currentRole=role==='admin'?'admin':'staff';document.querySelectorAll('.role-switch').forEach(el=>{const on=el.dataset.role===currentRole;el.classList.toggle('is-active',on);el.setAttribute('aria-pressed',String(on));});$('eqAdmin').hidden=currentRole!=='admin';$('eqRoleNote').textContent=currentRole==='admin'?'管理者本機編輯：可增修圖上設備；這不是帳號驗證，發佈仍須 GitHub 權限。':'員工檢視：可勾選所有圖層、查看設備資料，不可透過此畫面增修。';if(currentRole!=='admin'){cancelAction();multiSelectMode=false;selectedIds.clear();}editorOpened=false;showInspector();updateFooter();fire('role');}
+function roleSet(role){appearanceDraft=null;currentRole=role==='admin'?'admin':'staff';document.querySelectorAll('.role-switch').forEach(el=>{const on=el.dataset.role===currentRole;el.classList.toggle('is-active',on);el.setAttribute('aria-pressed',String(on));});$('eqAdmin').hidden=currentRole!=='admin';$('eqRoleNote').textContent=currentRole==='admin'?'管理者本機編輯：可增修圖上設備；這不是帳號驗證，發佈仍須 GitHub 權限。':'員工檢視：可勾選所有圖層、查看設備資料，不可透過此畫面增修。';if(currentRole!=='admin'){cancelAction();multiSelectMode=false;selectedIds.clear();}editorOpened=false;showInspector();renderIcons();updateFooter();fire('role');}
 function syncLayerChecks(){document.querySelectorAll('[data-eq-toggle]').forEach(el=>{el.checked=!!visibility[el.dataset.eqToggle];});}
 function renderList(){const ul=$('eqList');ul.replaceChildren();const q=$('eqSearch').value.trim().toLowerCase();const entries=[];data.devices.forEach(d=>{const t=byType[d.type];if([d.name,d.zone,d.note,t.label].join(' ').toLowerCase().includes(q))entries.push({kind:'device',id:d.id,label:d.name,info:t.label+(d.zone?' · '+d.zone:''),color:groups[t.group].color,symbol:t.symbol});});data.routes.forEach(r=>{if([r.name,r.note,groups[r.group].name].join(' ').toLowerCase().includes(q))entries.push({kind:'route',id:r.id,label:r.name,info:groups[r.group].name+' · '+r.points.length+' 個節點',color:groups[r.group].color,symbol:'線'});});if(!entries.length){const el=document.createElement('div');el.className='v82-empty';el.textContent=data.devices.length?'找不到符合的設備／線路':'目前尚未放置設備。管理者可先選擇設備類型，再點擊底圖定位。';ul.appendChild(el);return;}
  if(entries.length>100){const tip=document.createElement('div');tip.className='v115-more';tip.textContent=`共 ${entries.length} 筆符合資料，先顯示前 100 筆；請繼續輸入關鍵字縮小範圍。`;ul.appendChild(tip);}
@@ -522,8 +614,10 @@ function fastSelectDevice(id,previous){
  const target=v115IconById.get(id);if(!target)return false;
  // SVG paint order is DOM order: raise the currently selected marker above all other markers.
  if(target.parentNode===icons&&icons.lastElementChild!==target)icons.appendChild(target);
+ // Both array and segment end grips require a full active-selection redraw.
+ if(validArray(d.array)||validSegment(d.segment)){renderIcons();renderList();updateFooter();fire('data');return true;}
  const previousEl=previous?.kind==='device'?v115IconById.get(previous.id):null;
- if(previousEl&&previousEl!==target){previousEl.classList.remove('is-selected');previousEl.querySelectorAll('.v88-selection-halo,.v88-nameplate').forEach(n=>n.remove());}
+ if(previousEl&&previousEl!==target){previousEl.classList.remove('is-selected');previousEl.querySelectorAll('.v88-selection-halo,.v88-nameplate,.hw-array-grip').forEach(n=>n.remove());}
  for(const g of [target]){
   const isActive=true;g.classList.toggle('is-selected',isActive);
   g.querySelectorAll('.v88-selection-halo').forEach(n=>n.remove());
@@ -547,7 +641,7 @@ function fastSelectDevice(id,previous){
  renderList();updateFooter();fire('data');
  return true;
 }
-function select(kind,id){const previous=selected;if(!multiSelectMode)selectedIds.clear();selected={kind,id};showInspector();
+function select(kind,id){if(appearanceDraft&&appearanceDraft.id!==id)appearanceDraft=null;const previous=selected;if(!multiSelectMode)selectedIds.clear();selected={kind,id};showInspector();
  if(kind==='device'&&!multiSelectMode&&fastSelectDevice(id,previous))return;
  renderAll();}
 function showInspector(){const device=selected?.kind==='device'?data.devices.find(d=>d.id===selected.id):null;const route=selected?.kind==='route'?data.routes.find(r=>r.id===selected.id):null;
@@ -557,7 +651,7 @@ function showInspector(){const device=selected?.kind==='device'?data.devices.fin
  $('eqOpenEditor').hidden=!(currentRole==='admin'&&device);$('eqEditor').hidden=!(currentRole==='admin'&&device);$('eqRouteEditor').hidden=!(currentRole==='admin'&&route);
  if(currentRole==='admin'&&device)fillEditor();if(currentRole==='admin'&&route){$('eqRouteName').value=route.name;$('eqRouteNote').value=route.note;}fire('selection');
 }
-function fillEditor(){const d=selected?.kind==='device'?data.devices.find(x=>x.id===selected.id):null;if(!d)return;$('eqChangeType').value=d.type;$('eqName').value=d.name;$('eqZone').value=d.zone;$('eqNote').value=d.note;$('eqStatusSelect').value=d.status;$('eqRotation').value=d.rotation;$('eqX').value=d.x.toFixed(4);$('eqY').value=d.y.toFixed(4);$('eqWaterSources').hidden=d.type!=='threeWay';$('eqSourceTower').checked=d.waterSources.includes('tower');$('eqSourceGround').checked=d.waterSources.includes('groundwater');$('eqSourceTap').checked=d.waterSources.includes('tap');$('eqDeviceFields').replaceChildren();(d.fields||[]).forEach(f=>addFieldRow(f.key,f.value));$('eqIconShape').value=d.shape||byType[d.type].shape||'circle';$('eqIconColor').value=d.color||byType[d.type].color||groups[byType[d.type].group].color;$('eqIconSize').value=d.size||byType[d.type].size||100;$('eqIconWidth').value=validAxis(d.widthScale);$('eqIconHeight').value=validAxis(d.heightScale);const seg=validSegment(d.segment),arr=validArray(d.array);if($('hwSegmentMode')){$('hwSegmentMode').value=seg?'bar':'icon';$('hwSegmentLength').value=seg?.length??6;$('hwSegmentThickness').value=seg?.thickness??.65;$('hwSegmentPattern').value=seg?.pattern||'auto';$('hwSegmentCap').value=seg?.cap||'round';$('hwSegmentLabel').value=seg?.labelPosition||'bottom';$('hwSegmentGlyph').checked=!!seg?.centerGlyph;const box=$('hwSegmentParams');if(box)box.hidden=!seg;const mode=$('hwSegmentBox');if(mode)mode.hidden=!SEGMENT_TYPES.has(d.type);}if($('hwArrayBox')){$('hwArrayBox').hidden=!ARRAY_TYPES.has(d.type);$('hwArrayMode').value=arr?'array':'icon';$('hwArrayParams').hidden=!arr;$('hwArrayCount').value=arr?.count||3;$('hwArraySpacing').value=arr?.spacing||2.3;$('hwArrayLabel').value=arr?.labelPosition||'bottom';const splitCount=$('hwSplitCount');if(splitCount)splitCount.textContent=arr?'目前 '+arr.count+' 台':'尚未建立陣列';}syncSegmentSizeFields();$('eqIconLocked').checked=!!d.locked;$('eqIconLabel').checked=d.showLabel!==false;}
+function fillEditor(){const d=selected?.kind==='device'?data.devices.find(x=>x.id===selected.id):null;if(!d)return;$('eqChangeType').value=d.type;$('eqName').value=d.name;$('eqZone').value=d.zone;$('eqNote').value=d.note;$('eqStatusSelect').value=d.status;$('eqRotation').value=d.rotation;$('eqX').value=d.x.toFixed(4);$('eqY').value=d.y.toFixed(4);$('eqWaterSources').hidden=d.type!=='threeWay';$('eqSourceTower').checked=d.waterSources.includes('tower');$('eqSourceGround').checked=d.waterSources.includes('groundwater');$('eqSourceTap').checked=d.waterSources.includes('tap');$('eqDeviceFields').replaceChildren();(d.fields||[]).forEach(f=>addFieldRow(f.key,f.value));$('eqIconShape').value=d.shape||byType[d.type].shape||'circle';$('eqIconColor').value=d.color||byType[d.type].color||groups[byType[d.type].group].color;$('eqIconSize').value=d.size||byType[d.type].size||100;$('eqIconWidth').value=validAxis(d.widthScale);$('eqIconHeight').value=validAxis(d.heightScale);const seg=validSegment(d.segment),arr=validArray(d.array);if($('hwSegmentMode')){$('hwSegmentMode').value=seg?'bar':'icon';$('hwSegmentLength').value=seg?.length??6;$('hwSegmentThickness').value=seg?.thickness??.65;$('hwSegmentPattern').value=seg?.pattern||'auto';$('hwSegmentCap').value=seg?.cap||'round';$('hwSegmentLabel').value=seg?.labelPosition||'bottom';$('hwSegmentGlyph').checked=!!seg?.centerGlyph;const box=$('hwSegmentParams');if(box)box.hidden=!seg;const mode=$('hwSegmentBox');if(mode)mode.hidden=!SEGMENT_TYPES.has(d.type);}if($('hwArrayBox')){$('hwArrayBox').hidden=!ARRAY_TYPES.has(d.type);$('hwArrayMode').value=arr?'array':'icon';$('hwArrayParams').hidden=!arr;$('hwArrayCount').value=arr?.count||3;$('hwArraySpacing').value=arr?.spacing||2.3;if($('hwArraySpan'))$('hwArraySpan').value=arrayLength(arr||{count:3,spacing:2.3}).toFixed(2);$('hwArrayLabel').value=arr?.labelPosition||'bottom';const splitCount=$('hwSplitCount');if(splitCount)splitCount.textContent=arr?'目前 '+arr.count+' 台':'尚未建立陣列';}syncSegmentSizeFields();$('eqIconLocked').checked=!!d.locked;$('eqIconLabel').checked=d.showLabel!==false;}
 function syncSegmentSizeFields(){
  const isSegment=$('hwSegmentMode')?.value==='bar';
  const axisRow=$('eqIconWidth')?.closest('.v11103-size-grid');
@@ -569,7 +663,7 @@ function setData(raw,source,store=false){if(raw&&Array.isArray(raw.photoAssets))
 function downloadable(filename,obj){const blob=new Blob([JSON.stringify(obj,null,2)+'\n'],{type:'application/json;charset=utf-8'});const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
 function addNew(type,p,segmentSpec=null,arraySpec=null){const t=byType[type];if(!t)return;
  const preset=activeTemplate&&data.templates.find(x=>x.id===activeTemplate&&x.type===type);
- const d={id:newId('d'),type,x:snapPos(p.x),y:snapPos(p.y),name:preset?.name||t.label,zone:'',status:'planned',rotation:0,note:preset?.note||t.defaultNote||'',waterSources:type==='threeWay'?[...(preset?.waterSources||placementSources)]:[],valveSelection:'unknown',fields:clone(preset?.fields||t.defaultFields||[]),shape:preset?.shape||null,color:preset?.color||null,size:preset?.size||null,widthScale:validAxis(preset?.widthScale),heightScale:validAxis(preset?.heightScale),segment:SEGMENT_TYPES.has(type)?validSegment(segmentSpec||preset?.segment):null,array:ARRAY_TYPES.has(type)?validArray(arraySpec||preset?.array):null,locked:false,showLabel:preset?.showLabel!==false};
+ const d={id:newId('d'),type,x:(segmentSpec||arraySpec)?roundPos(p.x):snapPos(p.x),y:(segmentSpec||arraySpec)?roundPos(p.y):snapPos(p.y),name:preset?.name||t.label,zone:'',status:'planned',rotation:0,note:preset?.note||t.defaultNote||'',waterSources:type==='threeWay'?[...(preset?.waterSources||placementSources)]:[],valveSelection:'unknown',fields:clone(preset?.fields||t.defaultFields||[]),shape:preset?.shape||null,color:preset?.color||null,size:preset?.size||null,widthScale:validAxis(preset?.widthScale),heightScale:validAxis(preset?.heightScale),segment:SEGMENT_TYPES.has(type)?validSegment(segmentSpec||preset?.segment):null,array:ARRAY_TYPES.has(type)?validArray(arraySpec||preset?.array):null,locked:false,showLabel:preset?.showLabel!==false};
  if((segmentSpec||arraySpec)&&typeof (segmentSpec||arraySpec).rotation==='number')d.rotation=(segmentSpec||arraySpec).rotation;const spot=(segmentSpec||arraySpec)?{ok:true,x:d.x,y:d.y}:magnetSolve({x:d.x,y:d.y},d);if(!spot.ok){notify('附近圖標過密，請選擇其他位置放置');return;}d.displayX=spot.x;d.displayY=spot.y;window.dispatchEvent(new CustomEvent('hw-v100-magnet',{detail:{...spot,mode:'place',type}}));
  data.devices.push(d);save();const repeated=repeatPlacement&&action!=='segment'&&action!=='array';if(!repeated)cancelAction();select('device',d.id);notify('已放置 '+t.label+(repeated?'，可繼續點圖新增':'，點選可編輯或複製'));}
 // V11.10.6: atomically replace a visual array with separately editable physical devices.
@@ -711,7 +805,7 @@ function addArrayPoint(e){
  if(distance<2.6||distance>45){notify('陣列區段長度需介於 2.6～45 CAD 單位');return;}
  const count=Math.min(20,Math.max(2,Math.round((distance-1.65)/2.3)+1));
  const angle=(Math.atan2(pt.y-start.y,pt.x-start.x)*180/Math.PI+360)%360;
- const spec={enabled:true,count,spacing:Math.max(1.3,Math.min(6,(distance-1.65)/(count-1))),rotation:angle,labelPosition:'bottom'};
+ const spec={enabled:true,count,spacing:Math.max(ARRAY_MIN_GAP,Math.min(arrayMaxGap(count),(distance-ARRAY_GLYPH_ENVELOPE)/(count-1))),rotation:angle,labelPosition:'bottom'};
  const center={x:(start.x+pt.x)/2,y:(start.y+pt.y)/2},type=actionType;
  cancelAction();addNew(type,center,null,spec);
  notify('陣列是一組配置標示；如每台需獨立維修檔案，請逐台建立設備');
@@ -790,14 +884,31 @@ function setup(){
  let v115SearchTimer=0;$('eqSearch').addEventListener('input',()=>{clearTimeout(v115SearchTimer);v115SearchTimer=setTimeout(renderList,120);});
  $('eqCloseDetail').addEventListener('click',()=>{selectedIds.clear();selected=null;editorOpened=false;fire('editorClose');showInspector();renderAll();});
  $('hwArrayMode')?.addEventListener('change',()=>{$('hwArrayParams').hidden=$('hwArrayMode').value!=='array';});
+ const arrayCountInput=$('hwArrayCount'),arrayGapInput=$('hwArraySpacing'),arraySpanInput=$('hwArraySpan');
+ const updateArrayFields=source=>{
+  const count=Math.max(2,Math.min(20,Math.round(Number(arrayCountInput?.value)||2))),maxGap=arrayMaxGap(count);
+  if(arrayGapInput)arrayGapInput.max=maxGap.toFixed(3);
+  if(arraySpanInput)arraySpanInput.max=ARRAY_MAX_SPAN;
+  if(source==='span'&&arraySpanInput&&arrayGapInput){const len=Math.max(ARRAY_GLYPH_ENVELOPE+(count-1)*ARRAY_MIN_GAP,Math.min(ARRAY_MAX_SPAN,Number(arraySpanInput.value)||ARRAY_GLYPH_ENVELOPE+(count-1)*2.3));arrayGapInput.value=((len-ARRAY_GLYPH_ENVELOPE)/(count-1)).toFixed(3);}
+  const gap=Math.max(ARRAY_MIN_GAP,Math.min(maxGap,Number(arrayGapInput?.value)||2.3));
+  if(arraySpanInput)arraySpanInput.value=(ARRAY_GLYPH_ENVELOPE+(count-1)*gap).toFixed(2);
+ };
+ arrayCountInput?.addEventListener('input',()=>updateArrayFields('count'));
+ arrayGapInput?.addEventListener('input',()=>updateArrayFields('gap'));
+ arraySpanInput?.addEventListener('input',()=>updateArrayFields('span'));
+
  $('hwSegmentMode')?.addEventListener('change',()=>{$('hwSegmentParams').hidden=$('hwSegmentMode').value!=='bar';syncSegmentSizeFields();});
  $('eqChangeType')?.addEventListener('change',()=>{if($('hwSegmentBox'))$('hwSegmentBox').hidden=!SEGMENT_TYPES.has($('eqChangeType').value);if($('hwArrayBox'))$('hwArrayBox').hidden=!ARRAY_TYPES.has($('eqChangeType').value);});
+ const liveAppearanceIds=new Set(['eqIconSize','eqIconWidth','eqIconHeight','eqIconShape','eqIconColor','eqRotation','hwSegmentMode','hwSegmentLength','hwSegmentThickness','hwSegmentPattern','hwSegmentCap','hwSegmentLabel','hwSegmentGlyph','hwArrayMode','hwArrayCount','hwArraySpacing','hwArraySpan','hwArrayLabel','eqIconLabel']);
+ function liveAppearanceEvent(event){if(liveAppearanceIds.has(event.target?.id))requestAnimationFrame(previewAppearance);}
+ document.addEventListener('input',liveAppearanceEvent);
+ document.addEventListener('change',liveAppearanceEvent);
  $('eqSaveDevice').addEventListener('click',()=>{const d=data.devices.find(x=>x.id===selected?.id);if(!d||currentRole!=='admin')return;const before=clone(d);d.type=byType[$('eqChangeType').value]?.type||d.type;d.name=str($('eqName').value,80)||byType[d.type].label;d.zone=str($('eqZone').value,80);d.note=str($('eqNote').value,900);d.status=$('eqStatusSelect').value;d.rotation=num($('eqRotation').value);const realX=num($('eqX').value,d.x),realY=num($('eqY').value,d.y);const oldDx=iconX(d)-d.x,oldDy=iconY(d)-d.y;d.x=realX;d.y=realY;d.displayX=roundPos(realX+oldDx);d.displayY=roundPos(realY+oldDy);d.waterSources=['tower','groundwater','tap'].filter(x=>$({tower:'eqSourceTower',groundwater:'eqSourceGround',tap:'eqSourceTap'}[x]).checked);d.fields=editorFields();d.shape=$('eqIconShape').value||null;d.color=$('eqIconColor').value||null;d.size=validSize($('eqIconSize').value);d.widthScale=validAxis($('eqIconWidth').value);d.heightScale=validAxis($('eqIconHeight').value);d.segment=SEGMENT_TYPES.has(d.type)&&$('hwSegmentMode')?.value==='bar'?validSegment({enabled:true,length:$('hwSegmentLength').value,thickness:$('hwSegmentThickness').value,pattern:$('hwSegmentPattern').value,cap:$('hwSegmentCap').value,labelPosition:$('hwSegmentLabel').value,centerGlyph:$('hwSegmentGlyph').checked}):null;d.array=ARRAY_TYPES.has(d.type)&&$('hwArrayMode')?.value==='array'?validArray({enabled:true,count:$('hwArrayCount').value,spacing:$('hwArraySpacing').value,labelPosition:$('hwArrayLabel').value}):null;d.locked=$('eqIconLocked').checked;d.showLabel=$('eqIconLabel').checked;
  const actualMoved=changedPhysical(before,d);
  if((actualMoved||changedGeometry(before,d))&&!fitIcon(d)){Object.assign(d,before);notify('圖標位置空間不足，請調整大小或座標');return;}
  const waterConfigChanged=JSON.stringify(before.waterSources||[])!==JSON.stringify(d.waterSources||[]);
  const linesToReview=(actualMoved||waterConfigChanged)?requireRouteRecheck(d.id,actualMoved?'設備實際位置已改變':'三向閥可接入的水源已改變'):0;
- save();renderAll();select('device',d.id);editorOpened=false;fire('editorClose');notify('設備資料已儲存於本機'+(linesToReview?'，'+linesToReview+' 條相關線路待重新核對':''));});
+ appearanceDraft=null;save();renderAll();select('device',d.id);editorOpened=false;fire('editorClose');notify('設備資料已儲存於本機'+(linesToReview?'，'+linesToReview+' 條相關線路待重新核對':''));});
  $('eqRemoveDevice').addEventListener('click',()=>{
  const d=data.devices.find(x=>x.id===selected?.id);if(!d||currentRole!=='admin')return;
  const related=data.routes.filter(r=>r.fromDeviceId===d.id||r.toDeviceId===d.id||r.points.some(p=>p.deviceId===d.id));
@@ -1025,7 +1136,7 @@ function removeSystemNode(id){
 window.HWEquipment={
 getAnchorGuides:()=>showAnchorGuides,
 setAnchorGuides:(enabled)=>{showAnchorGuides=!!enabled;try{localStorage.setItem('hw-v1199-anchor-guides',showAnchorGuides?'on':'off');}catch(_){}renderIcons();return showAnchorGuides;},
-setIconStretch:(width,height)=>{if(currentRole!=='admin'||selected?.kind!=='device')return false;const d=data.devices.find(q=>q.id===selected.id);if(!d||d.locked)return false;return updateDetails('device',d.id,{widthScale:validAxis(width),heightScale:validAxis(height)});},
+previewAppearance,discardAppearancePreview,setIconStretch:(width,height)=>{if(currentRole!=='admin'||selected?.kind!=='device')return false;const d=data.devices.find(q=>q.id===selected.id);if(!d||d.locked)return false;return updateDetails('device',d.id,{widthScale:validAxis(width),heightScale:validAxis(height)});},
 setRotation:(angle)=>{if(currentRole!=='admin'||selected?.kind!=='device')return false;const d=data.devices.find(q=>q.id===selected.id);if(!d||d.locked)return false;const n=Number(angle);if(!Number.isFinite(n))return false;const normalized=((Math.round(n)%360)+360)%360;if(((Math.round(Number(d.rotation)||0)%360)+360)%360===normalized)return true;return updateDetails('device',d.id,{rotation:normalized});},
 saveSystemNode,removeSystemNode,bulkSystemLink,manageWorkOrder:workOrderAction,recordInspectionRound,finishInspectionWork,getStorageState:()=>({dirty:storageDirty,error:storageLastError,lastSavedAt}),retryStorageSave:()=>{const ok=persist();updateFooter();window.dispatchEvent(new CustomEvent('hw-v101-storage',{detail:{ok,dirty:storageDirty,error:storageLastError}}));return ok;},resetIconPosition:(id)=>{if(currentRole!=='admin')return false;const d=data.devices.find(q=>q.id===id);if(!d||d.locked)return false;const old={x:d.displayX,y:d.displayY};d.displayX=d.x;d.displayY=d.y;if(iconMagnetEnabled&&data.devices.some(other=>other.id!==d.id&&window.HWIconMagnet.collision(visual(d),visual(other),id=>byType[id]))){d.displayX=old.x;d.displayY=old.y;notify('定位點上已有其他圖標，請先移開或關閉吸附');return false;}save();renderAll();return true;},previewArraySplit:arraySplitPreview,splitArraySelected,previewArrayBatch:arrayBatchPreview,applyArrayBatch,getVisualPlacement:(id)=>{const d=data.devices.find(q=>q.id===id);return d?{physical:{x:d.x,y:d.y},icon:{x:iconX(d),y:iconY(d)}}:null;},getSegmentWallSnap:()=>wallSnapMode,setSegmentWallSnap,getIconMagnetEnabled:()=>iconMagnetEnabled,setIconMagnetEnabled:enabled=>{iconMagnetEnabled=!!enabled;try{localStorage.setItem('hw-v100-icon-magnet',enabled?'on':'off');}catch(e){}window.dispatchEvent(new CustomEvent('hw-v100-magnet',{detail:{mode:'toggle',enabled:iconMagnetEnabled}}));return iconMagnetEnabled;},getIconMagnetPreview:(type,x,y)=>{const t=byType[type];if(!t)return {ok:false};const preset=activeTemplate&&data.templates.find(z=>z.id===activeTemplate&&z.type===type);return magnetSolve({x:snapPos(x),y:snapPos(y)},{id:'preview-v100',type,name:preset?.name||t.label,size:preset?.size||t.size||100,widthScale:validAxis(preset?.widthScale),heightScale:validAxis(preset?.heightScale),shape:preset?.shape||t.shape,showLabel:preset?.showLabel!==false});},getSmartSnap:(x,y,group,includeRoutes=true)=>smartSnap({x,y},group,includeRoutes),updateDetails,importPrivateProject,importCloudReadOnlyProject:(raw,source)=>importPrivateProject(raw,source,true),validateData:raw=>sanitize(raw),getData:()=>clone(data),getSelected:()=>selected?clone(selected):null,getRole:()=>currentRole,getWorkspace:()=>workspace,getAction:()=>({action,actionType,count:drawing.length}),getHistory:()=>({index:historyIndex,length:history.length}),getTypes:()=>[...catalogue,...data.customTypes].map(t=>({...byType[t.type]})),getType:id=>byType[id],setHook:(k,fn)=>{hooks[k]=fn;},setRole:roleSet,setWorkspace,select,cancelAction,begin,placeAt:(type,clientX,clientY)=>{if(currentRole==='admin'&&byType[type])addNew(type,svgPoint({clientX,clientY}));},setRepeat:v=>{repeatPlacement=!!v;},setOrtho:v=>{orthogonal=!!v;},setPlacementSources:sources=>{placementSources=['tower','groundwater','tap'].filter(k=>Array.isArray(sources)&&sources.includes(k));activeTemplate=null;fire('action');},getPlacementSources:()=>[...placementSources],saveSelectedTemplate,applyTemplate,deleteTemplate,setActiveTemplate:id=>{activeTemplate=data.templates.some(x=>x.id===id)?id:null;fire('action');},getActiveTemplate:()=>activeTemplate,getMultiMode:()=>multiSelectMode,setMultiMode,getSelectionIds,clearMany,moveSelected,alignSelected,distributeSelected,arrayCopy,setSnap:(enabled,step)=>{snapEnabled=!!enabled;snapStep=[.1,.25,.5,1].includes(Number(step))?Number(step):.25;fire('selection');},getSnap:()=>({enabled:snapEnabled,step:snapStep}),undo:()=>timeTravel(-1),redo:()=>timeTravel(1),finishRoute:()=> $('eqFinishRoute').click(),removeLastPoint:()=>{if(action==='route'&&drawing.length){drawing.pop();$('eqRoutePoints').textContent=drawing.length+' 個節點';$('eqFinishRoute').disabled=drawing.length<2;renderPreview();fire('action');}},duplicate:()=>{if(currentRole!=='admin'||selected?.kind!=='device')return;const d=data.devices.find(x=>x.id===selected.id);if(!d)return;const b=clone(d);b.id=newId('d');b.name=d.name+' 副本';b.x=+(b.x+1.8).toFixed(4);b.y=+(b.y+1.8).toFixed(4);b.displayX=+(iconX(d)+1.8).toFixed(4);b.displayY=+(iconY(d)+1.8).toFixed(4);b.locked=false;b.photos=[];b.terminals=[];b.arrayBatchId='';b.arraySourceId='';b.arrayIndex=0;b.arrayTotal=0;b.condition='unchecked';b.lastInspectionAt='';const spot=magnetSolve({x:b.displayX,y:b.displayY},b);if(!spot.ok){notify('周邊空間不足，無法複製設備');return;}b.displayX=spot.x;b.displayY=spot.y;data.devices.push(b);save();select('device',b.id);notify('已複製設備；可從設備位置欄位調整，或以滑鼠／手指直接拖曳未鎖定圖標');},rotate:()=>{if(currentRole!=='admin'||selected?.kind!=='device')return false;const d=data.devices.find(x=>x.id===selected.id);return d&&!d.locked?window.HWEquipment.setRotation((d.rotation||0)+90):false;},toggleLock:()=>{if(currentRole!=='admin'||selected?.kind!=='device')return;const d=data.devices.find(x=>x.id===selected.id);if(!d)return;d.locked=!d.locked;save();select('device',d.id);},openEditor:()=>{if(currentRole!=='admin'||!selected)return;editorOpened=true;fire('editorOpen');},closeEditor:()=>{editorOpened=false;fire('editorClose');},setVisibility:(k,v)=>{if(k in visibility){visibility[k]=!!v;saveVisibility();renderAll();}},getVisibility:()=>({...visibility}),getLabelMode:()=>deviceLabelMode,setLabelMode:mode=>{if(!['smart','all','off'].includes(mode))return;deviceLabelMode=mode;try{localStorage.setItem('hw-v88-device-label-mode',mode);}catch(e){}renderIcons();renderRoutes();},getDrawing:()=>clone(drawing),focus};
 setup();

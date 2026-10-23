@@ -104,7 +104,9 @@ viewer.appendChild(drawer);
 // Additional controls in the device editor; no changes to the underlying CAD file.
 const iconEdit=el('fieldset','v84-icon-overrides');iconEdit.innerHTML=`<legend>圖標外觀（單一設備）</legend>
   <div class="v84-edit-grid"><label>形狀<select id="eqIconShape"><option value="circle">● 圓形</option><option value="square">■ 方形</option><option value="diamond">◆ 菱形</option><option value="hex">⬡ 六角形</option></select></label><label>顏色<input id="eqIconColor" type="color" value="#65caff"/></label><label>大小 (%)<input id="eqIconSize" type="number" min="50" max="300" step="5" value="100"/></label></div>
-  <div class="v11103-size-grid"><label>↔ 左右寬度 (%)<input id="eqIconWidth" aria-label="圖示左右寬度百分比" type="number" inputmode="numeric" min="30" max="300" step="5" value="100"/></label><label>↕ 上下高度 (%)<input id="eqIconHeight" aria-label="圖示上下高度百分比" type="number" inputmode="numeric" min="30" max="300" step="5" value="100"/></label></div>
+  <div class="v11117-live-size"><label>整體尺寸滑桿 <input type="range" id="hwLiveSize" min="50" max="300" step="5" value="100" aria-label="整體大小即時預覽"></label>
+  <div class="v11103-size-grid"><label>↔ 左右寬度 (%)<input id="eqIconWidth" aria-label="圖示左右寬度百分比" type="number" inputmode="numeric" min="30" max="300" step="5" value="100"/><input id="hwLiveWidth" type="range" min="30" max="300" step="5" value="100" aria-label="寬度即時預覽"/></label><label>↕ 上下高度 (%)<input id="eqIconHeight" aria-label="圖示上下高度百分比" type="number" inputmode="numeric" min="30" max="300" step="5" value="100"/><input id="hwLiveHeight" type="range" min="30" max="300" step="5" value="100" aria-label="高度即時預覽"/></label></div>
+  <small id="hwLiveAppearanceHint" hidden>● CAD 即時預覽中，按「儲存」才會正式更新；關閉編輯會復原。</small></div>
   <div id="hwSegmentBox" class="hw-segment-editor" hidden>
     <label class="hw-segment-title">區段設備顯示模式<select id="hwSegmentMode"><option value="icon">一般圖示</option><option value="bar">長條標示（圖案不拉伸）</option></select></label>
     <div id="hwSegmentParams" hidden>
@@ -116,7 +118,7 @@ const iconEdit=el('fieldset','v84-icon-overrides');iconEdit.innerHTML=`<legend>�
   </div>
   <div id="hwArrayBox" class="hw-segment-editor" hidden>
     <label class="hw-segment-title">設備陣列顯示模式<select id="hwArrayMode"><option value="icon">單一設備圖示</option><option value="array">等距陣列標示（單一群組紀錄）</option></select></label>
-    <div id="hwArrayParams" hidden><div class="hw-segment-grid"><label>圖示數量<input type="number" id="hwArrayCount" min="2" max="20" step="1" value="3"/></label><label>中心間距（CAD 單位）<input type="number" id="hwArraySpacing" min="1.3" max="6" step="0.1" value="2.3"/></label></div>
+    <div id="hwArrayParams" hidden><div class="hw-segment-grid"><label>圖示數量<input type="number" id="hwArrayCount" min="2" max="20" step="1" value="3"/></label><label>中心間距（CAD 單位）<input type="number" id="hwArraySpacing" min="1.3" max="25" step="0.05" value="2.3"/></label></div><div class="hw-segment-grid"><label>↕ 整排總長度（CAD 單位）<input type="number" id="hwArraySpan" min="3.2" max="65" step="0.05" value="6.25"/></label><div class="hw-array-hint">直接拉圖面上選取陣列的兩端圓點，即可調整上下長度。風扇大小固定，只改中心間距；另一端會固定。</div></div>
     <label>名稱位置<select id="hwArrayLabel"><option value="bottom">下方</option><option value="top">上方</option><option value="off">隱藏</option></select></label>
     <div class="hw-split-box" id="hwSplitBox"><div class="hw-split-head"><strong>拆成每台獨立設備</strong><span id="hwSplitCount">目前 3 台</span></div><p>保留這一排的 CAD 座標、旋轉與間距；拆分後每台都有獨立編號、照片及維修紀錄。原陣列標示將被取代，可使用復原。</p><button type="button" class="hw-split-button" id="hwSplitArray">拆分並建立獨立設備</button><small id="hwSplitWarning">請先儲存目前的陣列數量、間距與角度，再執行拆分。</small></div></div>
   </div>
@@ -126,6 +128,13 @@ const iconEdit=el('fieldset','v84-icon-overrides');iconEdit.innerHTML=`<legend>�
 // device details stay in their existing collapsible section.
 drawer.insertBefore(iconEdit,drawer.children[1]);
 const batchDrawerButton=el('button','v11107-drawer-entry','同排設備｜批次更新共同規格');batchDrawerButton.type='button';batchDrawerButton.id='v11107BatchDrawer';batchDrawerButton.hidden=true;iconEdit.insertBefore(batchDrawerButton,iconEdit.firstChild);
+// V11.11.7: change any size input or slider, reflect the paired control.
+for(const [numberId,rangeId] of [['eqIconSize','hwLiveSize'],['eqIconWidth','hwLiveWidth'],['eqIconHeight','hwLiveHeight']]){
+ const number=$(numberId),range=$(rangeId);
+ if(!number||!range)continue;
+ range.addEventListener('input',()=>{number.value=range.value;number.dispatchEvent(new Event('input',{bubbles:true}));});
+ number.addEventListener('input',()=>{const n=Number(number.value);if(Number.isFinite(n))range.value=String(Math.max(Number(range.min),Math.min(Number(range.max),n)));});
+}
 $('hwSplitArray')?.addEventListener('click',()=>{
  const check=api.previewArraySplit?.();
  if(!check?.ok){window.alert(check?.reason||'無法拆分，請先選取陣列');return;}
@@ -343,8 +352,10 @@ function sync(){const data=api.getData(),a=api.getAction(),role=api.getRole(),ws
 window.addEventListener('hw-v90-change',e=>{if(['selection','role','workspace','data','action'].includes(e.detail?.kind))syncRotationPanel();});
 window.addEventListener('hw-v90-change',e=>{if(!batchOverlay.hidden&&['role','workspace','selection'].includes(e.detail?.kind))batchClose();});
 api.setHook('history',sync);api.setHook('role',sync);api.setHook('workspace',sync);api.setHook('action',sync);api.setHook('data',sync);api.setHook('selection',()=>{const sel=api.getSelected();const data=api.getData();if(sel?.kind==='device'){const d=data.devices.find(x=>x.id===sel.id);if(d)markRecent(d.type);}sync();});
-api.setHook('editorOpen',()=>{if(api.getRole()!=='admin')return;inspectorOpen=true;drawer.hidden=false;drawer.classList.add('open');const item=api.getSelected();$('v84DrawerTitle').textContent=item?.kind==='route'?'編輯路徑':'編輯設備';iconEdit.hidden=item?.kind!=='device';drawer.scrollTop=0;['eqSaveDevice','eqRemoveDevice'].forEach(id=>$(id).hidden=item?.kind!=='device');['eqSaveRoute','eqRemoveRoute'].forEach(id=>$(id).hidden=item?.kind!=='route');if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');});
-api.setHook('editorClose',()=>{inspectorOpen=false;drawer.hidden=true;drawer.classList.remove('open');});
+api.setHook('editorOpen',()=>{
+ for(const [numberId,rangeId] of [['eqIconSize','hwLiveSize'],['eqIconWidth','hwLiveWidth'],['eqIconHeight','hwLiveHeight']]){if($(numberId)&&$(rangeId))$(rangeId).value=$(numberId).value;}
+if(api.getRole()!=='admin')return;inspectorOpen=true;drawer.hidden=false;drawer.classList.add('open');const item=api.getSelected();$('v84DrawerTitle').textContent=item?.kind==='route'?'編輯路徑':'編輯設備';iconEdit.hidden=item?.kind!=='device';drawer.scrollTop=0;['eqSaveDevice','eqRemoveDevice'].forEach(id=>$(id).hidden=item?.kind!=='device');['eqSaveRoute','eqRemoveRoute'].forEach(id=>$(id).hidden=item?.kind!=='route');if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');});
+api.setHook('editorClose',()=>{api.discardAppearancePreview?.();inspectorOpen=false;drawer.hidden=true;drawer.classList.remove('open');});
 api.setHook('designerOpen',openDesigner);
 // Desktop drag-and-drop, in addition to touch-friendly 'choose then tap'.
 $('canvas').addEventListener('dragover',e=>{if(api.getRole()!=='admin'||api.getWorkspace()!=='equipment')return;e.preventDefault();e.dataTransfer.dropEffect='copy';});

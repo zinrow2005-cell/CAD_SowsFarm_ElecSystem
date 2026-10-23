@@ -50,7 +50,7 @@
  if(s.centerGlyph){rect(node,g,-.22,-.2,.44,.4,c,'#112839',.07,.05);g.appendChild(N(node,'text',{'text-anchor':'middle',y:'.1','font-size':'.25',fill:'#fff'},String(type.symbol||'段').slice(0,2)));}
  g.appendChild(N(node,'rect',{x:-h,y:top,width:L,height:H,fill:'transparent',class:'hit'}));
  }
- function drawArray(g,d,a,type,node){const count=Math.max(2,Math.min(20,Math.round(a.count||3))),spacing=Math.max(1.3,Math.min(6,Number(a.spacing)||2.3)),L=1.65+(count-1)*spacing,c=d.color||'#85ddea';
+ function drawArray(g,d,a,type,node){const count=Math.max(2,Math.min(20,Math.round(a.count||3))),spacing=Math.max(1.3,Math.min(25,Number(a.spacing)||2.3)),L=1.65+(count-1)*spacing,c=d.color||'#85ddea';
  const grp=N(node,'g',{'pointer-events':'none'});g.appendChild(grp);
  // One visual group; the repeated symbols are not independently editable/numbered assets.
  line(node,grp,-L/2+.2,0,L/2-.2,0,c,.05,{'stroke-dasharray':'.20 .16',opacity:'.54'});

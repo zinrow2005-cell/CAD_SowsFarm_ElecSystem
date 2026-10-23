@@ -4837,5 +4837,29 @@
     "lower": "污水集中抽取池",
     "notSowCrates": true,
     "actualStructuralDimensionsVerified": false
+  },
+  "boarHouse": {
+    "revision": "V11.11.5",
+    "physicalCompartments": 17,
+    "upperRowCompartments": 8,
+    "lowerRowCompartments": 9,
+    "ordinaryBoarHousingCompartments": 16,
+    "semenCollectionStation": {
+      "id": "BOAR-U-01",
+      "name": "假母台採精區",
+      "ordinaryHousingHeads": 0,
+      "use": "公豬採精時放置假母台；不作為一般公豬飼養欄"
+    },
+    "rightShiftDrawingUnits": 1.6,
+    "shiftedLayers": [
+      "06_欄位_公豬舍",
+      "77_公豬舍_17欄獨立選取",
+      "78_文字_公豬舍欄號"
+    ],
+    "unshifted": [
+      "85_公豬舍_全長通道_獨立選取",
+      "牆、門、棟舍、現場設備圖示"
+    ],
+    "note": "左側水簾實際邊界屬裝置本機設備圖層，須在部署後依現場量測確認淨距；這是示意調整非施工尺寸。"
   }
 }

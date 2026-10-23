@@ -30,3 +30,11 @@
 .v11107-batch-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}.v11107-batch-actions button{min-height:44px;flex:1 1 125px;border:1px solid #4c8592;border-radius:10px;background:#193d50;color:#eaf9fc;font-weight:700;cursor:pointer;padding:9px;}.v11107-batch-actions #v11107BatchApply:not(:disabled){color:#07362e;background:#8deed5;border-color:#8deed5;}.v11107-batch-actions button:disabled{opacity:.45;cursor:not-allowed;}
 #v11107BatchEntry,.v11107-drawer-entry{border:1px solid #63c9bb;border-radius:9px;padding:8px 10px;background:#1b5961;color:#e7fdfb;font-weight:700;cursor:pointer;min-height:40px}.v11107-drawer-entry{display:block;width:100%;margin:6px 0 11px}.v11107-drawer-entry[hidden],#v11107BatchEntry[hidden]{display:none!important;}
 @media(max-width:500px){.v11107-batch-dialog{max-height:calc(100dvh - 18px);padding:13px;border-radius:13px}.v11107-batch-line{grid-template-columns:1fr;gap:6px}.v11107-batch-head h2{font-size:18px}.v11107-batch-actions{position:sticky;bottom:-13px;background:#102a3c;padding:9px 0;z-index:1}}
+
+/* V11.11.6 - end grips resize spacing, not glyphs */
+.hw-array-grip{cursor:ew-resize;touch-action:none;pointer-events:all;}
+.hw-array-grip:hover .hw-array-grip-dot{fill:#85ffee;stroke:#e9ffff;stroke-width:.13;}
+.hw-array-grip:active .hw-array-grip-dot{fill:#fff8ac;}
+.hw-array-resizing, .hw-array-resizing *{cursor:ew-resize!important;touch-action:none!important;}
+.hw-array-hint{align-self:center;font-size:12px;line-height:1.65;color:#a7d6dd;background:#09283a;border:1px solid #30667b;border-radius:9px;padding:8px;}
+@media(max-width:760px){.hw-array-grip .hw-array-grip-hit{r:.58;}}
