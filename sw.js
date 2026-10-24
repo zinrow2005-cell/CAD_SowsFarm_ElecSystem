@@ -1,8 +1,9 @@
-/* 虎尾場 PWA V11.12.4 — app-shell only; never caches private device records or photos. */
+/* 虎尾場 PWA V11.12.6 — app-shell only; never caches private device records or photos. */
 'use strict';
 const CACHE_PREFIX = 'huwei-pwa-shell-';
-const CACHE_NAME = CACHE_PREFIX + 'v11.12.4';
+const CACHE_NAME = CACHE_PREFIX + 'v11.12.6';
 const APP_SHELL = [
+  "./assets/js/floating-tools-v11125.js",
   "./assets/js/network-trace-v11110.js",
   "./assets/css/app.css",
   "./assets/js/status-map-v11109.js",
