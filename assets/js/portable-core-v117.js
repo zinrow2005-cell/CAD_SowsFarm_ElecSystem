@@ -115,7 +115,7 @@ async function detectArchiveFormat(file){
 function incompatibleFormatError(type){
  if(type==='legacy-hwb')return Error('這是舊版加密 .hwb 備份，與新版免密碼 .hwpack 不同。請到「舊版 .hwb 相容匯入」使用當年設定的密碼還原；舊加密檔無法免密碼解密。');
  if(type==='legacy-json')return Error('這是舊版 JSON 專案檔，不是含所有照片原圖的 .hwpack。請使用原系統的「舊版 JSON 相容匯入」功能；不要直接覆蓋目前資料。');
- if(type==='zip')return Error('你選的是 ZIP 系統程式壓縮檔，不是備份。請先在電腦 APP 的「完整專案備份」建立並下載 .hwpack。');
+ if(type==='zip')return Error('ZIP 內容尚未確認；請先檢查 ZIP 是否有完整 .hwpack。不要只看副檔名。');
  if(type==='html')return Error('你選的是網頁檔案，不是完整備份。請重新選擇 .hwpack。');
  return Error('無法辨識備份格式。請確認選到電腦端下載的 .hwpack，而不是 .hwb、.zip 或 JSON。檔案並未寫入手機資料。');
 }
@@ -273,5 +273,5 @@ async function compareCurrentArchive({archive,project,photos,stallCapacity,stall
  return {ok:!changed.length&&!issues.length,sections,changed,photoIssues:issues,verifiedPhotos:passed,expectedPhotos:archive.validated.images.length,
   checkedAt:new Date().toISOString(),archiveDate:archive.meta.createdAt};
 }
-root.HWPortableCore={version:'11.12.6',cadFingerprint:CAD_SHA256,totals,coverage,detectArchiveFormat,readHeader,exportArchive,inspectArchive,applyArchive,verifyRestored,compareCurrentArchive};
+root.HWPortableCore={version:'11.12.7',cadFingerprint:CAD_SHA256,totals,coverage,detectArchiveFormat,readHeader,exportArchive,inspectArchive,applyArchive,verifyRestored,compareCurrentArchive};
 })(typeof window==='undefined'?globalThis:window);

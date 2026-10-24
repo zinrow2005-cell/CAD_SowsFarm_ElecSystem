@@ -1552,3 +1552,10 @@ body.hw109-panel-open #hw125Dock #hw110Launch{visibility:hidden;pointer-events:n
 .v117-actions #v117Export,.v117-actions #v117Save{min-height:50px;font-weight:750}
 .v117-panel #v11119Download:not([hidden]){position:sticky;bottom:0;z-index:5;box-shadow:0 0 0 3px #0c2435,0 -8px 16px #03131ba8}
 @media(max-width:650px){.v126-progress{font-size:13px;padding:10px 12px}}
+
+/* V11.12.7: status is already announced in the top progress region.
+   Avoid showing the same error twice on small phones. */
+#v117Overlay #v117Status{display:none!important}
+#v117Overlay #v11121Detected{overflow-wrap:anywhere}
+#v117Overlay #v11119Download{min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center}
+#v117Overlay #v11119Download[hidden]{display:none!important}
