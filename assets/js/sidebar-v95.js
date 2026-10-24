@@ -157,3 +157,81 @@ sync();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',compactNavigation,{once:true});
   else compactNavigation();
 })();
+
+
+/* V11.12.4 — Progressive disclosure, preserve every original wired control.
+ * Primary actions are always visible; rare specialist actions remain one click away.
+ */
+(function(){'use strict';
+ function boot(){
+  const root=document.getElementById('hw120Groups');
+  if(!root||document.getElementById('hw122ZoneExtras'))return;
+  function extra(id,label,description,parent,ids){
+   const d=document.createElement('details');d.className='hw122-extra';d.id=id;
+   const sum=document.createElement('summary');sum.textContent=label;
+   if(description)sum.title=description;
+   const body=document.createElement('div');body.className='hw122-extra-body';
+   for(const iid of ids){const item=document.getElementById(iid);if(item)body.appendChild(item);}
+   d.append(sum,body);parent?.appendChild(d);
+   return d;
+  }
+  const find=document.querySelector('#hw120Find>.hw120-body');
+  const systems=document.querySelector('#hw120Systems>.hw120-body');
+  const manage=document.querySelector('#hw120Manage>.hw120-body');
+  extra('hw122ZoneExtras','欄格容量與服務範圍','較少使用的欄格資料設定',find,['v104EquipOpen','v109EquipOpen']);
+  extra('hw122SystemExtras','更多專業查詢','供水、配電、通風、送料專用工具',systems,['v110Launch','v113Launch','v112VentLaunch','v111FeedNetworkLaunch']);
+  extra('hw122ManageExtras','進階工具與選用雲端','設備模板、舊版工具和選用同步',manage,['v95Advanced','v93CloudPanel']);
+  // Keep basic display modes visible; move infrequent building/water setup behind one disclosure.
+  const base=document.getElementById('v83BasePanel');
+  if(base&&!document.getElementById('hw122BaseTools')){
+   const nodes=[base.querySelector('.v104-shortcut'),document.getElementById('v109Launch'),document.getElementById('v110BaseLaunch')].filter(Boolean);
+   if(nodes.length){
+    const fold=document.createElement('details');fold.id='hw122BaseTools';fold.className='hw122-extra';
+    const summary=document.createElement('summary');summary.textContent='棟舍、欄格與三水源進階工具';
+    const body=document.createElement('div');body.className='hw122-extra-body';
+    for(const node of nodes)body.appendChild(node);
+    fold.append(summary,body);
+    base.querySelector('#v95BaseExtras')?.before(fold);
+   }
+  }
+  // Preset display modes are the frequent action. Keep granular annotation
+  // checkboxes available, but not permanently occupying mobile screen space.
+  if(base&&!document.getElementById('hw122BaseLabels')){
+   const children=[...base.children];
+   const idx=children.findIndex(n=>n.classList?.contains('section')&&n.textContent.includes('文字與標註顯示'));
+   if(idx>=0){
+    const nodes=children.slice(idx,idx+4);
+    if(nodes[1]?.id==='annotations'){
+     const fold=document.createElement('details');fold.id='hw122BaseLabels';fold.className='hw122-extra';
+     const summary=document.createElement('summary');summary.textContent='自訂文字與標註顯示';
+     const content=document.createElement('div');content.className='hw122-extra-body';
+     for(const n of nodes)content.appendChild(n);
+     fold.append(summary,content);
+     base.querySelector('#hw122BaseTools')?.before(fold);
+    }
+   }
+  }
+  // Continue to show shortcuts correctly even when destination moved into an accordion.
+  function revealItem(node){
+   if(!node)return;
+   for(let x=node.parentElement;x;x=x.parentElement)if(x.tagName==='DETAILS')x.open=true;
+  }
+  document.getElementById('v95Find')?.addEventListener('click',()=>revealItem(document.getElementById('v84Items')),true);
+  document.getElementById('v84ToolLayers')?.addEventListener('click',()=>revealItem(document.getElementById('v84Layers')),true);
+  const status=document.getElementById('v95ActionStatus');
+  const start=document.getElementById('v95Start');
+  const sync=()=>{
+   const action=window.HWEquipment?.getAction?.();
+   const busy=action?.action==='place'||action?.action==='route';
+   start?.classList.toggle('hw122-busy',!!busy);
+   if(status)status.setAttribute('aria-live','polite');
+  };
+  window.addEventListener('hw-v89-ui-sync',sync);
+  sync();
+  // Keep existing controls and their attached click listeners. Hide redundant
+  // labels visually, never remove old event listeners/data.
+  const kicker=document.querySelector('#v95Start .v95-head strong');
+  if(kicker)kicker.textContent='常用操作';
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();

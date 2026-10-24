@@ -1,12 +1,12 @@
-/* V11.11.2 portable encrypted whole-project archive. Offline, no cloud requests.
- * Binary AES-256-GCM envelope: 8-byte magic + LE uint32 header length +
- * JSON structural header (random PBKDF2 salt + random per-entry IVs) +
- * independently authenticated ciphertexts: encrypted project manifest, then
- * encrypted JPEG/PNG/WebP previews and optional masters.
+/* V11.12.1 complete portable backup, passwordless by default, no cloud requests.
+ * Passwordless binary envelope: 8-byte magic + LE header size + manifest
+ * & photo byte ranges hashed by SHA-256. Hashes detect accidental damage,
+ * NOT deliberate tampering: unencrypted backups expose private photos & data.
+ * Old HWPK117! encrypted archives remain read-only compatible with password.
  * This module does not touch project state until explicit applyArchive().
  */
 (function(root){'use strict';
-const MAGIC='HWPK117!', VERSION=2, MAX_ARCHIVE=360*1024*1024, MAX_META=14*1024*1024;
+const MAGIC='HWPK117!', MAGIC_PLAIN='HWPN121!', VERSION=2, PLAIN_SCHEMA=3, MAX_ARCHIVE=360*1024*1024, MAX_META=14*1024*1024;
 const MAX_IMAGE=20*1024*1024, MAX_PHOTOS=5000, MAX_ENTRIES=10001, MAX_HEADER=140000;
 const ITERATIONS=260000;
 const CAD_SHA256='341df0d8b58e880acaea0e2952d8d6d92a2239bfabe757d6697a1458993cdead';
@@ -64,7 +64,7 @@ async function recoverPreview(master,id){
 async function exportArchive({project,photos,stallCapacity,stallLinks,password,onProgress}){
  if(!project||project.app!=='HuweiEquipment'||!Array.isArray(project.devices)||!Array.isArray(project.routes))throw Error('不是有效的虎尾場專案');
  if(!photos?.getPreview||!photos?.getOriginal)throw Error('照片元件尚未正確載入');
- const ids=photoIds(project),salt=cryptoProvider().getRandomValues(new Uint8Array(16));const key=await passwordKey(password,salt);
+ const ids=photoIds(project);
  const descriptors=[],media=[],all=ids.length,counts={master:0,previewOnly:0};let rawBytes=0;
  for(let i=0;i<ids.length;i++){
   const id=ids[i];progress(onProgress,'正在核對照片 '+(i+1)+'／'+all,i+1,all);
@@ -83,27 +83,72 @@ async function exportArchive({project,photos,stallCapacity,stallLinks,password,o
  const metadata={format:'HuweiPortableManifest',schema:2,createdAt:new Date().toISOString(),cadFingerprint:CAD_SHA256,
   project:cleanProject({...project,stallCapacity,stallLinks}),images:descriptors,summary:totals({...project,stallLinks}),coverage:coverage(project,stallCapacity,stallLinks)};
  const metaBytes=te.encode(JSON.stringify(metadata));if(metaBytes.length>MAX_META)throw Error('專案基本資料超過 14 MB');
- const plain=[metaBytes,...media],encrypted=[],headerEntries=[];
+ // V11.12.1: passwordless archive, with per-block SHA-256 checksums. No key needed.
+ const plain=[metaBytes,...media],headerEntries=[];
  for(let i=0;i<plain.length;i++){
-  progress(onProgress,'正在加密區塊 '+(i+1)+'／'+plain.length,i+1,plain.length);
-  const item=await encrypt(plain[i],key);encrypted.push(item.body);headerEntries.push({iv:item.iv,length:item.body.length});
+  progress(onProgress,'正在核對備份區塊 '+(i+1)+'／'+plain.length,i+1,plain.length);
+  headerEntries.push({length:plain[i].length,sha256:await sha(plain[i])});
  }
- const header={format:'HuweiPortableArchive',schema:VERSION,kdf:'PBKDF2-SHA256',iterations:ITERATIONS,
-  cipher:'AES-256-GCM',salt:b64(salt),entries:headerEntries};
+ const header={format:'HuweiPortableArchive',schema:PLAIN_SCHEMA,encoding:'plain-sha256',entries:headerEntries};
  const headerBytes=te.encode(JSON.stringify(header));if(headerBytes.length>MAX_HEADER)throw Error('照片清單超出封裝限制');
- const preamble=new Uint8Array(12);preamble.set(te.encode(MAGIC),0);new DataView(preamble.buffer).setUint32(8,headerBytes.length,true);
- const blob=new Blob([preamble,headerBytes,...encrypted],{type:'application/octet-stream'});
+ const preamble=new Uint8Array(12);preamble.set(te.encode(MAGIC_PLAIN),0);new DataView(preamble.buffer).setUint32(8,headerBytes.length,true);
+ const blob=new Blob([preamble,headerBytes,...plain],{type:'application/octet-stream'});
  if(blob.size>MAX_ARCHIVE)throw Error('備份檔超過 360 MB 的安全上限');
- return{blob,name:'虎尾場_完整設備照片備份_'+new Date().toISOString().slice(0,10)+'.hwpack',summary:metadata.summary,master:counts.master,previewOnly:counts.previewOnly};
+ return{blob,name:'虎尾場_免密碼完整備份_'+new Date().toISOString().slice(0,10)+'.hwpack',summary:metadata.summary,master:counts.master,previewOnly:counts.previewOnly};
 }
-async function readHeader(file){if(!file||file.size<80||file.size>MAX_ARCHIVE)throw Error('備份檔案大小不符合要求（最大 360 MB）');
- const prefix=new Uint8Array(await file.slice(0,12).arrayBuffer());if(td.decode(prefix.subarray(0,8))!==MAGIC)throw Error('檔案不是 V11.7 完整備份 .hwpack');
- const length=new DataView(prefix.buffer).getUint32(8,true);if(length<80||length>MAX_HEADER||12+length>=file.size)throw Error('備份標頭長度異常');
+async function detectArchiveFormat(file){
+ if(!file||typeof file.slice!=='function'||!Number.isFinite(file.size))throw Error('請選擇完整備份檔案');
+ const bytes=new Uint8Array(await file.slice(0,Math.min(file.size,2048)).arrayBuffer());
+ const prefix=td.decode(bytes.subarray(0,8));
+ if(prefix===MAGIC_PLAIN)return 'plain';
+ if(prefix===MAGIC)return 'encrypted';
+ const first=td.decode(bytes).replace(/^\uFEFF/, '').trimStart();
+ if(bytes[0]===0x50&&bytes[1]===0x4b)return 'zip';
+ if(first.startsWith('{')){
+  if(first.includes('HuweiPrivateBackup'))return 'legacy-hwb';
+  if(first.includes('HuweiEquipment')||first.includes('photoAssets'))return 'legacy-json';
+  return 'json-unknown';
+ }
+ if(first.startsWith('<!')||first.startsWith('<html'))return 'html';
+ return 'unknown';
+}
+function incompatibleFormatError(type){
+ if(type==='legacy-hwb')return Error('這是舊版加密 .hwb 備份，與新版免密碼 .hwpack 不同。請到「舊版 .hwb 相容匯入」使用當年設定的密碼還原；舊加密檔無法免密碼解密。');
+ if(type==='legacy-json')return Error('這是舊版 JSON 專案檔，不是含所有照片原圖的 .hwpack。請使用原系統的「舊版 JSON 相容匯入」功能；不要直接覆蓋目前資料。');
+ if(type==='zip')return Error('你選的是 ZIP 系統程式壓縮檔，不是備份。請先在電腦 APP 的「完整專案備份」建立並下載 .hwpack。');
+ if(type==='html')return Error('你選的是網頁檔案，不是完整備份。請重新選擇 .hwpack。');
+ return Error('無法辨識備份格式。請確認選到電腦端下載的 .hwpack，而不是 .hwb、.zip 或 JSON。檔案並未寫入手機資料。');
+}
+async function readHeader(file){
+ if(!file||file.size<24||file.size>MAX_ARCHIVE)throw Error('備份檔案大小不符合要求（最大 360 MB）');
+ const kind=await detectArchiveFormat(file);
+ if(kind!=='plain'&&kind!=='encrypted')throw incompatibleFormatError(kind);
+ const prefix=new Uint8Array(await file.slice(0,12).arrayBuffer());
+ const length=new DataView(prefix.buffer).getUint32(8,true);
+ if(length<70||length>MAX_HEADER||12+length>=file.size)throw Error('備份標頭長度異常');
  let header;try{header=JSON.parse(await file.slice(12,12+length).text());}catch(e){throw Error('備份標頭不是有效 JSON');}
- if(header.format!=='HuweiPortableArchive'||header.schema!==VERSION||header.kdf!=='PBKDF2-SHA256'||header.cipher!=='AES-256-GCM'||header.iterations!==ITERATIONS||!Array.isArray(header.entries)||!header.entries.length||header.entries.length>MAX_ENTRIES||unb64(header.salt).length!==16)throw Error('不支援的備份格式或加密參數');
+ if(header.format!=='HuweiPortableArchive'||!Array.isArray(header.entries)||!header.entries.length||header.entries.length>MAX_ENTRIES)throw Error('備份標頭格式錯誤');
+ if(kind==='encrypted'){
+  if(header.schema!==VERSION||header.kdf!=='PBKDF2-SHA256'||header.cipher!=='AES-256-GCM'||header.iterations!==ITERATIONS||unb64(header.salt).length!==16)throw Error('舊版加密備份參數不支援');
+ }else if(header.schema!==PLAIN_SCHEMA||header.encoding!=='plain-sha256')throw Error('不支援的免密碼備份版本');
  let offset=12+length;const entries=[];
- for(let i=0;i<header.entries.length;i++){const entry=header.entries[i];if(!Number.isSafeInteger(entry.length)||entry.length<16||entry.length>MAX_IMAGE+16&&i!==0||entry.length>MAX_META+16&&i===0||unb64(entry.iv).length!==12)throw Error('加密區塊尺寸或 IV 不正確');entries.push({...entry,index:i,offset});offset+=entry.length;if(offset>file.size)throw Error('加密區塊超過檔案尾端');}
- if(offset!==file.size)throw Error('備份檔有多餘或缺失資料');return{entries,salt:unb64(header.salt)};
+ for(let i=0;i<header.entries.length;i++){
+  const entry=header.entries[i],limit=(i===0?MAX_META:MAX_IMAGE)+(kind==='encrypted'?16:0);
+  if(!Number.isSafeInteger(entry.length)||entry.length<1||entry.length>limit)throw Error('備份區塊尺寸異常');
+  if(kind==='encrypted'){
+   if(entry.length<16||unb64(entry.iv).length!==12)throw Error('舊備份 IV 不正確');
+  }else if(!/^[a-f0-9]{64}$/.test(entry.sha256||''))throw Error('免密碼備份缺少完整性核對值');
+  entries.push({...entry,index:i,offset});offset+=entry.length;
+  if(offset>file.size)throw Error('備份區塊超過檔案尾端');
+ }
+ if(offset!==file.size)throw Error('備份檔有多餘或缺失資料');
+ return{entries,salt:kind==='encrypted'?unb64(header.salt):null,kind};
+}
+async function readBlock(file,entry,parsed,key){
+ if(parsed.kind==='encrypted')return decrypt(file,entry.offset,entry,key);
+ const bytes=new Uint8Array(await file.slice(entry.offset,entry.offset+entry.length).arrayBuffer());
+ if(bytes.length!==entry.length||await sha(bytes)!==entry.sha256)throw Error('備份區塊內容毀損（第 '+(entry.index+1)+' 塊，SHA-256 不一致）');
+ return bytes;
 }
 function validateManifest(meta,entryCount,validateData){if(meta?.format!=='HuweiPortableManifest'||meta.schema!==2)throw Error('加密資料清單版本不符合');
  if(meta.cadFingerprint!==CAD_SHA256)throw Error('備份底圖版本不一致，為避免設備位置錯位，請使用相同 CAD 版本還原');
@@ -116,14 +161,14 @@ function validateManifest(meta,entryCount,validateData){if(meta?.format!=='Huwei
  return{project:clean,images:meta.images,summary:totals({...clean,stallLinks:meta.project.stallLinks})};
 }
 async function inspectArchive({file,password,validateData,onProgress}){
- const parsed=await readHeader(file);const key=await passwordKey(password,parsed.salt);
- progress(onProgress,'正在解密專案索引',0,parsed.entries.length);
- const raw=await decrypt(file,parsed.entries[0].offset,parsed.entries[0],key);if(raw.length>MAX_META)throw Error('專案基本資料過大');
+ const parsed=await readHeader(file);const key=parsed.kind==='encrypted'?await passwordKey(password,parsed.salt):null;
+ progress(onProgress,'正在讀取專案索引',0,parsed.entries.length);
+ const raw=await readBlock(file,parsed.entries[0],parsed,key);if(raw.length>MAX_META)throw Error('專案基本資料過大');
  let meta;try{meta=JSON.parse(td.decode(raw));}catch(e){throw Error('解密後的專案索引錯誤');}
  const validated=validateManifest(meta,parsed.entries.length,validateData);
  for(let i=0;i<validated.images.length;i++){
   const item=validated.images[i],entry=parsed.entries[i+1];progress(onProgress,'驗證照片 '+(i+1)+'／'+validated.images.length,i+1,validated.images.length);
-  const plain=await decrypt(file,entry.offset,entry,key);
+  const plain=await readBlock(file,entry,parsed,key);
   if(plain.length!==item.bytes||await sha(plain)!==item.sha256)throw Error('照片內容驗證失敗：'+item.id+' ('+item.kind+')');
  }
  return{file,parsed,key,meta,validated};
@@ -133,7 +178,7 @@ async function applyArchive(ctx,{importProject,restoreCapacity,restoreLinks,onPr
  const{file,parsed,key,validated,meta}=ctx,groups=new Map();
  for(let i=0;i<validated.images.length;i++){
   const item=validated.images[i],entry=parsed.entries[i+1];progress(onProgress,'準備照片資料 '+(i+1)+'／'+validated.images.length,i+1,validated.images.length);
-  const plain=await decrypt(file,entry.offset,entry,key);
+  const plain=await readBlock(file,entry,parsed,key);
   if(plain.length!==item.bytes||await sha(plain)!==item.sha256)throw Error('匯入前二次驗證照片失敗：'+item.id);
   const dataUrl='data:'+item.mime+';base64,'+b64(plain);
   if(!groups.has(item.id))groups.set(item.id,{id:item.id});
@@ -190,7 +235,7 @@ function stableJson(value){
  return JSON.stringify(canon(value));
 }
 async function compareCurrentArchive({archive,project,photos,stallCapacity,stallLinks,onProgress}){
- if(!archive?.validated?.project||!archive?.meta?.project)throw Error('請先輸入密碼並驗證備份檔');
+ if(!archive?.validated?.project||!archive?.meta?.project)throw Error('請先選擇並驗證備份檔');
  if(!project||!photos?.getPreview||!photos?.getOriginal)throw Error('無法讀取目前設備或照片資料');
  const expected=cleanProject(archive.validated.project),actual=cleanProject(project),sections=[];
  // Any additional project module must be compared, not merely the familiar counters.
@@ -228,5 +273,5 @@ async function compareCurrentArchive({archive,project,photos,stallCapacity,stall
  return {ok:!changed.length&&!issues.length,sections,changed,photoIssues:issues,verifiedPhotos:passed,expectedPhotos:archive.validated.images.length,
   checkedAt:new Date().toISOString(),archiveDate:archive.meta.createdAt};
 }
-root.HWPortableCore={version:'11.11.2',cadFingerprint:CAD_SHA256,totals,coverage,readHeader,exportArchive,inspectArchive,applyArchive,verifyRestored,compareCurrentArchive};
+root.HWPortableCore={version:'11.12.1',cadFingerprint:CAD_SHA256,totals,coverage,detectArchiveFormat,readHeader,exportArchive,inspectArchive,applyArchive,verifyRestored,compareCurrentArchive};
 })(typeof window==='undefined'?globalThis:window);

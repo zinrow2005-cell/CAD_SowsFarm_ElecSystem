@@ -48,7 +48,7 @@ root.innerHTML=`<div class="v119-shell">
  <button class="v119-card" data-home-action="search" data-tone="blue" type="button"><span class="v119-card-icon">⌕</span><span class="v119-card-copy"><b>設備搜尋與維修</b><small>依名稱、位置、照片標記快速查詢</small></span><span class="v119-card-arrow">↗</span></button>
  <button class="v119-card" data-home-action="inspection" data-tone="gold" type="button"><span class="v119-card-icon">☑</span><span class="v119-card-copy"><b>現場巡檢與維修</b><small>逐台檢查、同排巡檢、異常報修與紀錄</small></span><span class="v119-card-arrow">↗</span></button>
  <button class="v119-card" data-home-action="health" data-tone="gold" type="button"><span class="v119-card-icon">✓</span><span class="v119-card-copy"><b>資料健檢</b><small>檢查缺失關聯與需要核對的紀錄</small></span><span class="v119-card-arrow">↗</span></button>
- <button class="v119-card" data-home-action="backup" data-tone="purple" type="button"><span class="v119-card-icon">⇩</span><span class="v119-card-copy"><b>完整專案備份</b><small>加密匯出、跨裝置匯入 .hwpack</small></span><span class="v119-card-arrow">↗</span></button>
+ <button class="v119-card" data-home-action="backup" data-tone="purple" type="button"><span class="v119-card-icon">⇩</span><span class="v119-card-copy"><b>完整專案備份</b><small>免密碼備份、跨裝置匯入 .hwpack</small></span><span class="v119-card-arrow">↗</span></button>
 </section>
 <p class="v119-footer" id="v119Notice" role="status">資料統計僅包含本機已儲存的設備、管線、照片紀錄及未完成的維修／巡檢單。尚未建檔時顯示 0，不代表豬場沒有設備。完整備份需由使用者手動執行。</p>
 </div>
