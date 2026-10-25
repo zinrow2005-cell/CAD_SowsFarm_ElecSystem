@@ -1560,3 +1560,29 @@ body.hw109-panel-open #hw125Dock #hw110Launch{visibility:hidden;pointer-events:n
 #v117Overlay #v11121Detected{overflow-wrap:anywhere}
 #v117Overlay #v11119Download{min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center}
 #v117Overlay #v11119Download[hidden]{display:none!important}
+
+/* V11.12.9 UI audit: suppress the right CAD dock whenever an equipment
+   dossier / drawer is open, on desktop, tablet and mobile alike. */
+.viewer.hw125-suppressed #hw125Dock,
+.viewer:has(#v84Drawer:not([hidden])) #hw125Dock { display:none!important; }
+
+/* V11.12.9 UI audit: show all five workspace tabs on compact phones.
+   The preceding scroll-only tab row hid the last Backup label. */
+@media (max-width:520px) {
+  .v1194-tabs { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:3px;overflow-x:visible;padding-bottom:10px; }
+  .v1194-tabs button { flex:initial;min-width:0;white-space:normal;
+    overflow-wrap:anywhere;text-align:center;font-size:11px;line-height:1.3;
+    padding:6px 2px;min-height:49px; }
+}
+
+/* V11.12.9 final layout regression: hide the magnet toggle while editing a
+   device (otherwise the floating chip overlaps the photo/link tabs). */
+.viewer:has(#v84Drawer:not([hidden])) .v100-magnet-box { display:none!important; }
+.v1194-tabs .v1194-tab-label { margin-left:4px; }
+@media (max-width:520px) {
+  .v1194-tabs button { display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:2px;line-height:1.15; }
+  .v1194-tabs .v1194-tab-icon { font-size:14px;line-height:1.15; }
+  .v1194-tabs .v1194-tab-label { margin-left:0;white-space:nowrap;font-size:11px;line-height:1.25; }
+}
