@@ -25,10 +25,29 @@
   if(circuit){circuit.textContent='⚡ 配電迴路';actions.append(circuit);}
   viewer.append(dock);
   function closeMenu(){dock.classList.remove('hw125-open');menu.setAttribute('aria-expanded','false');}
+  function updateSuppressed(){
+    const drawer=document.getElementById('v84Drawer');
+    const side=document.getElementById('side');
+    const suppressed=!!(
+      (drawer && !drawer.hidden) ||
+      (side && side.classList.contains('open')) ||
+      document.body.classList.contains('v119-home-open') ||
+      document.body.classList.contains('v1194-hub-open') ||
+      document.body.classList.contains('hw109-panel-open') ||
+      viewer.classList.contains('v1191-action-active') ||
+      viewer.classList.contains('v1192-locating')
+    );
+    viewer.classList.toggle('hw125-suppressed',suppressed);
+    if(suppressed)closeMenu();
+  }
   menu.addEventListener('click',()=>{const open=dock.classList.toggle('hw125-open');menu.setAttribute('aria-expanded',String(open));});
   actions.addEventListener('click',e=>{if(e.target.closest('button'))closeMenu();});
   document.addEventListener('pointerdown',e=>{if(!dock.contains(e.target))closeMenu();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&dock.classList.contains('hw125-open')){closeMenu();menu.focus({preventScroll:true});}});
-  window.addEventListener('resize',()=>{if(window.innerWidth>760)closeMenu();},{passive:true});
-  // When overlays/panels are open, the tool launcher is suppressed by CSS, not removed.
+  window.addEventListener('resize',()=>{if(window.innerWidth>760)closeMenu();updateSuppressed();},{passive:true});
+  window.addEventListener('hw-v90-change',updateSuppressed);
+  const watchTargets=[document.body,document.getElementById('v84Drawer'),document.getElementById('side'),viewer].filter(Boolean);
+  const observer=new MutationObserver(updateSuppressed);
+  watchTargets.forEach(node=>observer.observe(node,{attributes:true,attributeFilter:['class','hidden']}));
+  updateSuppressed();
 })();
