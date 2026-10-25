@@ -1,0 +1,22 @@
+{
+  "profile": "2026-10-17",
+  "version": "10.5",
+  "matingCrates": 76,
+  "patrolBoarPens": 1,
+  "giltPens": 14,
+  "headsPerGiltPen": 10,
+  "designGiltHeads": 140,
+  "referenceGiltHeadsWithTwoPensReserved": 120,
+  "gestationA": [
+    84,
+    84,
+    84
+  ],
+  "gestationB": [
+    82,
+    82,
+    80
+  ],
+  "gestationTotal": 496,
+  "notes": "A/B 上下區域暫時對應，巡情公豬欄獨立計數；CAD 欄格均分寬度待實測"
+}

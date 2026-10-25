@@ -1,4 +1,5 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=5,viewport-fit=cover"/><title>虎尾豬場設備配置｜V11.12.7 PWA 儀表板整合版</title>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=5,viewport-fit=cover"/><title>虎尾豬場設備配置｜V11.12.8 PWA 儀表板整合版</title>
+<meta name="app-version" content="11.12.8">
 <meta name="theme-color" content="#0b2738">
 <meta name="msapplication-TileColor" content="#0b2738">
 <meta name="format-detection" content="telephone=no">
@@ -24,7 +25,7 @@
 @keyframes pwaSplashLoad{0%{transform:translateX(-115%);}60%{transform:translateX(145%);}100%{transform:translateX(145%);}}
 @media (prefers-reduced-motion: reduce){.pwa-splash-bar::before{animation:none;transform:translateX(25%);}}
 </style><style>
-/* V11.12.7 — Compact on-site toolbar and reversible specialist disclosure. */
+/* V11.12.8 — Compact on-site toolbar and reversible specialist disclosure. */
 #side{scrollbar-width:thin}
 #side .v82-rolebar .hw108-header-launch{display:none!important}
 #side h1{font-size:14px;margin:3px 0 5px}
@@ -65,7 +66,7 @@
  .hw122-extra-body>button{min-height:44px}
 }
 
-/* V11.12.7: 單一完整編輯模式；舊 role buttons 僅為舊模組相容隱藏節點。 */
+/* V11.12.8: 單一完整編輯模式；舊 role buttons 僅為舊模組相容隱藏節點。 */
 #side .hw123-unified-role{padding:6px 9px;margin:5px 0 7px}
 #side .hw123-unified-role .role-title{margin:0;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
 #side .hw123-unified-role .role-title b{font-size:12px;color:#9be9da}
@@ -81,8 +82,8 @@
     <div class="pwa-splash-bar"></div>
   </div>
 </div>
-<div id="app"><div class="mobilebar"><button id="menuOpen" title="開啟圖層與設備設定">☰ 圖層</button><strong title="虎尾豬場 CAD 設備配置 V11.12.7">虎尾豬場 V11.12.7</strong></div><aside class="side" id="side">
-<div class="topline"><span class="stamp">HUWEI PIG FARM</span><span style="font-size:11px;color:#8bcab7">V11.12.7</span></div><h1>2D 母豬場設備配置系統</h1><p class="sub">CAD 基本圖面 × 全新圖標配置工作台<br>底圖不重繪，自訂圖標、位置、規格與路徑由你直接在圖上編輯</p>
+<div id="app"><div class="mobilebar"><button id="menuOpen" title="開啟圖層與設備設定">☰ 圖層</button><strong title="虎尾豬場 CAD 設備配置 V11.12.8">虎尾豬場 V11.12.8</strong></div><aside class="side" id="side">
+<div class="topline"><span class="stamp">HUWEI PIG FARM</span><span style="font-size:11px;color:#8bcab7">V11.12.8</span></div><h1>2D 母豬場設備配置系統</h1><p class="sub">CAD 基本圖面 × 全新圖標配置工作台<br>底圖不重繪，自訂圖標、位置、規格與路徑由你直接在圖上編輯</p>
 
 <div class="v82-rolebar hw123-unified-role"><div class="role-title"><b>設備管理</b><span id="eqStatus">設備 0｜線路 0｜本機可編輯</span></div></div>
 <nav class="v83-workspace-tabs" aria-label="系統設定分類" role="tablist">
@@ -162,7 +163,7 @@
 <g id="ly154" class="cad-layer" data-layer="V10.8_B棟池上混凝土樓板" data-category="fixture" stroke="#78d1a5" stroke-width="0.095" fill="none"><g data-facility-id="B-CONCRETE-SLAB-UPPER-BUILT" role="button" tabindex="0" aria-label="查看池上混凝土樓板" data-info="妊娠B棟第三排左端兩格位置｜污水池正上方混凝土樓板"><path d="M3.3900 72.2250 H4.4500" stroke="#7cdbac" stroke-dasharray="0.15 0.10" stroke-width="0.052"/><title>既有混凝土樓板，與下層污水池同平面位置；承載與氣體隔離待專業確認</title></g></g><g id="ly153" class="cad-layer" data-layer="V10.8_B棟池上公豬欄" data-category="boar" stroke="#e7ad60" stroke-width="0.070" fill="none"><g data-facility-id="B-BOAR-PEN-UPPER-PLANNED" role="button" tabindex="0" aria-label="查看池上公豬欄" data-info="妊娠B棟第三排左端｜公豬欄向左加寬約兩個母豬夾欄、右緣不變｜1欄／1頭"><rect x="2.0580" y="72.0848" width="2.4840" height="1.9200" rx="0.035" stroke="#efb860" stroke-width="0.070" fill="none"/><text x="3.3000" y="73.2100" text-anchor="middle" font-size="0.270" fill="#ffcf87" stroke="none">公豬欄</text><title>池上公豬欄 1 頭，向左加寬約 2 格至約 4 格寬；原右側兩格下方為混凝土樓板及污水池，左側新增區域須現場核實支撐條件</title></g></g><g id="eqRoutes" aria-label="水電通風設備線路"></g><g id="eqIcons" aria-label="水電通風設備點位"></g><g id="eqPreview" aria-hidden="true"></g></svg></div><div class="toolbar"><button title="放大" aria-label="放大" class="tool" id="zoomIn">＋</button><button title="縮小" aria-label="縮小" class="tool" id="zoomOut">−</button><button title="恢復全場" aria-label="恢復全場" class="tool" id="fit">⌗</button></div><div class="stat" id="info">CAD 底圖 V11.12.8｜設備配置 V11.12.8<br><span id="visibleCount"></span><div class="legend"><span><i class="dot" style="background:#e2edf4"></i>外牆</span><span><i class="dot" style="background:#dca1b2"></i>產床</span><span><i class="dot" style="background:#f9ca7c"></i>面積</span><span><i class="dot" style="background:#acc6e4"></i>尺寸</span></div></div><div id="toast" class="toast"></div><div id="eqPlaceTip" hidden></div><div id="hwSegmentAngleBar" hidden role="group" aria-label="區段設備角度與吸附控制"><div class="hw-angle-heading"><strong id="hwSegmentModeText">自由角度：不吸附</strong><span id="hwSegmentAngleValue">先點選起點</span></div><label class="hw-angle-toggle"><input id="hwAngleWallToggle" type="checkbox"/> 沿牆吸附（可隨時切換）</label><small>自由模式：兩個端點決定角度，不會強制垂直。已放置設備仍可在編輯視窗調整角度。</small></div><div id="eqDetails" hidden><button type="button" class="close" id="eqCloseDetail" aria-label="關閉設備資訊">×</button><h3 id="eqDetailTitle"></h3><div class="muted" id="eqDetailMeta"></div><div style="white-space:pre-wrap;margin-top:8px" id="eqDetailText"></div><button type="button" id="eqOpenEditor" class="v82-btn primary" hidden>編輯這項設備</button><p class="muted" style="margin-bottom:0">設備座標僅供配置參考，施工前仍須現場核對。</p></div></main></div>
 <script src="./assets/js/cad-inline-1.js"></script>
 <script src="./assets/js/cad-inline-2.js"></script><script src="./assets/js/equipment-symbols-v90.js"></script><script src="./assets/js/photo-store-v92.js"></script><script src="./assets/js/photo-store-v103.js"></script><script src="./assets/js/icon-magnet-v100.js"></script><script src="./assets/js/smart-equipment-v11105.js"></script><script src="./assets/js/equipment-v94.js"></script><script src="./assets/js/equipment-guide-v11100.js"></script><script src="./assets/js/workbench-v90.js"></script><script src="./assets/js/placement-v90.js"></script><script src="./assets/js/photo-circuits-v92.js"></script><script src="./assets/js/circuit-audit-v92.js"></script><script src="./assets/js/secure-transfer-v92.js"></script><script src="./assets/js/cloud-v94.js"></script><script src="./assets/js/sidebar-v95.js"></script><script src="./assets/js/device-record-v96.js"></script><script src="./assets/js/feed-v97.js"></script><script src="./assets/js/smart-v98.js"></script><script src="./assets/js/ui-v99.js"></script><script src="./assets/js/photo-tools-v103.js"></script><script src="./assets/js/magnet-ui-v100.js"></script><script src="./assets/js/precision-v101.js"></script><script src="./assets/js/stall-capacity-v104.js"></script><script src="./assets/js/stall-geometry-v105.js"></script>
-<script src="./assets/js/two-level-plan-v108.js"></script><script src="./assets/js/stall-links-v109.js"></script><script src="./assets/js/water-supply-v110.js"></script><script src="./assets/js/system-tree-v116.js"></script><script src="./assets/js/feed-network-v111.js"></script><script src="./assets/js/vent-network-v112.js"></script><script src="./assets/js/power-board-v113.js"></script><script src="./assets/js/farm-ops-v114.js"></script><script src="./assets/js/system-health-v115.js"></script><script src="./assets/js/portable-core-v117.js"></script><script src="./assets/js/jszip-3.10.1.min.js"></script><script src="./assets/js/portable-zip-bridge-v11127.js"></script><script src="./assets/js/portable-ui-v117.js"></script><script src="./assets/js/stall-navigation-v1172.js"></script><script src="./assets/js/photo-index-v118.js"></script><script>
+<script src="./assets/js/two-level-plan-v108.js"></script><script src="./assets/js/stall-links-v109.js"></script><script src="./assets/js/water-supply-v110.js"></script><script src="./assets/js/system-tree-v116.js"></script><script src="./assets/js/feed-network-v111.js"></script><script src="./assets/js/vent-network-v112.js"></script><script src="./assets/js/power-board-v113.js"></script><script src="./assets/js/farm-ops-v114.js"></script><script src="./assets/js/system-health-v115.js"></script><script src="./assets/js/portable-core-v117.js"></script><script src="./assets/js/jszip-3.10.1.min.js"></script><script src="./assets/js/portable-zip-bridge-v11128.js"></script><script src="./assets/js/portable-ui-v117.js"></script><script src="./assets/js/stall-navigation-v1172.js"></script><script src="./assets/js/photo-index-v118.js"></script><script>
 (function(){
   var hideSplash=function(){
     var el=document.getElementById('pwaSplash');
@@ -177,10 +178,10 @@
   }
 })();
 </script><script>
-// V11.12.7: register only over HTTPS/localhost; file:// previews remain a normal website.
+// V11.12.8: register only over HTTPS/localhost; file:// previews remain a normal website.
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function (err) {
+    navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).catch(function (err) {
       console.warn('[虎尾場 PWA] 離線服務未啟用：', err);
     });
   });

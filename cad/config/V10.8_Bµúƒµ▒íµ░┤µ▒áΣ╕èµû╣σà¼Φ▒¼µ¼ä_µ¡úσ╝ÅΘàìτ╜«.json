@@ -1,0 +1,57 @@
+{
+  "version": "V11.8.6",
+  "zone": "妊娠舍 B 棟左下方",
+  "mode": "設備配置（不顯示施工進度）",
+  "upperBoarPen": {
+    "id": "B-BOAR-UPPER-01",
+    "category": "公豬欄",
+    "pens": 1,
+    "capacityHeads": 1,
+    "separateFrom": "BOAR-HEAT-01"
+  },
+  "concreteSlab": {
+    "id": "B-CONCRETE-SLAB-UPPER-BUILT",
+    "category": "混凝土樓板",
+    "location": "公豬欄下方、污水池上方",
+    "exists": true,
+    "ownerReported": true,
+    "structureVerified": false
+  },
+  "wastewaterPit": {
+    "id": "B-WASTEWATER-PIT-LOWER",
+    "category": "污水集中抽取池",
+    "level": "下層",
+    "function": "收集、抽取、檢修"
+  },
+  "symbolPosition": {
+    "svgX": 3.3,
+    "svgY": 73.0448,
+    "formerLeftTwoPenPositions": {
+      "x0": 3.3,
+      "x1": 4.542,
+      "y0": 72.0848,
+      "y1": 74.0048
+    },
+    "alignedWith": "妊娠B第三排夾欄; B-R3-001 now starts at the former B-R1-003 boundary",
+    "dimensionsVerified": false,
+    "penFootprint": {
+      "x0": 2.058,
+      "x1": 4.542,
+      "y0": 72.0848,
+      "y1": 74.0048
+    },
+    "extension": {
+      "direction": "left",
+      "approximateSowCrateWidths": 2,
+      "widthCADUnits": 1.242,
+      "rightEdgeUnchanged": true
+    }
+  },
+  "scope": {
+    "matingSowCrates": 76,
+    "pregnancyACrates": 252,
+    "pregnancyBCrates": 244,
+    "independentBoarPens": 2
+  },
+  "note": "公豬欄1頭由原約兩格寬向左擴大約兩格，總約四格寬，右邊界仍與B3首格相接，不減少B3的80格母豬夾欄；下層污水池及既有樓板仍只依原兩格位置標示。新增延伸區域的結構支撐及可用空間須現場確認。"
+}

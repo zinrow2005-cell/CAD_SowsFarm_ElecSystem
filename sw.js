@@ -1,10 +1,10 @@
-/* 虎尾場 PWA V11.12.7 — app-shell only; never caches private device records or photos. */
+/* 虎尾場 PWA V11.12.8 — app-shell only; never caches private device records or photos. */
 'use strict';
 const CACHE_PREFIX = 'huwei-pwa-shell-';
-const CACHE_NAME = CACHE_PREFIX + 'v11.12.7';
+const CACHE_NAME = CACHE_PREFIX + 'v11.12.8';
 const APP_SHELL = [
   "./assets/js/jszip-3.10.1.min.js",
-  "./assets/js/portable-zip-bridge-v11127.js",
+  "./assets/js/portable-zip-bridge-v11128.js",
   "./assets/js/floating-tools-v11125.js",
   "./assets/js/network-trace-v11110.js",
   "./assets/css/app.css",
@@ -19,6 +19,7 @@ const APP_SHELL = [
   "./assets/js/quick-locate-v1192.js",
   "./assets/js/mobile-field-v1191.js",
   "./manifest.webmanifest",
+  "./release.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/maskable-512.png",
@@ -94,7 +95,7 @@ self.addEventListener('fetch', event => {
     const cache = await caches.open(CACHE_NAME);
     try {
       // Freshest released code when online, shell is readable when offline.
-      const response = await fetch(req);
+      const response = await fetch(req, { cache: 'no-cache' });
       if (response.ok && response.type === 'basic') await cache.put(req, response.clone());
       return response;
     } catch (_) {

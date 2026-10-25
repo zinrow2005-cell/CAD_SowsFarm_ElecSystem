@@ -1,4 +1,4 @@
-/* V11.12.7 unified offline import for .hwpack and ZIP-wrapped .hwpack. */
+/* V11.12.8 unified offline import for .hwpack and ZIP-wrapped .hwpack. */
 (function(){'use strict';
 const hw=window.HWEquipment,media=window.HWPhotoStore,core=window.HWPortableCore;
 if(!hw||!media||!core)return;
