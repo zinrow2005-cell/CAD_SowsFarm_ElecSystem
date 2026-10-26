@@ -1,8 +1,8 @@
 {
   "app": "虎尾母豬場設備配置系統",
-  "version": "11.12.13",
-  "revision": "r5-route-perimeter-anchors",
+  "version": "11.12.14",
+  "revision": "r6-a4-photo-print",
   "date": "2026-10-26",
   "format": "hwpack-unchanged",
-  "notes": "Adjustable device-perimeter anchors for electric, water, feed and ventilation lines; drag selected route nodes, preserve device associations and clear verification when geometry changes."
+  "notes": "Add single-page A4 annotated equipment photo print preview with nonoverlapping numbered labels, full marker legend, and print/PDF via browser. No changes to .hwpack or CAD data."
 }

@@ -273,5 +273,5 @@ async function compareCurrentArchive({archive,project,photos,stallCapacity,stall
  return {ok:!changed.length&&!issues.length,sections,changed,photoIssues:issues,verifiedPhotos:passed,expectedPhotos:archive.validated.images.length,
   checkedAt:new Date().toISOString(),archiveDate:archive.meta.createdAt};
 }
-root.HWPortableCore={version:'11.12.13',cadFingerprint:CAD_SHA256,totals,coverage,detectArchiveFormat,readHeader,exportArchive,inspectArchive,applyArchive,verifyRestored,compareCurrentArchive};
+root.HWPortableCore={version:'11.12.14',cadFingerprint:CAD_SHA256,totals,coverage,detectArchiveFormat,readHeader,exportArchive,inspectArchive,applyArchive,verifyRestored,compareCurrentArchive};
 })(typeof window==='undefined'?globalThis:window);

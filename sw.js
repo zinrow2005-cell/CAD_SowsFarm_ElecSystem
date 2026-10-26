@@ -1,7 +1,7 @@
-/* 虎尾場 PWA V11.12.13 — app-shell only; never caches private device records or photos. */
+/* 虎尾場 PWA V11.12.14 — app-shell only; never caches private device records or photos. */
 'use strict';
 const CACHE_PREFIX = 'huwei-pwa-shell-';
-const CACHE_NAME = CACHE_PREFIX + 'v11.12.13';
+const CACHE_NAME = CACHE_PREFIX + 'v11.12.14';
 const APP_SHELL = [
   "./assets/js/jszip-3.10.1.min.js",
   "./assets/js/portable-zip-bridge-v11129.js",
@@ -40,6 +40,7 @@ const APP_SHELL = [
   "./assets/js/magnet-ui-v100.js",
   "./assets/js/photo-circuits-v92.js",
   "./assets/js/photo-marker-card-v111212.js",
+  "./assets/js/photo-print-v111214.js",
   "./assets/js/photo-index-v118.js",
   "./assets/js/photo-store-v103.js",
   "./assets/js/photo-store-v92.js",

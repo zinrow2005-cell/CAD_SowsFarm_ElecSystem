@@ -1650,3 +1650,32 @@ body.hw109-panel-open #hw125Dock #hw110Launch{visibility:hidden;pointer-events:n
 #plan #eqPreview .hw-route-grip-dot{pointer-events:none}
 #plan #eqPreview .hw-route-grip-attached .hw-route-grip-dot{stroke:#7b5208;stroke-width:.085}
 @media (pointer:coarse){#plan #eqPreview .hw-route-grip-hit{r:3.2}#plan #eqPreview .hw-route-grip-dot{r:.48}}
+
+/* V11.12.14 — A4 photograph marker preview, with a dedicated single-page print layout. */
+.hw-print-open{background:#126a72!important;border:1px solid #67dbcb!important;font-weight:800!important;color:#fff!important}
+.hw-print-overlay{position:fixed;inset:0;z-index:120000;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:18px;background:rgba(3,18,30,.89);box-sizing:border-box}
+.hw-print-overlay[hidden]{display:none!important}
+.hw-print-modal{width:min(1100px,100%);min-width:0;border-radius:18px;background:#f1f5f7;color:#173349;box-shadow:0 24px 70px rgba(0,0,0,.4);padding:16px;box-sizing:border-box}
+.hw-print-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:4px 4px 12px;border-bottom:1px solid #cad9df}
+.hw-print-topbar strong{display:block;font-size:18px;color:#173746}
+.hw-print-topbar small{display:block;font-size:12px;margin-top:4px;color:#536f7a}
+.hw-print-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.hw-print-actions button{border:1px solid #a7c3cc;background:#fff;color:#26485a;border-radius:9px;padding:10px 12px;font-weight:700;min-height:42px;cursor:pointer;font-size:13px}
+.hw-print-actions button.primary{background:#147875;color:white;border-color:#147875}
+.hw-print-actions button:disabled{opacity:.48;cursor:wait}
+.hw-print-status{padding:10px 12px;background:#e3f4ef;border:1px solid #b8dad2;border-radius:9px;font-size:13px;line-height:1.55;color:#164e50;margin:12px 4px}
+.hw-print-status.error{background:#fff0ea;color:#8b3d27;border-color:#e9b9a9}
+.hw-print-paper{box-sizing:border-box;width:min(100%,720px);aspect-ratio:210/297;max-width:100%;margin:12px auto 0;background:#fff;border:1px solid #cad6dd;box-shadow:0 8px 28px rgba(22,44,56,.18);overflow:hidden}
+.hw-print-paper img{display:block;width:100%;height:100%;object-fit:fill}
+.hw-print-help{text-align:center;font-size:12px;line-height:1.6;color:#59717c;margin:12px 5px 5px}
+@media(max-width:680px){.hw-print-overlay{padding:0}.hw-print-modal{border-radius:0;padding:10px;min-height:100vh}.hw-print-topbar strong{font-size:15px}.hw-print-actions{width:100%}.hw-print-actions button{flex:1 1 auto;white-space:nowrap;padding:10px 6px;font-size:12px}}
+@page{size:A4 portrait;margin:0}
+@media print{
+ body.hw-photo-print-open{margin:0!important;padding:0!important;width:210mm!important;height:297mm!important;overflow:hidden!important;background:white!important;print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}
+ body.hw-photo-print-open >*:not(#hwPhotoPrintPreview){display:none!important}
+ body.hw-photo-print-open #hwPhotoPrintPreview{display:block!important;position:static!important;inset:auto!important;padding:0!important;margin:0!important;width:210mm!important;height:297mm!important;overflow:hidden!important;background:#fff!important;box-shadow:none!important}
+ body.hw-photo-print-open #hwPhotoPrintPreview .hw-print-modal{display:block!important;padding:0!important;margin:0!important;border:0!important;box-shadow:none!important;border-radius:0!important;background:white!important;min-height:0!important;width:210mm!important;height:297mm!important;max-width:none!important}
+ body.hw-photo-print-open #hwPhotoPrintPreview .hw-print-topbar,body.hw-photo-print-open #hwPhotoPrintPreview .hw-print-status,body.hw-photo-print-open #hwPhotoPrintPreview .hw-print-help{display:none!important}
+ body.hw-photo-print-open #hwPhotoPrintPreview .hw-print-paper{display:block!important;width:210mm!important;height:297mm!important;max-width:none!important;margin:0!important;border:0!important;padding:0!important;box-shadow:none!important;overflow:hidden!important;break-inside:avoid!important;page-break-inside:avoid!important}
+ body.hw-photo-print-open #hwPhotoPrintPreview .hw-print-paper img{display:block!important;width:210mm!important;height:297mm!important;margin:0!important;object-fit:fill!important;print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}
+}
