@@ -1,7 +1,7 @@
-/* 虎尾場 PWA V11.12.14 — app-shell only; never caches private device records or photos. */
+/* 虎尾場 PWA V11.12.15 — app-shell only; never caches private device records or photos. */
 'use strict';
 const CACHE_PREFIX = 'huwei-pwa-shell-';
-const CACHE_NAME = CACHE_PREFIX + 'v11.12.14';
+const CACHE_NAME = CACHE_PREFIX + 'v11.12.15';
 const APP_SHELL = [
   "./assets/js/jszip-3.10.1.min.js",
   "./assets/js/portable-zip-bridge-v11129.js",
@@ -24,6 +24,7 @@ const APP_SHELL = [
   "./icons/icon-512.png",
   "./icons/maskable-512.png",
   "./icons/apple-touch-icon.png",
+  "./assets/js/cad-export-v111215.js",
   "./assets/js/cad-inline-1.js",
   "./assets/js/field-qa-v11101.js",
   "./assets/js/cad-inline-2.js",

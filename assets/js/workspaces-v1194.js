@@ -66,7 +66,7 @@ function backup(){const data=getData(),d=arr(data.devices),r=arr(data.routes),p=
  <div class="v1194-columns"><section class="v1194-panel v1194-main-panel">${banner('完整專案備份流程','建議按下面的順序操作，確保更換手機、平板或電腦時資料能完整還原。')}
  <div class="v1194-steps"><div><i>01</i><span><b>檢查資料及照片</b><small>先確認照片主檔與相關設備有正常連結</small></span></div><div><i>02</i><span><b>免密碼完整備份 .hwpack</b><small>產生完整備份檔並核對照片及資料</small></span></div><div><i>03</i><span><b>儲存並測試還原</b><small>確認檔案存在，再到另一台裝置驗證內容</small></span></div></div>
  </section><aside class="v1194-panel v1194-side-panel">${banner('備份與還原工具','此處只是入口，尚未表示備份成功。')}
- <div class="v1194-action-stack">${button('立即建立完整備份','backup-export','main')}${button('從 .hwpack 還原','backup-import')}</div><p class="v1194-note">重要：先保留舊裝置上的原始資料；只有新裝置完成還原驗證後，才可視為備份有效。</p></aside></div>`;}
+ <div class="v1194-action-stack">${button('立即建立完整備份','backup-export','main')}${button('從 .hwpack 還原','backup-import')}${button('CAD 圖面匯出（DXF／SVG／PNG／PDF）','cad-export')}</div><p class="v1194-note">重要：先保留舊裝置上的原始資料；只有新裝置完成還原驗證後，才可視為備份有效。</p></aside></div>`;}
 function open(type){if(!(type in modules))return false;
  if(!current)previousFocus=document.activeElement;
  current=type;overlay.dataset.mode=type;overlay.hidden=false;
@@ -91,6 +91,7 @@ function launch(type){close();home.hide();
  else if(type==='backup-export'||type==='backup-import'){window.HWPortableUI?.open?.();if(type==='backup-import')window.HWPortableUI?.changeTab?.('import');}
 }
 function handleAction(action){
+ if(action==='cad-export'){window.HWCADExportV111215?.open?.();return;}
  if(action==='inspection'){close();home.hide();window.HWInspectionV11108?.open?.();return;}
  if(action==='home'){close();home.show();return;}
  if(action==='map'){showMap('base');return;}

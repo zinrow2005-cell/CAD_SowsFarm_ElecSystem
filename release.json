@@ -1,8 +1,8 @@
 {
   "app": "虎尾母豬場設備配置系統",
-  "version": "11.12.14",
-  "revision": "r6-a4-photo-print",
+  "version": "11.12.15",
+  "revision": "r7-cad-exchange",
   "date": "2026-10-26",
   "format": "hwpack-unchanged",
-  "notes": "Add single-page A4 annotated equipment photo print preview with nonoverlapping numbered labels, full marker legend, and print/PDF via browser. No changes to .hwpack or CAD data."
+  "notes": "CAD export center: base/all/visible layers to DXF, SVG, PNG, single-page PDF. Reads live device and route data without mutating source or hwpack."
 }
