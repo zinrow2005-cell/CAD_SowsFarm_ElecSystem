@@ -1,8 +1,8 @@
 {
   "app": "虎尾母豬場設備配置系統",
-  "version": "11.12.9",
-  "revision": "r1-ui-audit",
-  "date": "2026-10-25",
+  "version": "11.12.12",
+  "revision": "r4-photo-context-terminal-trace",
+  "date": "2026-10-26",
   "format": "hwpack-unchanged",
-  "notes": "Cross-device UI audit fixes: desktop equipment dossier occludes floating CAD tools; compact-phone workspace navigation shows all five tabs. Preserve project and photo backup formats."
+  "notes": "Immediate photo marker context card; device terminal linking; direct terminal focus and source-specific electrical trace; mobile bottom sheet, desktop side panel; keep marker locks and backups unchanged."
 }

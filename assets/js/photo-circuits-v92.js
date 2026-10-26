@@ -11,9 +11,9 @@ modal.innerHTML=`<section class="v90-sheet" role="dialog" aria-modal="true" aria
 <section id="v90Photos" class="v90-tab-pane"><div class="v90-actions"><button type="button" class="v99-camera-open" id="v99OpenCamera">📷 現場拍照</button><label class="v90-upload v99-native-fallback" id="v99NativeFallback" hidden>使用系統相機<input type="file" id="v90Camera" accept="image/*" capture="environment" hidden></label><label class="v90-upload">🖼️ 從相簿／檔案上傳<input type="file" id="v90Upload" accept="image/*" hidden></label><span id="v90PhotoCount"></span></div>
 <p class="v90-hint">每張照片可直接點選位置新增標記，關聯到開關或端子。新版照片保存高解析主圖及輕量縮圖；舊版照片保持原畫質。跨裝置請使用加密完整私人備份。</p>
 <div id="v90Thumbs" class="v90-thumbs"></div>
-<div id="v90PhotoMain" class="v90-photomain" hidden><div class="v90-photo-toolbar"><button id="v90AddPin" type="button">＋ 標記照片位置</button><button id="v90RemovePhoto" type="button" class="v90-danger">刪除照片</button><span id="v90PhotoHint"></span></div>
+<div id="v90PhotoMain" class="v90-photomain" hidden><div class="v90-photo-toolbar"><button id="v90AddPin" type="button">＋ 標記照片位置</button><button id="v90LockAll" type="button">🔒 全部鎖定</button><button id="v90UnlockAll" type="button">🔓 全部解鎖</button><button id="v90RemovePhoto" type="button" class="v90-danger">刪除照片</button><span id="v90PhotoHint"></span></div>
 <div class="v90-photo-stage" id="v90Stage"><div class="v90-image-wrap" id="v90ImageWrap"><img id="v90Image" alt="設備照片" draggable="false"><div id="v90Pins" class="v90-pins"></div></div></div>
-<div id="v90MarkerForm" class="v90-marker-form" hidden><strong>標記內容</strong><div class="v90-grid"><label>標記名稱<input id="v90MarkerTitle" maxlength="100" placeholder="例如：2號無熔絲開關"></label><label>連結開關／端子<select id="v90MarkerTerminal"></select></label></div><label>功能、上游及下游說明<textarea id="v90MarkerNote" rows="3" maxlength="500" placeholder="例：電源由主盤 MCCB-02 進來，控制產房 B 棟的三台排風扇"></textarea></label><div class="v90-actions"><button id="v90SaveMarker" type="button" class="v90-primary">儲存標記</button><button id="v90RemoveMarker" type="button" class="v90-danger">刪除標記</button></div></div>
+<div id="v90MarkerForm" class="v90-marker-form" hidden><strong>標記內容</strong><div class="v90-grid"><label>標記名稱<input id="v90MarkerTitle" maxlength="100" placeholder="例如：2號無熔絲開關"></label><label>連結開關／端子<select id="v90MarkerTerminal"></select></label></div><label>功能、上游及下游說明<textarea id="v90MarkerNote" rows="3" maxlength="500" placeholder="例：電源由主盤 MCCB-02 進來，控制產房 B 棟的三台排風扇"></textarea></label><label class="v90-check v90-marker-lock"><input id="v90MarkerLocked" type="checkbox"> 鎖定標記位置（避免誤觸拖動）</label><div class="v90-actions"><button id="v90QuickLock" type="button">🔒 立即鎖定位置</button><button id="v90SaveMarker" type="button" class="v90-primary">儲存標記</button><button id="v90RemoveMarker" type="button" class="v90-danger">刪除標記</button></div></div>
 </div><div class="v90-empty" id="v90PhotoEmpty">尚未加入照片。選擇「現場拍照」或「上傳圖片」開始。</div></section>
 <section id="v90Terminals" class="v90-tab-pane" hidden><p class="v90-hint">為配電盤每個進線端子、斷路器及出線端子建立名稱。出線端子可選擇由哪一個端子供電；未設定的內部接線不會被系統自行推測。</p><div id="v90TerminalList"></div><button id="v90AddTerminal" type="button" class="v90-primary">＋ 新增開關／端子</button></section>
 <section id="v90Trace" class="v90-tab-pane" hidden><p class="v90-hint">從圖上已連結的電線自動追蹤上下游。只反映已建檔的線路和設備內部端子連結，不能代替現場查線、斷電驗證或電氣測試。</p><label class="v90-field">追蹤起點 <select id="v90TraceTerminal"></select></label><div class="v90-grid" id="v90TraceGrid"><div><h3>← 上游供電來源</h3><div id="v90Upstream"></div></div><div><h3>→ 下游供電設備</h3><div id="v90Downstream"></div></div></div><div id="v90Unlinked" class="v90-hint"></div></section>
@@ -36,7 +36,7 @@ function opt(sel,val,text){const o=el('option','',text);o.value=val;sel.appendCh
 function emptySelect(sel,label='尚未設定'){sel.replaceChildren();opt(sel,'',label);}
 function updateDevice(d,patch){if(!editable())return false;return api.updateDetails('device',d.id,patch);}
 function stop(){window.HWLiveCameraV99?.stop();opened=false;modal.hidden=true;annotate=false;}
-function openPanel(which='photos'){const d=device();if(!d)return message('請先選取設備物件');opened=true;tab=which;modal.hidden=false;switchTab(tab);}
+function openPanel(which='photos'){const d=device();if(!d)return message('請先選取設備物件');lastSelection='device-'+d.id;opened=true;tab=which;modal.hidden=false;switchTab(tab);}
 function switchTab(t){if(t!=='photos')window.HWLiveCameraV99?.stop();tab=t;modal.querySelectorAll('[data-v90tab]').forEach(b=>b.classList.toggle('active',b.dataset.v90tab===t));['photos','terminals','trace'].forEach(n=>{$('v90'+n[0].toUpperCase()+n.slice(1)).hidden=n!==t;});render();}
 openBtns.addEventListener('click',()=>openPanel());staffBtn.addEventListener('click',()=>openPanel());$('v90Close').addEventListener('click',stop);modal.addEventListener('click',e=>{if(e.target===modal)stop();});modal.querySelectorAll('[data-v90tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.v90tab)));
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&opened){e.preventDefault();e.stopImmediatePropagation();stop();}},true);
@@ -48,17 +48,115 @@ function renderPhotos(d){const photos=d.photos||[];const thumbs=$('v90Thumbs');t
  if(!current){window.dispatchEvent(new CustomEvent('hw-v118-photo-view',{detail:{deviceId:d.id,photoId:'',markers:[]}}));return;}
  $('v90PhotoMain').dataset.photoId=current.id;
  if(photoKey!==current.id||!$('v90Image').src)paintPhoto(current);
- $('v90AddPin').classList.toggle('active',annotate);$('v90PhotoHint').textContent=annotate?'點一下照片上欲標示的位置':'點標記查看內容，也可拖曳標記調整位置';
- const pins=$('v90Pins');pins.replaceChildren();for(const [i,m] of (current.markers||[]).entries()){const pin=el('button','v90-pin'+(activeMarker===m.id?' active':''),'');pin.title=m.title||'照片標記';pin.dataset.markerId=m.id;pin.dataset.label=String(i+1);pin.setAttribute('aria-label',`照片標記 ${i+1}：${m.title||'未命名標記'}`);pin.style.left=m.x+'%';pin.style.top=m.y+'%';pin.addEventListener('click',e=>{e.stopPropagation();activeMarker=m.id;annotate=false;renderPhotos(device());});
- pin.addEventListener('pointerdown',e=>{if(!editable())return;e.preventDefault();e.stopPropagation();const rect=$('v90ImageWrap').getBoundingClientRect();let dragged=false;const move=ev=>{dragged=true;pin.style.left=(Math.max(0,Math.min(100,(ev.clientX-rect.left)/rect.width*100)))+'%';pin.style.top=Math.max(0,Math.min(100,(ev.clientY-rect.top)/rect.height*100))+'%';};const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);if(dragged){const next=clone(current.markers);const mark=next.find(x=>x.id===m.id);mark.x=parseFloat(pin.style.left);mark.y=parseFloat(pin.style.top);const updated=clone(photos);updated.find(x=>x.id===current.id).markers=next;updateDevice(d,{photos:updated});}};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});});pins.appendChild(pin);}
- const mark=current.markers.find(m=>m.id===activeMarker);$('v90MarkerForm').hidden=!mark;if(mark){$('v90MarkerTitle').value=mark.title;$('v90MarkerNote').value=mark.note;const select=$('v90MarkerTerminal');emptySelect(select,'不連結端子');(d.terminals||[]).forEach(t=>opt(select,t.id,t.name));select.value=mark.terminalId||'';}
- $('v90AddPin').disabled=!editable();$('v90RemovePhoto').hidden=!editable();$('v90SaveMarker').hidden=!editable();$('v90RemoveMarker').hidden=!editable();window.dispatchEvent(new CustomEvent('hw-v118-photo-view',{detail:{deviceId:d.id,photoId:current.id,markers:current.markers||[]}}));}
+ $('v90AddPin').classList.toggle('active',annotate);
+ const markerCount=(current.markers||[]).length,lockedCount=(current.markers||[]).filter(m=>m.locked===true).length;
+ $('v90PhotoHint').textContent=(annotate?'點一下照片上欲標示的位置':'點標記查看內容；未鎖定的標記才能拖動')+` · 已鎖定 ${lockedCount}/${markerCount}`;
+ $('v90LockAll').disabled=!editable()||!markerCount||lockedCount===markerCount;
+ $('v90UnlockAll').disabled=!editable()||lockedCount===0;
+ const pins=$('v90Pins');pins.replaceChildren();for(const [i,m] of (current.markers||[]).entries()){const locked=!!m.locked;const pin=el('button','v90-pin'+(activeMarker===m.id?' active':'')+(locked?' locked':''),'');pin.title=(m.title||'照片標記')+(locked?'（已鎖定位置）':'');pin.dataset.markerId=m.id;pin.dataset.label=String(i+1);pin.dataset.locked=locked?'1':'0';pin.dataset.linked=(d.terminals||[]).some(t=>t.id===m.terminalId)?'1':'0';pin.setAttribute('aria-label',`照片標記 ${i+1}：${m.title||'未命名標記'}${locked?'（已鎖定位置）':''}`);pin.style.left=m.x+'%';pin.style.top=m.y+'%';pin.addEventListener('click',e=>{e.stopPropagation();activeMarker=m.id;annotate=false;renderPhotos(device());window.dispatchEvent(new Event('hw-v1212-marker-click'));});
+ pin.addEventListener('pointerdown',e=>{
+  if(!editable()||e.button!==0&&e.pointerType==='mouse')return;
+  e.stopPropagation();
+  if(locked){activeMarker=m.id;annotate=false;renderPhotos(device());window.dispatchEvent(new Event('hw-v1212-marker-click'));message('此標記已鎖定；請先取消鎖定才能移動');return;}
+  e.preventDefault();
+  const rect=$('v90ImageWrap').getBoundingClientRect();
+  const origin={x:e.clientX,y:e.clientY,left:Number(m.x),top:Number(m.y)};
+  const pointerId=e.pointerId;let dragged=false;
+  const move=ev=>{
+   if(ev.pointerId!==pointerId)return;
+   if(!dragged&&Math.hypot(ev.clientX-origin.x,ev.clientY-origin.y)<7)return;
+   dragged=true;
+   pin.style.left=Math.max(0,Math.min(100,(ev.clientX-rect.left)/rect.width*100))+'%';
+   pin.style.top=Math.max(0,Math.min(100,(ev.clientY-rect.top)/rect.height*100))+'%';
+  };
+  const cleanup=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',cancel);};
+  const cancel=ev=>{if(ev.pointerId!==pointerId)return;cleanup();pin.style.left=origin.left+'%';pin.style.top=origin.top+'%';};
+  const up=ev=>{
+   if(ev.pointerId!==pointerId)return;cleanup();
+   if(!dragged)return;
+   const latest=device(),photo=latest?.photos?.find(x=>x.id===current.id);
+   const latestMarker=photo?.markers?.find(x=>x.id===m.id);
+   if(!latest||!latestMarker||latestMarker.locked){renderPhotos(device());return;}
+   const updated=clone(latest.photos),mark=updated.find(x=>x.id===current.id).markers.find(x=>x.id===m.id);
+   mark.x=+parseFloat(pin.style.left).toFixed(2);mark.y=+parseFloat(pin.style.top).toFixed(2);
+   if(updateDevice(latest,{photos:updated}))renderPhotos(device());else renderPhotos(device());
+  };
+  window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',cancel);
+ });pins.appendChild(pin);}
+ const mark=(current.markers||[]).find(m=>m.id===activeMarker);$('v90MarkerForm').hidden=!mark;
+ if(mark){
+  $('v90MarkerTitle').value=mark.title;$('v90MarkerNote').value=mark.note;
+  $('v90MarkerLocked').checked=!!mark.locked;
+  $('v90QuickLock').textContent=mark.locked?'🔓 立即解鎖位置':'🔒 立即鎖定位置';
+  $('v90QuickLock').disabled=!editable();
+  $('v90RemoveMarker').disabled=!!mark.locked;
+  $('v90RemoveMarker').title=mark.locked?'已鎖定標記不可刪除，請先解鎖':'刪除這個照片標記';
+  const select=$('v90MarkerTerminal');emptySelect(select,'不連結端子');(d.terminals||[]).forEach(t=>opt(select,t.id,t.name));select.value=mark.terminalId||'';
+ }
+ $('v90AddPin').disabled=!editable();$('v90RemovePhoto').hidden=!editable();$('v90SaveMarker').hidden=!editable();$('v90RemoveMarker').hidden=!editable();$('v90QuickLock').hidden=!editable();$('v90LockAll').hidden=!editable();$('v90UnlockAll').hidden=!editable();
+ window.dispatchEvent(new CustomEvent('hw-v118-photo-view',{detail:{deviceId:d.id,photoId:current.id,markers:current.markers||[]}}));}
+// Photo/marker lock changes are persisted through HWEquipment.updateDetails (and sanitize).
+function changeLockForSelected(lock){
+ const d=device();if(!d||!editable())return;
+ const photos=clone(d.photos||[]),ph=photos.find(p=>p.id===activePhoto),mark=ph?.markers?.find(m=>m.id===activeMarker);
+ if(!mark)return;
+ if(!!mark.locked===lock)return;
+ // A quick lock should not discard any text/terminal edits still visible in the form.
+ mark.title=$('v90MarkerTitle').value.trim().slice(0,100);
+ mark.note=$('v90MarkerNote').value.trim().slice(0,500);
+ mark.terminalId=$('v90MarkerTerminal').value;
+ mark.locked=lock;
+ if(updateDevice(d,{photos})){renderPhotos(device());message(lock?'已儲存並鎖定位置，不會誤拖或刪除':'已儲存並解鎖，可以重新調整位置');}
+ else message('無法儲存鎖定狀態，請確認資料儲存是否正常');
+}
+function changeLockForAll(lock){
+ const d=device();if(!d||!editable())return;
+ const photos=clone(d.photos||[]),ph=photos.find(p=>p.id===activePhoto);
+ if(!ph||!Array.isArray(ph.markers)||!ph.markers.length)return message('這張照片尚未建立標記');
+ const changing=ph.markers.filter(m=>!!m.locked!==lock).length;
+ if(!changing)return message(lock?'這張照片的標記已全部鎖定':'這張照片沒有鎖定中的標記');
+ if(!lock&&!confirm(`確定要解鎖這張照片的 ${changing} 個標記？解鎖後可移動及刪除。`))return;
+ ph.markers.forEach(m=>{m.locked=lock;});
+ if(updateDevice(d,{photos})){renderPhotos(device());message(lock?`已鎖定這張照片的 ${changing} 個標記`:`已解鎖這張照片的 ${changing} 個標記`);}
+ else message('無法儲存批次鎖定狀態，資料未變更');
+}
+$('v90QuickLock').addEventListener('click',()=>{
+ const mark=device()?.photos?.find(ph=>ph.id===activePhoto)?.markers?.find(m=>m.id===activeMarker);
+ if(mark)changeLockForSelected(!mark.locked);
+});
+$('v90LockAll').addEventListener('click',()=>changeLockForAll(true));
+$('v90UnlockAll').addEventListener('click',()=>changeLockForAll(false));
 $('v90AddPin').addEventListener('click',()=>{annotate=!annotate;renderPhotos(device());});
-$('v90Stage').addEventListener('click',e=>{if(!annotate||!editable()||e.target.closest('.v90-pin'))return;const d=device();if(!d)return;const rect=$('v90ImageWrap').getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)return;const mark={id:uid('pin'),x:+(Math.max(0,Math.min(100,(e.clientX-rect.left)/rect.width*100))).toFixed(2),y:+(Math.max(0,Math.min(100,(e.clientY-rect.top)/rect.height*100))).toFixed(2),title:'新標記',note:'',terminalId:''};const photos=clone(d.photos||[]),ph=photos.find(p=>p.id===activePhoto);if(!ph||ph.markers.length>=80)return;ph.markers.push(mark);activeMarker=mark.id;annotate=false;updateDevice(d,{photos});renderPhotos(device());});
-$('v90SaveMarker').addEventListener('click',()=>{const d=device();if(!d||!editable())return;const photos=clone(d.photos),ph=photos.find(p=>p.id===activePhoto),mark=ph?.markers.find(m=>m.id===activeMarker);if(!mark)return;mark.title=$('v90MarkerTitle').value.trim().slice(0,100);mark.note=$('v90MarkerNote').value.trim().slice(0,500);mark.terminalId=$('v90MarkerTerminal').value;updateDevice(d,{photos});renderPhotos(device());message('照片標記已儲存');});
-$('v90RemoveMarker').addEventListener('click',()=>{const d=device();if(!d||!editable()||!confirm('刪除這個照片標記？'))return;const photos=clone(d.photos),ph=photos.find(p=>p.id===activePhoto);ph.markers=ph.markers.filter(m=>m.id!==activeMarker);activeMarker='';updateDevice(d,{photos});renderPhotos(device());});
-$('v90RemovePhoto').addEventListener('click',async()=>{const d=device();if(!d||!editable()||!confirm('刪除這張照片與其所有標記？'))return;const removed=activePhoto,photos=d.photos.filter(p=>p.id!==removed);activePhoto=photos[0]?.id||'';activeMarker='';photoKey='';updateDevice(d,{photos});/* Keep the original binary for Undo; export includes only currently linked photos. */renderPhotos(device());});
-function renderTerminals(d){const host=$('v90TerminalList');host.replaceChildren();const terms=d.terminals||[];for(const [index,t] of terms.entries()){const item=el('div','v90-terminal');const label=el('div','v90-terminal-caption','端子 '+(index+1));item.appendChild(label);const grid=el('div','v90-grid');function input(l,key,max=150){const wrap=el('label','',l),n=el('input');n.value=t[key]||'';n.maxLength=max;n.disabled=!editable();n.addEventListener('change',()=>changeTerm(d,t.id,{[key]:n.value.slice(0,max)}));wrap.appendChild(n);grid.appendChild(wrap);}input('開關／端子名稱','name',70);
+$('v90Stage').addEventListener('click',e=>{if(!annotate||!editable()||e.target.closest('.v90-pin'))return;const d=device();if(!d)return;const rect=$('v90ImageWrap').getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)return;const mark={id:uid('pin'),x:+(Math.max(0,Math.min(100,(e.clientX-rect.left)/rect.width*100))).toFixed(2),y:+(Math.max(0,Math.min(100,(e.clientY-rect.top)/rect.height*100))).toFixed(2),title:'新標記',note:'',terminalId:'',locked:false};const photos=clone(d.photos||[]),ph=photos.find(p=>p.id===activePhoto);if(!ph||ph.markers.length>=80)return;ph.markers.push(mark);activeMarker=mark.id;annotate=false;updateDevice(d,{photos});renderPhotos(device());});
+$('v90SaveMarker').addEventListener('click',()=>{
+ const d=device();if(!d||!editable())return;
+ const photos=clone(d.photos||[]),ph=photos.find(p=>p.id===activePhoto),mark=ph?.markers?.find(m=>m.id===activeMarker);
+ if(!mark)return;
+ mark.title=$('v90MarkerTitle').value.trim().slice(0,100);
+ mark.note=$('v90MarkerNote').value.trim().slice(0,500);
+ mark.terminalId=$('v90MarkerTerminal').value;
+ mark.locked=!!$('v90MarkerLocked').checked;
+ if(updateDevice(d,{photos})){renderPhotos(device());message(mark.locked?'照片標記已儲存，位置已鎖定':'照片標記已儲存');}
+ else message('標記儲存失敗，請先檢查設備資料狀態');
+});
+$('v90RemoveMarker').addEventListener('click',()=>{
+ const d=device();if(!d||!editable())return;
+ const photos=clone(d.photos||[]),ph=photos.find(p=>p.id===activePhoto),mark=ph?.markers?.find(m=>m.id===activeMarker);
+ if(!mark)return;if(mark.locked)return message('此標記已鎖定，請先解鎖才能刪除');
+ if(!confirm('確定要刪除這個照片標記？'))return;
+ ph.markers=ph.markers.filter(m=>m.id!==activeMarker);
+ if(updateDevice(d,{photos})){activeMarker='';renderPhotos(device());message('照片標記已刪除');}
+});
+$('v90RemovePhoto').addEventListener('click',()=>{
+ const d=device();if(!d||!editable())return;
+ const ph=d.photos?.find(p=>p.id===activePhoto);if(!ph)return;
+ const protectedCount=(ph.markers||[]).filter(m=>m.locked).length;
+ if(protectedCount)return message(`這張照片有 ${protectedCount} 個鎖定標記；請先全部解鎖才能刪除`);
+ if(!confirm('確定刪除這張照片與其所有標記？'))return;
+ const removed=activePhoto,photos=d.photos.filter(p=>p.id!==removed);
+ if(updateDevice(d,{photos})){activePhoto=photos[0]?.id||'';activeMarker='';photoKey='';renderPhotos(device());message('照片已移除，原檔仍可由先前備份還原');}
+});
+function renderTerminals(d){const host=$('v90TerminalList');host.replaceChildren();const terms=d.terminals||[];for(const [index,t] of terms.entries()){const item=el('div','v90-terminal');item.dataset.terminalId=t.id;item.tabIndex=-1;const label=el('div','v90-terminal-caption','端子 '+(index+1));item.appendChild(label);const grid=el('div','v90-grid');function input(l,key,max=150){const wrap=el('label','',l),n=el('input');n.value=t[key]||'';n.maxLength=max;n.disabled=!editable();n.addEventListener('change',()=>changeTerm(d,t.id,{[key]:n.value.slice(0,max)}));wrap.appendChild(n);grid.appendChild(wrap);}input('開關／端子名稱','name',70);
  const dirWrap=el('label','','方向'),dir=el('select');[['input','進線'],['output','出線'],['both','雙向／接點']].forEach(([v,txt])=>opt(dir,v,txt));dir.value=t.direction;dir.disabled=!editable();dir.addEventListener('change',()=>changeTerm(d,t.id,{direction:dir.value}));dirWrap.appendChild(dir);grid.appendChild(dirWrap);
  const sourceWrap=el('label','','內部供電來自'),source=el('select');emptySelect(source,'尚未指定');terms.filter(other=>other.id!==t.id).forEach(other=>opt(source,other.id,other.name));source.value=t.feedsFrom||'';source.disabled=!editable();source.addEventListener('change',()=>changeTerm(d,t.id,{feedsFrom:source.value}));sourceWrap.appendChild(source);grid.appendChild(sourceWrap);input('控制位置／用途','controls',200);input('迴路說明','purpose',200);item.appendChild(grid);
  if(editable()){const del=el('button','v90-danger','刪除端子');del.addEventListener('click',()=>{if(!confirm('刪除此端子？既有電線端點與照片標記的關聯將失效。'))return;updateDevice(d,{terminals:terms.filter(x=>x.id!==t.id)});renderTerminals(device());});item.appendChild(del);}host.appendChild(item);}if(!terms.length)host.appendChild(el('div','v90-empty','尚無開關／端子資料，可先從配電箱進線、主開關、各分路開始建立。'));$('v90AddTerminal').hidden=!editable();}
@@ -111,6 +209,9 @@ const publishHost=$('v84BackupContents');if(publishHost){
  publishButton.addEventListener('click',()=>{const content=clone(data());content.devices.forEach(d=>{d.photos=[];});delete content.photoAssets;const blob=new Blob([JSON.stringify(content,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='equipment-data.json';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);message('已匯出不含照片版，發布前仍應確認設備資料是否可公開');});
  $('eqExport').textContent='下載完整私人備份（含照片）';
 }
-window.HWDeviceRecords={addPhoto:handleFile,open:(which='photos',photoId='',markerId='')=>{if(!['photos','terminals','trace'].includes(which))which='photos';if(photoId){activePhoto=photoId;photoKey='';activeMarker=markerId||'';annotate=false;}openPanel(which);},close:stop};
+window.HWDeviceRecords={addPhoto:handleFile,open:(which='photos',photoId='',markerId='')=>{if(!['photos','terminals','trace'].includes(which))which='photos';if(photoId){activePhoto=photoId;photoKey='';activeMarker=markerId||'';annotate=false;}openPanel(which);},close:stop,
+ showTerminal:(terminalId)=>{const d=device();if(!d)return;if(terminalId&&(d.terminals||[]).every(t=>t.id!==terminalId))return message('端子不存在，請重新連結');switchTab('terminals');requestAnimationFrame(()=>{const item=[...$('v90TerminalList').querySelectorAll('[data-terminal-id]')].find(x=>x.dataset.terminalId===terminalId);if(item){item.classList.add('v1212-terminal-target');item.scrollIntoView({block:'center',behavior:'smooth'});item.focus({preventScroll:true});}});},
+ traceTerminal:(terminalId)=>{const d=device();if(!d||(d.terminals||[]).every(t=>t.id!==terminalId))return message('請先連結有效端子');tracePort=terminalId;switchTab('trace');requestAnimationFrame(()=>{$('v90TraceTerminal').scrollIntoView({block:'nearest'});});}
+};
 window.HWPowerTrace={graph:topology,walk};
 })();
