@@ -1641,3 +1641,12 @@ body.hw109-panel-open #hw125Dock #hw110Launch{visibility:hidden;pointer-events:n
  .v1212-card-actions button{min-height:42px;font-size:12px}
 }
 @media(max-width:420px){.v1212-trace-cols{grid-template-columns:1fr}.v1212-card{font-size:12px}}
+
+#plan #eqPreview{pointer-events:none}
+/* V11.12.13 adjustable route anchors – same handles for electric, water, feed and ventilation. */
+#plan #eqPreview .hw-route-grip{cursor:grab;touch-action:none;pointer-events:all}
+#plan #eqPreview .hw-route-grip:active{cursor:grabbing}
+#plan #eqPreview .hw-route-grip-hit{pointer-events:all}
+#plan #eqPreview .hw-route-grip-dot{pointer-events:none}
+#plan #eqPreview .hw-route-grip-attached .hw-route-grip-dot{stroke:#7b5208;stroke-width:.085}
+@media (pointer:coarse){#plan #eqPreview .hw-route-grip-hit{r:3.2}#plan #eqPreview .hw-route-grip-dot{r:.48}}

@@ -114,6 +114,8 @@ let multiSelectMode=false, selectedIds=new Set(), snapEnabled=false, snapStep=0.
 let showAnchorGuides=false;try{showAnchorGuides=localStorage.getItem('hw-v1199-anchor-guides')==='on';}catch(_){}
 let deviceLabelMode='smart';try{const v=localStorage.getItem('hw-v88-device-label-mode');if(['smart','all','off'].includes(v))deviceLabelMode=v;}catch(e){}
 const roundPos=n=>Math.round(n*10000)/10000;
+const routeAnchors=window.HWRouteAnchorsV111213;
+
 function snapPos(n){return snapEnabled?roundPos(Math.round(n/snapStep)*snapStep):roundPos(n);}
 function inMap(x,y){const v=map.viewBox.baseVal;return Number.isFinite(x)&&Number.isFinite(y)&&x>=-10&&x<=75&&y>=-10&&y<=90;}
 let iconMagnetEnabled=true;try{iconMagnetEnabled=localStorage.getItem('hw-v100-icon-magnet')!=='off';}catch(e){}
@@ -200,7 +202,7 @@ function sanitize(src){if(!src||typeof src!=='object'||Array.isArray(src)||!Arra
  const from=idSet.has(fromDeviceId)?fromDeviceId:'',to=idSet.has(toDeviceId)?toDeviceId:'';
  const ft=str(r.fromTerminalId,80),tt=str(r.toTerminalId,80),a=devices.find(d=>d.id===from),b=devices.find(d=>d.id===to);
  const validEnd=!!(a&&b&&(!ft||a.terminals.some(t=>t.id===ft))&&(!tt||b.terminals.some(t=>t.id===tt)));
- return{id,group,name:str(r.name,80)||groups[group].name+'線路',note:str(r.note,900),points:r.points.map(p=>({x:num(p.x),y:num(p.y),...(p.deviceId&&idSet.has(String(p.deviceId))?{deviceId:String(p.deviceId)}:{})})),fromDeviceId:from,toDeviceId:to,fromTerminalId:ft,toTerminalId:tt,circuitName:str(r.circuitName,80),purpose:str(r.purpose,400),cableSpec:str(r.cableSpec,120),feedSpec:str(r.feedSpec,120),feedMode:['auger','chain','pneumatic','other'].includes(r.feedMode)?r.feedMode:'auger',waterSource:['tower','groundwater','tap','unknown'].includes(r.waterSource)?r.waterSource:'unknown',flowDirection:['forward','reverse','unknown'].includes(r.flowDirection)?r.flowDirection:'unknown',pipeDiameter:str(r.pipeDiameter,55),pipeMaterial:str(r.pipeMaterial,80),verifiedBy:str(r.verifiedBy,80),verifiedAt:str(r.verifiedAt,40),verificationNote:str(r.verificationNote,500),evidencePhotoId:str(r.evidencePhotoId,100),systemIds:linkedSystems(r.systemIds),confirmed:!!r.confirmed&&validEnd};});
+ return{id,group,name:str(r.name,80)||groups[group].name+'線路',note:str(r.note,900),points:r.points.map((p,j)=>{const target=str(p.deviceId||(j===0?from:j===r.points.length-1?to:''),100);return {x:num(p.x),y:num(p.y),...(target&&idSet.has(target)?{deviceId:target,...(p.edge&&Number.isFinite(Number(p.edge.u))&&Number.isFinite(Number(p.edge.v))?{edge:{u:Math.max(-1.2,Math.min(1.2,Number(p.edge.u))),v:Math.max(-1.2,Math.min(1.2,Number(p.edge.v)))}}:{})}:{})};}),fromDeviceId:from,toDeviceId:to,fromTerminalId:ft,toTerminalId:tt,circuitName:str(r.circuitName,80),purpose:str(r.purpose,400),cableSpec:str(r.cableSpec,120),feedSpec:str(r.feedSpec,120),feedMode:['auger','chain','pneumatic','other'].includes(r.feedMode)?r.feedMode:'auger',waterSource:['tower','groundwater','tap','unknown'].includes(r.waterSource)?r.waterSource:'unknown',flowDirection:['forward','reverse','unknown'].includes(r.flowDirection)?r.flowDirection:'unknown',pipeDiameter:str(r.pipeDiameter,55),pipeMaterial:str(r.pipeMaterial,80),verifiedBy:str(r.verifiedBy,80),verifiedAt:str(r.verifiedAt,40),verificationNote:str(r.verificationNote,500),evidencePhotoId:str(r.evidencePhotoId,100),systemIds:linkedSystems(r.systemIds),confirmed:!!r.confirmed&&validEnd};});
  // V11.4 maintenance records belong to the same project, so JSON, encrypted photo backup,
  // Firebase snapshots and undo/redo cannot silently omit them. Preserve historical work orders
  // even if a referenced device is later removed; the audit view flags the orphan instead.
@@ -239,14 +241,60 @@ function updateFooter(){const c={water:0,electric:0,ventilation:0,feed:0,equipme
 }
 function node(tag,attrs,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,String(attrs[k]));if(text!=null)e.textContent=text;return e;}
 function groupVisible(k){return !!visibility[k];}
-function routePoint(p){if(p.deviceId){const d=data.devices.find(x=>x.id===p.deviceId);if(d)return{x:d.x,y:d.y};}return{x:p.x,y:p.y};}
-function pathCoords(pts){return pts.map(p=>{const a=routePoint(p);return a.x.toFixed(4)+','+a.y.toFixed(4);}).join(' ');}
+function deviceForAnchor(p){return p?.deviceId?data.devices.find(x=>x.id===p.deviceId):null;}
+function routePoint(p,hint){const d=deviceForAnchor(p);if(d&&routeAnchors){const visual={...d,defaultShape:byType[d.type]?.shape};
+ if(p.edge){const fixed=routeAnchors.resolve(visual,p.edge);if(fixed)return fixed;}
+ // Older device links have only a device ID. Show them at the outline, based
+ // on their adjacent segment, until their grip is moved and a precise anchor saved.
+ const toward=hint&&Number.isFinite(hint.x)&&Number.isFinite(hint.y)?hint:{x:d.x+1,y:d.y};
+ const b=routeAnchors.boundary(visual,toward);return{x:b.x,y:b.y};}
+ if(d)return{x:d.x,y:d.y};return{x:p.x,y:p.y};}
+function resolvedRoutePoints(pts){return pts.map((p,i)=>{const adjacent=pts[i===pts.length-1?i-1:i+1]||p;
+ const next=deviceForAnchor(adjacent),hint=next?{x:iconX(next),y:iconY(next)}:{x:adjacent.x,y:adjacent.y};
+ return routePoint(p,hint);});}
+function pathCoords(pts){return resolvedRoutePoints(pts).map(a=>a.x.toFixed(4)+','+a.y.toFixed(4)).join(' ');}
+function startRouteGripDrag(e,routeId,index){
+ if(currentRole!=='admin'||action||e.button!==0||e.isPrimary===false)return;
+ const r=data.routes.find(z=>z.id===routeId),original=r?.points[index];if(!original)return;
+ e.preventDefault();e.stopPropagation();
+ const orig=clone(original),start={x:e.clientX,y:e.clientY};let moved=false,done=false;
+ const marker=e.currentTarget;try{marker.setPointerCapture(e.pointerId);}catch(_){ }
+ // Dragging a connected point never disconnects it. For a free point, use
+ // un-snapped coordinates. It can be explicitly connected while drawing.
+ function move(ev){if(done||ev.pointerId!==e.pointerId)return;
+  if(!moved&&Math.hypot(ev.clientX-start.x,ev.clientY-start.y)<4)return;
+  moved=true;const pt=svgPoint(ev),p=r.points[index],d=deviceForAnchor(p);
+  if(d&&routeAnchors){const projection=routeAnchors.boundary({...d,defaultShape:byType[d.type]?.shape},pt);
+   Object.assign(p,{x:projection.x,y:projection.y,edge:projection.edge});}
+  else if(inMap(pt.x,pt.y)){p.x=roundPos(pt.x);p.y=roundPos(pt.y);}
+  // Draw only this line and its handles while the pointer is moving.
+  const group=routesSvg.querySelector(`[data-eq-route="${routeId}"]`);
+  if(group){const path=pathCoords(r.points);group.querySelectorAll('polyline').forEach(line=>line.setAttribute('points',path));
+   const grip=preview.querySelector(`[data-route-point="${index}"]`),q=resolvedRoutePoints(r.points)[index];
+   grip?.setAttribute('transform',`translate(${q.x} ${q.y})`);}
+ }
+ function end(ev,cancel=false){if(done||ev.pointerId!==e.pointerId)return;done=true;
+  window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',abort);
+  try{if(marker.hasPointerCapture(e.pointerId))marker.releasePointerCapture(e.pointerId);}catch(_){ }
+  if(cancel){r.points[index]=orig;renderRoutes();renderPreview();return;}
+  if(moved){if(r.points[index].deviceId){const d=deviceForAnchor(r.points[index]);
+   if(d){const fixed=routeAnchors.boundary({...d,defaultShape:byType[d.type]?.shape},routePoint(r.points[index]));
+    r.points[index].x=fixed.x;r.points[index].y=fixed.y;}}
+   // Geometry was moved, so previous verification cannot be silently retained.
+   r.confirmed=false;r.verifiedBy='';r.verifiedAt='';
+   const stored=save();notify(stored?'端點位置已儲存；線路需重新現場核對':'端點已暫時調整，但本機儲存失敗！請立即匯出備份');}
+  renderRoutes();renderPreview();showInspector();
+ }
+ const up=ev=>end(ev,false),abort=ev=>end(ev,true);
+ window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',abort);
+}
 function renderRoutes(){routesSvg.replaceChildren();data.routes.forEach(r=>{if(!groupVisible(r.group))return;const g=node('g',{'data-eq-route':r.id,'data-water-source':r.group==='water'?(r.waterSource||'unknown'):'','data-flow-direction':r.flowDirection||'unknown'});const points=pathCoords(r.points),selectedRoute=selected?.kind==='route'&&selected.id===r.id;
  g.appendChild(node('polyline',{points,stroke:groups[r.group].color,'stroke-dasharray':r.group==='feed'?'0.18 0.10':'0.42 0.22',class:'route-line'+(selectedRoute?' selected-route':'')}));
- g.appendChild(node('polyline',{points,class:'routehit'}));g.addEventListener('click',e=>{
+ g.appendChild(node('polyline',{points,class:'routehit'}));
+ g.addEventListener('click',e=>{
  if(!action&&e.detail!==0)return; // V11.8.5 pointerup handles single click/tap after pan detection.
  e.stopPropagation();if(action==='route'){addRoutePoint(e);return;}select('route',r.id);});routesSvg.appendChild(g);
- if(visibility.labels&&(deviceLabelMode==='all'||(deviceLabelMode==='smart'&&selectedRoute))){const pts=r.points.map(routePoint),mid=pts[Math.floor(pts.length/2)];const t=node('text',{x:mid.x,y:mid.y-.33,'font-size':'.63','text-anchor':'middle',fill:groups[r.group].color,stroke:'#091b2d','stroke-width':'.08','paint-order':'stroke fill'},r.group==='ventilation'?'氣流示意 · '+r.name:r.name);routesSvg.appendChild(t);}
+ if(visibility.labels&&(deviceLabelMode==='all'||(deviceLabelMode==='smart'&&selectedRoute))){const pts=resolvedRoutePoints(r.points),mid=pts[Math.floor(pts.length/2)];const t=node('text',{x:mid.x,y:mid.y-.33,'font-size':'.63','text-anchor':'middle',fill:groups[r.group].color,stroke:'#091b2d','stroke-width':'.08','paint-order':'stroke fill'},r.group==='ventilation'?'氣流示意 · '+r.name:r.name);routesSvg.appendChild(t);}
  });}
 const v115IconById=new Map();
 // Visual nameplates never block equipment snapping. Instead choose an unoccupied
@@ -522,9 +570,25 @@ function startLinearEndDrag(e,id,side,kind){
  window.addEventListener('pointermove',move,{passive:false});window.addEventListener('pointerup',up);window.addEventListener('pointercancel',cancel);
 }
 function startArrayEndDrag(e,id,side){return startLinearEndDrag(e,id,side,'array');}
+function renderRouteGrips(){
+ const r=data.routes.find(x=>x.id===selected?.id&&selected?.kind==='route');
+ if(currentRole==='admin'&&!action&&r){const coords=resolvedRoutePoints(r.points);
+  for(let index=0;index<coords.length;index++){
+   const q=coords[index],attached=!!deviceForAnchor(r.points[index]),coarse=matchMedia('(pointer:coarse)').matches;
+   const grip=node('g',{class:'hw-route-grip'+(attached?' hw-route-grip-attached':''),'data-route-point':index,
+    transform:`translate(${q.x} ${q.y})`,role:'button',tabindex:'0',
+    'aria-label':`第 ${index+1} 個路徑點，${attached?'沿設備邊線拖動':'自由拖曳位置'}`});
+   grip.append(node('circle',{class:'hw-route-grip-hit',r:coarse?'3.2':'.65',fill:'transparent'}),node('circle',{class:'hw-route-grip-dot',r:coarse?'.48':'.28',fill:attached?'#ffe6a3':'#bbfcef',stroke:'#112a36','stroke-width':'.1','pointer-events':'none'}));
+   grip.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();});
+   grip.addEventListener('pointerdown',ev=>startRouteGripDrag(ev,r.id,index));
+   preview.appendChild(grip);
+  }
+ }
+}
 function renderPreview(){preview.replaceChildren();updateAngleBar();
+ if(!action)renderRouteGrips();
  if((action==='segment'||action==='array')&&drawing.length&&segmentHover){const a=drawing[0],b=segmentHover;const l=Math.hypot(b.x-a.x,b.y-a.y);if(l>.1){preview.appendChild(node('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#7de9d5','stroke-width':'.38','stroke-opacity':'.38'}));preview.appendChild(node('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#d9fff5','stroke-width':'.06','stroke-dasharray':'.26 .12'}));preview.appendChild(node('circle',{cx:a.x,cy:a.y,r:'.19',fill:'#8cf4d9'}));preview.appendChild(node('circle',{cx:b.x,cy:b.y,r:'.19',fill:'#8cf4d9'}));}return;}
- if(action!=='route'||!drawing.length)return;preview.appendChild(node('polyline',{points:pathCoords(drawing),fill:'none',stroke:groups[actionType].color,'stroke-width':'.18','stroke-dasharray':'.35 .2'}));drawing.forEach(p=>{const q=routePoint(p);preview.appendChild(node('circle',{cx:q.x,cy:q.y,r:'.22',fill:groups[actionType].color}));});}
+ if(action!=='route'||!drawing.length)return;preview.appendChild(node('polyline',{points:pathCoords(drawing),fill:'none',stroke:groups[actionType].color,'stroke-width':'.18','stroke-dasharray':'.35 .2'}));resolvedRoutePoints(drawing).forEach(q=>{preview.appendChild(node('circle',{cx:q.x,cy:q.y,r:'.22',fill:groups[actionType].color}));});}
 function updateCatalogue(){const list=[...catalogue,...(data.customTypes||[])];const drop=$('eqType');const old=drop.value;drop.replaceChildren();for(const t of list){const op=document.createElement('option');op.value=t.type;op.textContent=groups[t.group].name+'｜'+t.label+(t.type.startsWith('custom-')?' ★':'');drop.appendChild(op);}if(byType[old])drop.value=old;
  const ch=$('eqChangeType');if(ch){const selected=ch.value;ch.replaceChildren();for(const t of list){const op=document.createElement('option');op.value=t.type;op.textContent=groups[t.group].name+'｜'+t.label;ch.appendChild(op);}if(byType[selected])ch.value=selected;}}
 function resetTypeForm(){editingTypeId=null;$('eqCustomLabel').value='';$('eqCustomSymbol').value='';$('eqCustomGroup').value='water';$('eqCustomNote').value='';$('eqCustomFields').value='';$('eqCustomShape').value='circle';$('eqCustomColor').value='#65caff';$('eqCustomSize').value=String(NEW_ICON_SIZE);$('eqCustomGraphic').value='text';$('eqSaveType').textContent='＋ 儲存設備種類';}
@@ -544,10 +608,13 @@ function clientDistance(a,b){
  return Math.hypot(v.x-w.x,v.y-w.y);
 }
 function smartSnap(pt,group,includeRoutes=true){
- let device=null,distance=19;
+ let device=null,edge=null,distance=17;
  for(const d of data.devices){if(!groupVisible(byType[d.type]?.group||'equipment'))continue;
-  const dd=clientDistance(pt,d);if(dd<distance){device=d;distance=dd;}}
- if(device)return{kind:'device',x:device.x,y:device.y,deviceId:device.id,name:device.name,distance};
+  const projected=routeAnchors?.boundary({...d,defaultShape:byType[d.type]?.shape},pt);
+  const dd=projected?clientDistance(pt,projected):clientDistance(pt,{x:iconX(d),y:iconY(d)});
+  const inside=projected&&routeAnchors.inside({...d,defaultShape:byType[d.type]?.shape},pt);
+  if((inside||dd<distance)&&(!device||dd<distance)){device=d;edge=projected;distance=dd;}}
+ if(device)return{kind:'device',x:edge?.x??device.x,y:edge?.y??device.y,edge:edge?.edge,deviceId:device.id,name:device.name,distance};
  if(!includeRoutes)return null;
  let candidate=null;distance=15;
  for(const r of data.routes){if(r.group!==group||!groupVisible(r.group))continue;
@@ -584,7 +651,7 @@ function nearest(pt){return smartSnap(pt,actionType,false)?.deviceId?data.device
 function addRoutePoint(e,explicitId){
  if(currentRole!=='admin'||action!=='route')return;
  const p=svgPoint(e);let device=explicitId?data.devices.find(x=>x.id===explicitId):null;
- const suggestion=device?{kind:'device',deviceId:device.id,x:device.x,y:device.y,name:device.name}:smartSnap(p,actionType,true);
+ const suggestion=device?{kind:'device',deviceId:device.id,...routeAnchors.boundary({...device,defaultShape:byType[device.type]?.shape},p),name:device.name}:smartSnap(p,actionType,true);
  if(!device&&suggestion?.kind==='device')device=data.devices.find(x=>x.id===suggestion.deviceId);
  if(!device&&suggestion?.kind==='junction'){
   const yes=confirm('要在「'+suggestion.name+'」建立分支接點嗎？\n\n原管線將拆為上游、下游兩段，並標記為待現場核對。\n此動作可以按復原還原。');
@@ -593,7 +660,7 @@ function addRoutePoint(e,explicitId){
  }
  let q={x:roundPos(p.x),y:roundPos(p.y)};
  if(orthogonal&&drawing.length&&!device){const a=routePoint(drawing[drawing.length-1]);if(Math.abs(q.x-a.x)>Math.abs(q.y-a.y))q.y=a.y;else q.x=a.x;}
- const point=device?{x:device.x,y:device.y,deviceId:device.id}:q;
+ const point=device?{x:suggestion.x,y:suggestion.y,deviceId:device.id,...(suggestion.edge?{edge:suggestion.edge}:{})}:q;
  const previous=drawing.at(-1);
  if(previous&&Math.hypot(previous.x-point.x,previous.y-point.y)<.0001)return;
  drawing.push(point);renderPreview();$('eqRoutePoints').textContent=drawing.length+' 個節點';$('eqFinishRoute').disabled=drawing.length<2;
@@ -866,7 +933,7 @@ function wallAlignedEnd(start,end,forceFree=false){
  const sign=vx*best.nx+vy*best.ny>=0?1:-1;
  return {x:start.x+best.nx*L*sign,y:start.y+best.ny*L*sign};
 }
-function begin(type,mode){if(currentRole!=='admin')return;if(mode==='array'&&!ARRAY_TYPES.has(type)){notify('此設備不支援陣列標示');return;}if(mode==='segment'&&!SEGMENT_TYPES.has(type)){notify('這個設備不支援區段標示');return;}if(mode==='route'&&!['water','electric','feed','ventilation'].includes(type)){cancelAction();notify('請選擇水管、電線、飼料管或通風氣流示意線；通風線不代表供電電線');return;}cancelAction();if(multiSelectMode){multiSelectMode=false;selectedIds.clear();fire('selection');}action=mode;actionType=type;if(mode==='segment'||mode==='array'){wallSnapMode=false;const w=$('hwWallSnap');if(w)w.checked=false;segmentHover=null;segmentHoverRaw=null;}if(mode==='place'&&activeTemplate&&data.templates.find(x=>x.id===activeTemplate)?.type!==type)activeTemplate=null;if(mode==='array'){$('eqPlaceTip').textContent='陣列放置｜點選起點，再點選終點；會建立一組可編輯數量與間距的標示';}else if(mode==='segment'){$('eqPlaceTip').textContent='區段放置｜預設自由角度。點起點，再點任意角度的終點；若需要才開啟沿牆吸附。';$('eqPlaceTip').hidden=false;}else if(mode==='place'){$('eqPlaceTip').textContent='定位中｜在 CAD 底圖點一下放置 '+byType[type].label+'（按取消可結束）';$('eqAddDevice').classList.add('active');}else if(mode==='route'){$('eqPlaceTip').textContent='畫線中｜依序點選路徑，點擊設備可連接端點；最後按「完成線路」。';$('eqStartRoute').classList.add('active');}$('eqPlaceTip').hidden=false;if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');renderPreview();fire('action');}
+function begin(type,mode){if(currentRole!=='admin')return;if(mode==='array'&&!ARRAY_TYPES.has(type)){notify('此設備不支援陣列標示');return;}if(mode==='segment'&&!SEGMENT_TYPES.has(type)){notify('這個設備不支援區段標示');return;}if(mode==='route'&&!['water','electric','feed','ventilation'].includes(type)){cancelAction();notify('請選擇水管、電線、飼料管或通風氣流示意線；通風線不代表供電電線');return;}cancelAction();if(multiSelectMode){multiSelectMode=false;selectedIds.clear();fire('selection');}action=mode;actionType=type;if(mode==='segment'||mode==='array'){wallSnapMode=false;const w=$('hwWallSnap');if(w)w.checked=false;segmentHover=null;segmentHoverRaw=null;}if(mode==='place'&&activeTemplate&&data.templates.find(x=>x.id===activeTemplate)?.type!==type)activeTemplate=null;if(mode==='array'){$('eqPlaceTip').textContent='陣列放置｜點選起點，再點選終點；會建立一組可編輯數量與間距的標示';}else if(mode==='segment'){$('eqPlaceTip').textContent='區段放置｜預設自由角度。點起點，再點任意角度的終點；若需要才開啟沿牆吸附。';$('eqPlaceTip').hidden=false;}else if(mode==='place'){$('eqPlaceTip').textContent='定位中｜在 CAD 底圖點一下放置 '+byType[type].label+'（按取消可結束）';$('eqAddDevice').classList.add('active');}else if(mode==='route'){$('eqPlaceTip').textContent='畫線中｜點擊設備外框即可吸附邊線；畫完選取線路，拖曳端點手把沿外框自由調整。';$('eqStartRoute').classList.add('active');}$('eqPlaceTip').hidden=false;if(matchMedia('(max-width:760px), (max-width:1024px) and (pointer:coarse)').matches)$('side').classList.remove('open');renderPreview();fire('action');}
 function setup(){
  $('hwAngleWallToggle')?.addEventListener('change',e=>setSegmentWallSnap(e.target.checked));
  updateCatalogue();document.querySelectorAll('.v83-tab').forEach(btn=>btn.addEventListener('click',()=>setWorkspace(btn.dataset.workspace)));
@@ -920,7 +987,7 @@ function setup(){
  const count=related.length;const msg='確定刪除「'+d.name+'」？\n\n'+(count?'將影響 '+count+' 條水管／電線／飼料管。線條位置保留，但來源或去向改為待指定，核對狀態清除。':'目前沒有連接管線。')+'\n刪除後可以按「復原」。';
  if(!confirm(msg))return;
  for(const r of related){
-  for(const p of r.points){if(p.deviceId===d.id){p.x=d.x;p.y=d.y;delete p.deviceId;}}
+  for(const [i,p] of r.points.entries()){if(p.deviceId===d.id){const coords=resolvedRoutePoints(r.points)[i];p.x=coords.x;p.y=coords.y;delete p.deviceId;delete p.edge;}}
   if(r.fromDeviceId===d.id){r.fromDeviceId='';r.fromTerminalId='';}
   if(r.toDeviceId===d.id){r.toDeviceId='';r.toTerminalId='';}
   r.confirmed=false;

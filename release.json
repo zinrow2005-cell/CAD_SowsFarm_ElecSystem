@@ -1,8 +1,8 @@
 {
   "app": "虎尾母豬場設備配置系統",
-  "version": "11.12.12",
-  "revision": "r4-photo-context-terminal-trace",
+  "version": "11.12.13",
+  "revision": "r5-route-perimeter-anchors",
   "date": "2026-10-26",
   "format": "hwpack-unchanged",
-  "notes": "Immediate photo marker context card; device terminal linking; direct terminal focus and source-specific electrical trace; mobile bottom sheet, desktop side panel; keep marker locks and backups unchanged."
+  "notes": "Adjustable device-perimeter anchors for electric, water, feed and ventilation lines; drag selected route nodes, preserve device associations and clear verification when geometry changes."
 }
