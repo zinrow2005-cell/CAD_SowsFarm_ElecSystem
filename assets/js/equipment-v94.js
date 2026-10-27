@@ -1008,7 +1008,7 @@ function setup(){
  notify('已載入 '+data.devices.length+' 個設備、'+data.routes.length+' 條線路');}catch(err){notify('匯入失敗：'+err.message);}finally{e.target.value='';}});
  $('eqRestorePublished').addEventListener('click',async()=>{if(currentRole!=='admin')return;if(!confirm('將以 GitHub 發布的設備資料覆蓋本機編輯內容，確定嗎？'))return;try{const r=await fetch('./equipment-data.json?refresh='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('找不到發布檔');setData(await r.json(),'網站已發布版本',true);notify('已還原網站版本');}catch(err){notify('無法還原：'+err.message);}});
  $('eqClear').addEventListener('click',()=>{if(currentRole!=='admin'||!confirm('確定清除本機全部設備與管線？請先匯出備份。'))return;setData(clone(initial),'空白本機專案',true);notify('本機設備圖層已清空，CAD 底圖未更動');});
- $('eqSaveVisibility').addEventListener('click',()=>notify('設備圖層的勾選狀態已自動保存在本機'));
+
  canvas.addEventListener('pointerdown',e=>{if(!action)return;pointerDown={x:e.clientX,y:e.clientY};e.stopImmediatePropagation();},true);
  map.addEventListener('pointermove',e=>{if((action==='segment'||action==='array')&&drawing.length){segmentHoverRaw=svgPoint(e);segmentHover=wallAlignedEnd(drawing[0],segmentHoverRaw,e.shiftKey);renderPreview();}},{passive:true});
  map.addEventListener('click',e=>{if(currentRole!=='admin'||!action)return;const down=pointerDown;pointerDown=null;if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>9)return;e.stopImmediatePropagation();e.preventDefault();if(action==='place')addNew(actionType,svgPoint(e));else if(action==='route')addRoutePoint(e);else if(action==='segment')addSegmentPoint(e);else if(action==='array')addArrayPoint(e);},true);

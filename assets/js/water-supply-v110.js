@@ -65,7 +65,7 @@ overlay.innerHTML=`<section class="v110-dialog" role="dialog" aria-modal="true" 
 </section><section class="v110-panel"><h3>② 三向閥的可能水源與實際記錄</h3><label for="v110Valve">選擇三向閥</label><select id="v110Valve"></select><div id="v110ValvePossibilities" class="v110-tip">先選擇圖上的三向閥；可能水源在設備編輯器設定。</div><label for="v110ValveState">人工記錄的切換位置（不是即時監測）</label><select id="v110ValveState"><option value="unknown">未知／待確認</option><option value="tower">水塔水</option><option value="groundwater">地下水</option><option value="tap">自來水</option><option value="closed">關閉（記錄）</option></select><button type="button" id="v110SaveValve">保存三向閥紀錄</button>
 <div class="v110-divider"></div><h3>③ 已核對管路追蹤</h3><label for="v110Origin">由哪個水源設備出發？</label><select id="v110Origin"></select><button type="button" id="v110Trace">追蹤已核對連接</button><div id="v110TraceResult" class="v110-results">目前沒有開始追蹤。此功能不會判斷真實即時水流。</div>
 </section></div>
-<p id="v110Status" class="v110-status" role="status">此視窗的水管資料存入原設備專案，隨原有加密備份與雲端快照保存。</p></div></section>`;
+<p id="v110Status" class="v110-status" role="status">此視窗的水管資料存入原設備專案，隨原有加密備份保存。</p></div></section>`;
 document.body.append(overlay);
 function status(message,error=false){$('v110Status').textContent=message;$('v110Status').dataset.error=error?'true':'false';}
 function lineInfo(){const r=getRoute(pickedRoute);if(!r){$('v110RouteInfo').textContent='尚未選擇任何水管。';return;}

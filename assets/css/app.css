@@ -346,33 +346,7 @@
 .v92-legacy p{font-size:11px;color:#ffd39d;line-height:1.6}
 .v92-legacy button{width:100%;margin:4px 0;font-size:11px}
 
-/* V9.3 optional cloud private vault */
-.v93-cloud{margin:18px 0;padding:14px;background:#0c2538;border:1px solid #427083;border-radius:15px;color:#e8f8fc;font-size:12px;line-height:1.6}
-.v93-heading{display:flex;align-items:center;gap:10px;margin-bottom:10px}.v93-ico{font-size:27px}.v93-heading h3{margin:0;font-size:15px}.v93-heading p{margin:2px 0;font-size:11px;color:#9dbec9}
-.v93-status{border:1px solid #327775;background:#174442;border-radius:9px;padding:9px 10px;margin:8px 0 12px;white-space:pre-wrap;overflow-wrap:anywhere}
-.v93-cloud details{margin:10px 0;border:1px solid #2c546b;border-radius:10px;padding:0 10px}.v93-cloud summary{padding:10px 2px}
-.v93-cloud label{display:block;font-size:11px;color:#b8d5df;margin:9px 0}.v93-cloud input:not([type=checkbox]),.v93-cloud textarea{width:100%;margin-top:5px;min-height:38px;border:1px solid #476b7c;border-radius:8px;background:#0a1d2f;color:#ecfaff;padding:8px;font:inherit;outline:none}
-.v93-cloud textarea{resize:vertical;min-height:115px}.v93-cloud input:focus,.v93-cloud textarea:focus{border-color:#7ce5cf}
-.v93-cloud button{border-radius:9px;padding:9px 11px;background:#204457;color:#e8fcfc;border:1px solid #477184;font-size:11px;font-weight:700;min-height:39px;white-space:normal}
-.v93-cloud button:hover{border-color:#7ce5cf}.v93-cloud button:disabled{opacity:.45;cursor:wait}.v93-cloud .v93-primary{background:#197b68;border-color:#7bcdb6}
-.v93-account{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.v93-account small{color:#a5c3d3;overflow-wrap:anywhere}
-.v93-owner{margin-top:13px!important}.v93-buttons{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.v93-hint{font-size:10.5px;color:#aac5ce;white-space:pre-wrap;line-height:1.65}
-.v93-work{margin-top:14px;border-top:1px solid #37586e;padding-top:12px}.v93-summary-row{display:flex;justify-content:space-between;align-items:center;gap:7px}
-.v93-summary-row strong{font-size:13px}.v93-upload{background:#103347;border:1px solid #315d6c;padding:10px;border-radius:10px;margin:8px 0}
-.v93-snapshot{border:1px solid #365b6e;border-radius:10px;margin:7px 0;padding:9px;display:flex;gap:8px;align-items:center;justify-content:space-between}
-.v93-snapshot div{min-width:0}.v93-snapshot strong,.v93-snapshot small{display:block}.v93-snapshot small{color:#98bece;font-size:10px}.v93-snapshot button{flex:none}
-.v93-restore{background:#092333;border:1px solid #669994;border-radius:12px;padding:11px;margin:12px 0}.v93-compare{white-space:pre-wrap;padding:10px;border:1px solid #3c6d7b;background:#132f3f;border-radius:8px;margin:9px 0}
-.v93-restore label:has(input[type=checkbox]){display:flex;align-items:flex-start;gap:7px}.v93-member{display:flex;align-items:center;justify-content:space-between;gap:7px;margin:5px 0;border-top:1px solid #335c68;padding-top:6px}.v93-member span{overflow-wrap:anywhere}
-@media(max-width:760px){.v93-cloud{margin:12px 0;padding:11px}.v93-snapshot button{padding:8px 6px;font-size:10px}}
 
-/* Accessible to employees and administrators, not hidden in local-admin backup section. */
-.v93-cloud-panel{margin:7px 0 15px;border:1px solid #32746f;background:#102b40;border-radius:13px;overflow:hidden}
-.v93-cloud-panel>summary{cursor:pointer;display:flex;align-items:center;gap:7px;padding:12px;color:#c9f8e9;font-size:12px;font-weight:750;list-style:none}
-.v93-cloud-panel>summary::-webkit-details-marker{display:none}
-.v93-cloud-panel>summary small{margin-left:auto;color:#9cbfc6;font-size:9.5px;font-weight:500}
-.v93-cloud-panel .v93-cloud{margin:0;border:none;border-top:1px solid #396a6d;border-radius:0}
-
-/* V9.4 sync status: quiet signals, no interrupting CAD interactions. */
 .v94-sync-panel{background:#0b2b3b;border:1px solid #31596f;border-radius:13px;padding:12px;margin:12px 0}
 .v94-sync-panel[hidden]{display:none!important}
 .v94-sync-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;font-size:12px}
@@ -522,8 +496,6 @@ body.v11100-dialog-open{overflow:hidden}
 #v83BasePanel .v95-base-note{font-size:11px;padding:9px;margin:8px 0}
 #v83BasePanel .section{margin-top:15px}
 #v95BaseExtras .section{margin-top:11px}
-#v93CloudPanel{margin:9px 0 0}
-#v93CloudPanel summary{font-size:12px}
 #v83EquipPanel #v84AdminLower[hidden],#v83EquipPanel #v84Admin[hidden]{display:none!important}
 @media (max-width:760px){
  #side{padding-left:12px;padding-right:12px;padding-bottom:34px}
@@ -564,7 +536,7 @@ body.v11100-dialog-open{overflow:hidden}
 .hw120-body #v110Launch{margin:0!important;width:100%;min-height:44px}
 .hw120-body #v110Launch small{font-size:10px}
 .hw120-body #v84Layers,.hw120-body #v84Items{margin:0!important;border-color:#365b6b}
-.hw120-body #v95Advanced,.hw120-body #v93CloudPanel{margin:0!important}
+.hw120-body #v95Advanced{margin:0!important}
 .hw120-body #v95Advanced .v95-group-summary{padding:10px 12px!important}
 .hw120-body > button:focus-visible,.hw120-summary:focus-visible{outline:2px solid #87e8da;outline-offset:2px}
 @media (max-width:760px){
@@ -1339,7 +1311,7 @@ body.v1192-locating #v113Fab,body.v1192-locating #v114Fab,body.v1192-locating .v
 @media(max-width:520px){.v1194-frame{padding:13px 12px calc(35px + env(safe-area-inset-bottom))}.v1194-brand-icon{width:39px;height:39px;font-size:22px}.v1194-brand b{font-size:10px}.v1194-brand small{font-size:10px}.v1194-nav-actions button{font-size:11px;min-height:40px;padding:7px 10px}.v1194-nav-map{display:none}.v1194-tabs{margin:14px 0 18px;gap:3px}.v1194-tabs button{font-size:12px;padding:8px 11px;min-height:41px}.v1194-page-head{margin-bottom:16px}.v1194-page-label{font-size:10px}.v1194-page-title{gap:12px}.v1194-head-icon{width:61px;height:61px;border-radius:17px;font-size:30px}.v1194-page-title h1{font-size:23px}.v1194-page-title strong{font-size:12px}.v1194-page-head>p{font-size:12px}.v1194-metrics{gap:8px}.v1194-metric{min-height:91px;padding:12px;border-radius:14px}.v1194-metric b{font-size:26px}.v1194-panel,.v1194-work-card{padding:16px;border-radius:17px}.v1194-category-grid,.v1194-layer-grid,.v1194-work-cards{grid-template-columns:1fr}.v1194-category{min-height:70px}.v1194-layer-card{min-height:78px}.v1194-preset-row{gap:5px}.v1194-preset-row button{font-size:11px}.v1194-work-card{min-height:265px}.v1194-work-card h2{font-size:20px}}
 @media(prefers-reduced-motion:reduce){.v1194-switch span,.v1194-switch span::after{transition:none}}
 
-/* ===== field-qa-v11101.css ===== */
+/* Compact mobile CAD controls: preserve map area during placement. */
 /* V11.10.1 · Device placement clarity and genuinely usable mobile CAD space.
    In a CAD placement / route action the authoritative compact action bar remains.
    Do not hide original tools on larger desktop sizes. */
@@ -1358,7 +1330,7 @@ body.v1192-locating #v113Fab,body.v1192-locating #v114Fab,body.v1192-locating .v
 @media (max-width:480px) {
   #app>.mobilebar #v116MobileLaunch,
   #app>.mobilebar #v115MobileLaunch,
-  #app>.mobilebar .v11101-duplicate-header { display:none!important; }
+  
   #app>.mobilebar {gap:7px;padding-inline:9px;}
   #app>.mobilebar strong {font-size:12px;flex:1 1 auto;min-width:0;}
   #app>.mobilebar #menuOpen {min-width:83px;}
@@ -1681,13 +1653,3 @@ body.hw109-panel-open #hw125Dock #hw110Launch{visibility:hidden;pointer-events:n
 }
 /* V11.12.15 CAD export center */
 #v111215ExportOverlay[hidden]{display:none!important}#v111215ExportOverlay{position:fixed;z-index:10990;inset:0;background:rgba(2,13,22,.82);display:flex;align-items:center;justify-content:center;padding:18px;color:#ebf9ff}.v111215-export-modal{width:min(680px,100%);max-height:94dvh;overflow:auto;border:1px solid #53798c;background:#102c3c;border-radius:17px;box-shadow:0 18px 66px #0009;position:relative}.v111215-export-modal header{display:flex;justify-content:space-between;gap:16px;align-items:start;padding:17px 19px;border-bottom:1px solid #345668}.v111215-export-modal header h2{font-size:19px;margin:4px 0}.v111215-export-modal header p{font-size:12px;color:#adc9d6;margin:2px 0}.v111215-export-modal header small{font-size:10px;letter-spacing:.09em;color:#64d4c3;font-weight:700}.v111215-export-modal button{min-height:41px;border:1px solid #557a89;border-radius:10px;padding:9px 14px;background:#1d4459;color:#e9f7ff;font-size:13px;cursor:pointer}.v111215-export-modal button.primary{background:#168676;border-color:#69debd;font-weight:700}.v111215-export-modal button:disabled{opacity:.5;cursor:wait}.v111215-body{display:grid;gap:15px;padding:18px}.v111215-body>label{display:grid;gap:7px;font-size:13px;color:#d7edf7}.v111215-body select{width:100%;min-width:0;border-radius:9px;min-height:44px;padding:8px 12px;background:#062637;border:1px solid #507487;color:#eef9ff;font-size:14px}.v111215-opts{display:grid;gap:10px}.v111215-opts label{display:flex;align-items:center;gap:9px;font-size:13px}.v111215-opts input{height:18px;width:18px;accent-color:#43bea8}.v111215-note{color:#a7c2d2;font-size:12px;line-height:1.7;margin:0}#v111215Status{border:1px solid #3c7181;background:#0e394a;border-radius:9px;padding:10px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}#v111215Status.error{color:#ffc6c6;border-color:#9e6565}.v111215-export-modal footer{display:flex;gap:10px;justify-content:end;padding:15px 18px;border-top:1px solid #365a6c}.v111215-previewhead{display:flex;justify-content:space-between;align-items:center;padding:9px 18px;border-top:1px solid #3f7287;font-size:12px}#v111215PreviewImage{padding:10px 16px 18px;overflow:hidden;display:flex;justify-content:center}#v111215PreviewImage svg{width:100%;border:1px solid #4a7184;border-radius:8px;box-sizing:border-box}#v111215PreviewHost[hidden]{display:none!important}@media(max-width:620px){#v111215ExportOverlay{padding:0;align-items:stretch}.v111215-export-modal{width:100%;height:100dvh;max-height:100dvh;border-radius:0}.v111215-body{padding:14px}.v111215-export-modal footer{position:sticky;bottom:0;background:#102c3c}.v111215-export-modal footer button{flex:1}}
-
-/* V11.12.18 — iPhone/iPad Files cloud-provider access and native share. */
-.v117-panel .v111218-pick{display:block;font-weight:750;color:#e8f8ff;margin:14px 0 5px}
-.v117-panel .v111218-pick input[type=file]{display:block;width:100%;min-height:48px;border:1px solid #5891a2;border-radius:10px;background:#0b3547;padding:11px 10px;font-size:13px;color:#fff;overflow-wrap:anywhere}
-.v117-panel .v111218-tip{color:#b9e4ee;font-size:12px;line-height:1.65;margin:6px 0 10px}
-.v117-panel .v111218-guide{border:1px solid #3c7087;border-radius:10px;background:#0a293b;padding:10px 12px;margin:10px 0 14px;color:#c9e8f4;font-size:12px;line-height:1.75}
-.v117-panel .v111218-guide summary{font-weight:750;cursor:pointer;color:#92e9e7}
-.v117-panel .v111218-guide ol{padding-left:23px;margin:8px 0}
-.v117-panel .v111218-guide p{margin:5px 0 2px;color:#a9c9d9}
-.v117-panel #v111218Share:not([hidden]){width:100%;background:#204e72;border:1px solid #6da9d2;font-weight:750;min-height:48px}

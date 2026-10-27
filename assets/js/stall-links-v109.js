@@ -57,7 +57,7 @@ const overlay=document.createElement('div');overlay.className='v109-overlay';ove
 <p id="v109DeviceInfo" class="v109-sub">尚未選取設備。</p><div id="v109DeviceStalls" class="v109-items"></div>
 <div class="v109-edit"><label for="v109Scope">綁定方式</label><select id="v109Scope"><option value="one">所選單一欄格</option><option value="row">所選欄格的整排／整區</option></select><button id="v109Bind" type="button">＋ 加入設備服務範圍</button></div><small>一台設備可服務多個欄格；一個欄格也能連結多台設備。管理者可新增／移除，員工只能查看。</small></section>
 </div><div class="v109-backup"><span id="v109Counts">載入中</span><button id="v109Export" type="button">匯出關聯 JSON</button><button id="v109Import" type="button">匯入關聯 JSON</button><input type="file" accept=".json,application/json" id="v109File" hidden></div>
-<p id="v109Status" class="v109-status" role="status">欄格關聯另存於本機，並納入新版私人加密備份與雲端快照。上傳前請先檢查設備與照片資料。</p>
+<p id="v109Status" class="v109-status" role="status">欄格關聯另存於本機，並納入新版私人加密備份。上傳前請先檢查設備與照片資料。</p>
 </div></section>`;
 document.body.append(overlay);
 let opened=false;function open(){opened=true;overlay.hidden=false;document.body.classList.add('v109-open');render();overlay.querySelector('.v109-modal').focus();}

@@ -32,8 +32,6 @@ start.innerHTML=`<div class="v95-head"><span class="v95-eyebrow">快速工作台
    <button type="button" id="v95Electric" class="v95-start-btn" data-v95-admin><span aria-hidden="true">ϟ</span><b>畫電線</b></button>
    <button type="button" id="v95Feed" class="v95-start-btn" data-v95-admin><span aria-hidden="true">〰</span><b>畫飼料管</b></button>
  </div>
- <button type="button" id="v95Find" class="v95-search-link">⌕ 找設備與料線</button>
- <button type="button" id="v95Audit" class="v95-audit-link">↗ 查看全場迴路盤點與上下游追蹤</button>
  <div class="v95-status" id="v95ActionStatus" role="status">點選工具開始，或直接在圖上選擇已放置設備。</div>`;
 intro?.after(start);
 
@@ -42,7 +40,7 @@ const admin=$('v84Admin'),adminLower=$('v84AdminLower'),layers=$('v84Layers'),it
 const fullLibrary=group('完整圖標庫','自訂圖標 · 收藏 · 連續放置','v95Library');
 for(const child of [...admin.children]){if(child.id==='v87Placement')continue; if(child.classList?.contains('v84-route-tile'))continue;fullLibrary.lastElementChild.appendChild(child);}
 admin.append(fullLibrary);
-const advanced=group('進階工具與資料管理','精準排列 · 設備模板 · 備份 · 雲端','v95Advanced');
+const advanced=group('進階工具與資料管理','精準排列 · 設備模板 · 備份','v95Advanced');
 // Preserve role switching: old workbench.js independently hides #v84Admin/#v84AdminLower.
 advanced.lastElementChild.append(admin);
 const precision=$('v87Placement');if(precision){precision.open=false;precision.removeAttribute('open');adminLower.prepend(precision);}
@@ -54,7 +52,6 @@ const originalRoutes=sheet.querySelector('.v84-route-tile');if(originalRoutes){o
 advanced.lastElementChild.append(adminLower);
 const auditLaunch=sheet.querySelector('.v91-launch');if(auditLaunch){auditLaunch.hidden=true;advanced.lastElementChild.append(auditLaunch);}
 const storage=sheet.querySelector('#v84StorageNote');if(storage)advanced.lastElementChild.append(storage);
-const oldCloud=$('v93CloudPanel');if(oldCloud){oldCloud.open=false; oldCloud.removeAttribute('open');oldCloud.querySelector('summary').textContent='☁ 雲端工作區（選用）';sheet.after(oldCloud);}
 // Consistent minimal sidebar ordering: actions / display / find / advanced.
 start.after(layers);
 layers.after(items);
@@ -67,18 +64,14 @@ routeSelect?.querySelector('option[value="equipment"]')?.remove();
 const oldRouteHeading=[...document.querySelectorAll('#eqAdmin .v82-group h3')].find(n=>n.textContent.includes('風管'));
 if(oldRouteHeading)oldRouteHeading.textContent='② 繪製水管／電線';
 
-function openItemList(){api.setWorkspace('equipment');items.open=true;const input=$('eqSearch');items.scrollIntoView({block:'nearest'});input?.focus({preventScroll:true});}
 function closeMobileSide(){if(window.innerWidth<=760)$('side')?.classList.remove('open');}
 function startLine(group){if(api.getRole()!=='admin')return;api.setWorkspace('equipment');if(routeSelect)routeSelect.value=group;api.begin(group,'route');closeMobileSide();}
 $('v95Place').addEventListener('click',()=>{api.setWorkspace('equipment');const dock=$('v89QuickLaunch')?.querySelector('.v89-primary');if(dock)dock.click();else $('v84CreateIcon')?.click();closeMobileSide();});
 $('v95Water').addEventListener('click',()=>startLine('water'));
 $('v95Electric').addEventListener('click',()=>startLine('electric'));
 $('v95Feed').addEventListener('click',()=>startLine('feed'));
-$('v95Find').addEventListener('click',openItemList);
-$('v95Audit').addEventListener('click',()=>{$('v91OpenAudit')?.click();closeMobileSide();});
 function sync(){const role=api.getRole(),edit=role==='admin',act=api.getAction();
  for(const b of start.querySelectorAll('[data-v95-admin]'))b.hidden=!edit;
- $('v95Audit').hidden=!$('v91OpenAudit');
  const hint=$('v95Instruction');if(hint)hint.textContent=edit?'放設備 → 點圖定位 → 點物件修改內容':'點圖面查看設備，或搜尋設備與迴路';
  const status=$('v95ActionStatus');if(status){status.textContent=act.action==='place'?'放置中：在圖上點位置；可按 Esc 取消':act.action==='route'?'畫'+(act.actionType==='electric'?'電線':act.actionType==='feed'?'飼料管':'水管')+'中：依序點路徑，完成後按「完成線路」':'點圖上的設備，即可查看照片、規格與迴路。';}
  for(const [id,group] of [['v95Water','water'],['v95Electric','electric'],['v95Feed','feed']])$(''+id).classList.toggle('is-active',act.action==='route'&&act.actionType===group);
@@ -108,8 +101,8 @@ sync();
         items:[['v84Layers','圖層與設備顯示'],['v84Items','設備／線路快速搜尋'],['v114Launch','設備檔案與維修紀錄'],['v104EquipOpen','欄位容量與編號'],['v109EquipOpen','欄格定位與服務範圍']]},
       {id:'hw120Systems',title:'全場系統・水電關聯',desc:'系統架構、供水、配電、通風與送料',
         items:[['v116Launch','棟舍子系統架構'],['hw110Side','水電與設備關聯追蹤'],['v110Launch','三水源與供水管線'],['v113Launch','配電箱與控制迴路'],['v112VentLaunch','通風設備與水簾'],['v111FeedNetworkLaunch','飼料設備與送料路徑']]},
-      {id:'hw120Manage',title:'巡檢・備份・進階設定',desc:'巡檢報修、專案備份、模板與選用雲端',
-        items:[['hw108Launch','現場巡檢與維修'],['v117Launch','完整專案備份／還原'],['v95Advanced','設備模板與進階工具'],['v93CloudPanel','雲端工作區（選用）']]}
+      {id:'hw120Manage',title:'巡檢・備份・進階設定',desc:'巡檢報修、完整備份、設備模板',
+        items:[['hw108Launch','現場巡檢與維修'],['v117Launch','完整專案備份／還原'],['v95Advanced','設備模板與進階工具']]}
     ];
     const groups=[];
     for(const cfg of configs){
@@ -148,8 +141,7 @@ sync();
     }
     start.after(container);
     function reveal(groupId){const fold=document.getElementById(groupId);if(fold){fold.open=true;}}
-    document.getElementById('v95Find')?.addEventListener('click',()=>reveal('hw120Find'),true);
-    document.getElementById('v84ToolLayers')?.addEventListener('click',()=>reveal('hw120Find'),true);
+        document.getElementById('v84ToolLayers')?.addEventListener('click',()=>reveal('hw120Find'),true);
     // Disclose nested ancestor whenever a programmatic shortcut focuses it.
     const item=document.getElementById('v84Items');const layer=document.getElementById('v84Layers');
     for(const node of [item,layer])node?.addEventListener('toggle',()=>{if(node.open)reveal('hw120Find');});
@@ -180,7 +172,7 @@ sync();
   const manage=document.querySelector('#hw120Manage>.hw120-body');
   extra('hw122ZoneExtras','欄格容量與服務範圍','較少使用的欄格資料設定',find,['v104EquipOpen','v109EquipOpen']);
   extra('hw122SystemExtras','更多專業查詢','供水、配電、通風、送料專用工具',systems,['v110Launch','v113Launch','v112VentLaunch','v111FeedNetworkLaunch']);
-  extra('hw122ManageExtras','進階工具與選用雲端','設備模板、舊版工具和選用同步',manage,['v95Advanced','v93CloudPanel']);
+  extra('hw122ManageExtras','設備進階工具','設備模板與相容工具',manage,['v95Advanced']);
   // Keep basic display modes visible; move infrequent building/water setup behind one disclosure.
   const base=document.getElementById('v83BasePanel');
   if(base&&!document.getElementById('hw122BaseTools')){
@@ -216,8 +208,7 @@ sync();
    if(!node)return;
    for(let x=node.parentElement;x;x=x.parentElement)if(x.tagName==='DETAILS')x.open=true;
   }
-  document.getElementById('v95Find')?.addEventListener('click',()=>revealItem(document.getElementById('v84Items')),true);
-  document.getElementById('v84ToolLayers')?.addEventListener('click',()=>revealItem(document.getElementById('v84Layers')),true);
+    document.getElementById('v84ToolLayers')?.addEventListener('click',()=>revealItem(document.getElementById('v84Layers')),true);
   const status=document.getElementById('v95ActionStatus');
   const start=document.getElementById('v95Start');
   const sync=()=>{
