@@ -1,4 +1,4 @@
-/* V11.12.17 offline ZIP bridge. ZIP is never trusted by filename alone.
+/* V11.12.18 offline ZIP bridge. ZIP is never trusted by filename alone.
  * Accepts only one genuine .hwpack embedded inside ZIP, or a genuine .hwpack
  * whose suffix changed. Does not import arbitrary zip/json bundles. */
 (function(root){'use strict';
@@ -15,7 +15,7 @@
   if(header[0]!==80||header[1]!==75)error('無法辨識備份內容。檔名可以不同，但必須是真正的 .hwpack 或內含 .hwpack 的 ZIP。');
   if(source.size>MAX_ZIP)error('ZIP 太大（超過 400 MB）。請從電腦直接傳送 .hwpack，避免手機解壓記憶體不足。');
   if(/iPhone|iPad|Android/i.test(root.navigator?.userAgent||'')&&source.size>90*1024*1024)error('此 ZIP 超過 90 MB，手機解壓可能使 APP 因記憶體不足而關閉。請在電腦解壓後，單獨傳送裡面的 .hwpack 到手機匯入。');
-  if(!root.JSZip)error('ZIP 解析元件未載入。請確認 V11.12.17 已完整部署並重新開啟 APP。');
+  if(!root.JSZip)error('ZIP 解析元件未載入。請確認 V11.12.18 已完整部署並重新開啟 APP。');
   let zip;try{zip=await root.JSZip.loadAsync(await source.arrayBuffer());}catch(e){error('ZIP 無法讀取或已損壞：'+(e?.message||e));}
   const entries=Object.values(zip.files).filter(f=>!f.dir);if(entries.length>MAX_FILES)error('ZIP 檔案項目過多，不適合作為設備資料備份。');
   const names=entries.map(f=>f.name),lower=names.map(n=>n.toLowerCase());
@@ -39,5 +39,5 @@
   const file=new File([bytes],safeName(candidate.name),{type:'application/octet-stream'});
   return{file,source,kind:nested===MAGIC_PLAIN?'plain':'encrypted',label:'✓ 從 ZIP 找到完整備份：'+safeName(candidate.name)+'（'+(file.size/1048576).toFixed(1)+' MB）',wrapped:true};
  }
- root.HWPortableZipBridge={version:'11.12.17',resolve};
+ root.HWPortableZipBridge={version:'11.12.18',resolve};
 })(window);
