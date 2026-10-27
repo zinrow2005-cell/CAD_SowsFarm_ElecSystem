@@ -1,8 +1,8 @@
 {
   "app": "虎尾母豬場設備配置系統",
-  "version": "11.12.18",
-  "revision": "r10-farrowing-all-head-directions",
+  "version": "11.12.17",
+  "revision": "r9-correct-four-center-doors",
   "date": "2026-10-27",
-  "format": "hwpack-unchanged",
-  "notes": "Full package repair; unified A/B/C/D sow-head direction legend and 12 row arrows; A and C north-head bed-face tick marks added to SVG and DXF, B and D south-head ticks retained; all 150 beds and doors unchanged; prior .hwpack structure preserved."
+  "format": "hwpack-coordinate-compatible",
+  "notes": "Moved A/C north central-aisle doors and B/D south central-aisle doors to blue user marks; kept other four doors and all 150 beds; SVG and DXF updated together."
 }

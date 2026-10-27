@@ -1,0 +1,194 @@
+{
+  "version": "11.12.16",
+  "source": "user specified aisle widths and head directions; image based preliminary doorway placement",
+  "barns": {
+    "A": {
+      "beds": 42,
+      "walkways": [
+        1.0,
+        0.6,
+        1.0,
+        0.6
+      ],
+      "heads": [
+        "N",
+        "S",
+        "N"
+      ],
+      "bedDepthRange": [
+        2.536,
+        2.536
+      ],
+      "perpendicularWidths": [
+        10.808,
+        10.808
+      ]
+    },
+    "B": {
+      "beds": 36,
+      "walkways": [
+        0.6,
+        1.0,
+        0.6,
+        1.0
+      ],
+      "heads": [
+        "S",
+        "N",
+        "S"
+      ],
+      "bedDepthRange": [
+        2.85,
+        2.876
+      ],
+      "perpendicularWidths": [
+        11.75,
+        11.828
+      ]
+    },
+    "C": {
+      "beds": 36,
+      "walkways": [
+        1.0,
+        0.6,
+        1.0,
+        0.6
+      ],
+      "heads": [
+        "N",
+        "S",
+        "N"
+      ],
+      "bedDepthRange": [
+        2.575,
+        2.577
+      ],
+      "perpendicularWidths": [
+        10.925,
+        10.932
+      ]
+    },
+    "D": {
+      "beds": 36,
+      "walkways": [
+        0.6,
+        1.0,
+        0.6,
+        1.0
+      ],
+      "heads": [
+        "S",
+        "N",
+        "S"
+      ],
+      "bedDepthRange": [
+        2.843,
+        2.847
+      ],
+      "perpendicularWidths": [
+        11.729,
+        11.742
+      ]
+    }
+  },
+  "doors": [
+    {
+      "barn": "A",
+      "door": 1,
+      "width_m_schematic": 0.55,
+      "fraction_from_north": 0.3549,
+      "center": [
+        31.2755,
+        15.6195
+      ],
+      "aligns_to": "north-middle row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "A",
+      "door": 2,
+      "width_m_schematic": 0.9,
+      "fraction_from_north": 0.6636,
+      "center": [
+        30.5008,
+        18.8647
+      ],
+      "aligns_to": "middle-south row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "B",
+      "door": 1,
+      "width_m_schematic": 0.9,
+      "fraction_from_north": 0.3362,
+      "center": [
+        28.7327,
+        26.2711
+      ],
+      "aligns_to": "north-middle row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "B",
+      "door": 2,
+      "width_m_schematic": 0.55,
+      "fraction_from_north": 0.6469,
+      "center": [
+        27.8789,
+        29.8476
+      ],
+      "aligns_to": "middle-south row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "C",
+      "door": 1,
+      "width_m_schematic": 0.55,
+      "fraction_from_north": 0.3547,
+      "center": [
+        34.6119,
+        16.3971
+      ],
+      "aligns_to": "north-middle row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "C",
+      "door": 2,
+      "width_m_schematic": 0.9,
+      "fraction_from_north": 0.6636,
+      "center": [
+        33.8282,
+        19.6799
+      ],
+      "aligns_to": "middle-south row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "D",
+      "door": 1,
+      "width_m_schematic": 0.9,
+      "fraction_from_north": 0.3362,
+      "center": [
+        32.058,
+        27.0947
+      ],
+      "aligns_to": "north-middle row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "D",
+      "door": 2,
+      "width_m_schematic": 0.55,
+      "fraction_from_north": 0.6468,
+      "center": [
+        31.2111,
+        30.6426
+      ],
+      "aligns_to": "middle-south row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    }
+  ],
+  "door_status": "two provisional door openings per barn aligned to the 2 interior row aisles; pending site measurements",
+  "bed_depths": "inferred from CAD outer walls; verify before construction"
+}
