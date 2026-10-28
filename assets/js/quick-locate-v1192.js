@@ -37,11 +37,12 @@ const toText=v=>String(v??'').toLocaleLowerCase();
 function allRecords(){
  const data=hw.getData();const devices=Array.isArray(data.devices)?data.devices:[];
  const routes=Array.isArray(data.routes)?data.routes:[];
+ const works=Array.isArray(data.maintenance)?data.maintenance:[];
  return [...devices.map(d=>{
     const type=hw.getType(d.type)||{};const group=groupForDevice(d);
-    const values=[d.id,d.name,d.zone,d.note,type.label,type.symbol,d.type, ...(Array.isArray(type.keywords)?type.keywords:[]), ...(Array.isArray(d.fields)?d.fields.flatMap(f=>[f.key,f.value]):[])];
+    const values=[d.id,d.name,d.zone,d.note,type.label,type.symbol,d.type, ...(Array.isArray(type.keywords)?type.keywords:[]), ...(Array.isArray(d.fields)?d.fields.flatMap(f=>[f.key,f.value]):[]), ...(d.photos||[]).flatMap(ph=>[ph.name,...(ph.markers||[]).flatMap(m=>[m.title,m.note,m.terminalId])]), ...(d.terminals||[]).flatMap(t=>[t.name,t.purpose,t.controls,t.note]), ...works.filter(w=>w.deviceId===d.id).flatMap(w=>[w.title,w.description,w.result,w.assignee,w.reporter])];
     return {kind:'device',id:d.id,group,title:d.name||'未命名設備',line:(d.zone||'尚未填區域')+' · '+(type.label||d.type||'設備'),search:values.map(toText).join(' '),record:d};
- }),...routes.map(r=>({kind:'route',id:r.id,group:r.group||'equipment',title:r.name||'未命名管線',line:(groups[r.group]||'其他')+'線路 · '+(r.points?.length||0)+' 個節點',search:[r.id,r.name,r.note,r.purpose,r.circuitName,r.group,r.fromDeviceId,r.toDeviceId].map(toText).join(' '),record:r}))];
+ }),...routes.map(r=>({kind:'route',id:r.id,group:r.group||'equipment',title:r.name||'未命名管線',line:(groups[r.group]||'其他')+'線路 · '+(r.points?.length||0)+' 個節點',search:[r.id,r.name,r.note,r.purpose,r.circuitName,r.group,r.fromDeviceId,r.toDeviceId,r.cableSpec,...devices.filter(d=>[r.fromDeviceId,r.toDeviceId].includes(d.id)).map(d=>d.name)].map(toText).join(' '),record:r}))];
 }
 function include(item){return currentCategory==='all'||(currentCategory==='device'&&item.kind==='device')||(currentCategory==='route'&&item.kind==='route')||(item.kind==='device'&&item.group===currentCategory);}
 function rank(item,q){const name=toText(item.title),id=toText(item.id);return name===q||id===q?0:name.startsWith(q)?1:id.startsWith(q)?2:item.line.toLocaleLowerCase().includes(q)?3:4;}
@@ -142,6 +143,7 @@ overlay.addEventListener('click',e=>{if(e.target?.dataset?.close==='1')close();}
 $('v1192AllMap').addEventListener('click',()=>{window.HWHomeV119?.hide?.();close();reset();});
 document.addEventListener('keydown',e=>{
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){
+   if(window.HWGlobalSearchV111223)return;
    if(e.target?.closest?.('input,textarea,[contenteditable="true"]'))return;
    e.preventDefault();visible?close():open();
  }

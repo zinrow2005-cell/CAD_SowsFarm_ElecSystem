@@ -8,12 +8,14 @@ const make=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.classNa
 const selectedDevice=()=>{const selected=api.getSelected();return selected?.kind==='device'?api.getData().devices.find(x=>x.id===selected.id):null;};
 const allowedSize=v=>Math.max(50,Math.min(300,Math.round((Number(v)||100)/5)*5));
 const sizeUI=make('section','v99-size-panel');sizeUI.id='v99SizePanel';
-sizeUI.innerHTML=`<div class="v99-size-head"><strong>設備圖標大小</strong><output id="v99SizeNumber" for="v99SizeSlider">100%</output></div>
+sizeUI.innerHTML=`<div class="v99-size-head"><strong>整體大小・即時預覽</strong><output id="v99SizeNumber" for="v99SizeSlider">100%</output></div>
 <div class="v99-size-controls"><button type="button" id="v99SizeDown" aria-label="縮小圖標 10%">−</button><input id="v99SizeSlider" aria-label="設備圖標大小，50% 到 300%" type="range" min="50" max="300" step="5" value="100"><button id="v99SizeUp" type="button" aria-label="放大圖標 10%">＋</button></div>
 <div class="v99-size-presets"><button type="button" data-size="75">小 75%</button><button type="button" data-size="100">標準 100%</button><button type="button" data-size="150">大 150%</button><button type="button" data-size="200">特大 200%</button></div>
 <p>調整時即時預覽，放開滑桿後自動儲存到這台設備。只改圖標大小，不影響 CAD 尺寸或管線連接。</p>`;
-const quick=$('v96-basic').querySelector('.v96-quick');
-quick?.append(sizeUI);
+const appearanceBody=$('v1222Appearance')?.querySelector('.v1222-appearance-body');
+const appearanceGrid=appearanceBody?.querySelector('.v84-edit-grid');
+if(appearanceBody&&appearanceGrid)appearanceGrid.insertAdjacentElement('afterend',sizeUI);
+else $('v96-basic').querySelector('.v96-quick')?.append(sizeUI);
 const slider=$('v99SizeSlider'),number=$('v99SizeNumber');
 let sizeDeviceId='',previewing=false;
 function showSize(d){if(!d)return;const t=api.getType(d.type);const n=allowedSize(d.size||t?.size||100);sizeDeviceId=d.id;slider.value=n;number.value=n+'%';$('v99SizePanel').hidden=api.getRole()!=='admin';}
@@ -23,10 +25,14 @@ function previewSize(n){const d=selectedDevice();if(!d||api.getRole()!=='admin')
 }
 function sizeCommit(value){const d=selectedDevice();if(!d||api.getRole()!=='admin')return;const n=allowedSize(value);previewing=false;slider.value=n;number.value=n+'%';if(d.size===n)return;
  // Preserve unsaved basic text edits when the older data API repaints the drawer.
- const drafts=['v96Name','v96Zone','v96Status','v96Note'].map(id=>[id,$(id)?.value]);
- const hidden=['eqName','eqZone','eqStatusSelect','eqNote'].map(id=>[id,$(id)?.value]);
+ const inputIds=['v96Name','v96Zone','v96Status','v96Note','eqName','eqZone','eqStatusSelect','eqNote',
+  'eqIconShape','eqIconColor','eqIconWidth','eqIconHeight','eqIconLabel','eqIconLocked','eqRotation','eqX','eqY',
+  'eqChangeType','eqSourceTower','eqSourceGround','eqSourceTap'];
+ const drafts=inputIds.map(id=>{const node=$(id);return node?[id,node.value,node.type==='checkbox'?node.checked:null]:null;}).filter(Boolean);
  const saved=api.updateDetails('device',d.id,{size:n});
- if(saved){for(const [id,v] of [...drafts,...hidden])if($(id)&&v!==undefined)$(id).value=v;$('eqIconSize').value=n;}
+ if(saved){for(const [id,value,checked] of drafts){const node=$(id);if(!node)continue;node.value=value;if(checked!==null)node.checked=checked;}
+  $('eqIconSize').value=n;window.dispatchEvent(new CustomEvent('hw-v1222-size-committed',{detail:{deviceId:d.id,size:n}}));}
+ else {showSize(d);$('eqIconSize').value=d.size||n;}
 }
 slider.addEventListener('input',()=>{previewing=true;previewSize(allowedSize(slider.value));});
 slider.addEventListener('change',()=>sizeCommit(slider.value));

@@ -7,13 +7,15 @@ const el=(tag,className,text)=>{const n=document.createElement(tag);if(className
 const target=()=>{const s=api.getSelected();return s?.kind==='device'?api.getData().devices.find(d=>d.id===s.id):null;};
 const parent=$('v96-basic')?.querySelector('.v96-quick');
 if(parent){
- const box=el('div','v101-locate');box.id='v101Locate';box.hidden=true;
- box.innerHTML=`<div class="v101-title"><strong>📍 設備實際位置與圖標</strong><small>圖標移動不會改變管線端點</small></div>
+ const box=el('details','v101-locate');box.id='v101Locate';box.hidden=true;box.open=false;
+ box.innerHTML=`<summary>設備實際位置與圖標<span>座標與定位輔助</span></summary><div class="v101-locate-body">
  <div class="v101-coordinates"><div><span>真實設備定位點</span><strong id="v101Physical"></strong></div><div><span>圖標顯示位置</span><strong id="v101Display"></strong></div></div>
  <div class="v101-locate-buttons"><button type="button" id="v101ResetIcon">圖標回到定位點</button><button type="button" id="v101EditAnchor">修改實際位置 ↗</button></div>
  <label class="v1199-anchor-toggle"><input type="checkbox" id="v1199ShowAnchorGuides"/> 顯示原始定位點連線（綠色圈圈與虛線）</label>
- <small class="v101-help">拖曳圖示僅改變顯示位置，不會改動真正的設備座標或已連接的管線端點。定位輔助線預設隱藏；需要核對時再勾選顯示。</small>`;
- parent.appendChild(box);
+ <small class="v101-help">拖曳圖示僅改變顯示位置，不會改動真正的設備座標或已連接的管線端點。定位輔助線預設隱藏；需要核對時再勾選顯示。</small></div>`;
+ const appearance=$('v1222Appearance');
+ if(appearance?.parentNode===$('v96-basic'))appearance.insertAdjacentElement('afterend',box);
+ else parent.appendChild(box);
  function updatePosition(){const d=target();box.hidden=!d||api.getRole()!=='admin';if(!d)return;
  const placement=api.getVisualPlacement(d.id);$('v101Physical').textContent=`${placement.physical.x.toFixed(2)}, ${placement.physical.y.toFixed(2)}`;
  $('v101Display').textContent=`${placement.icon.x.toFixed(2)}, ${placement.icon.y.toFixed(2)}`;

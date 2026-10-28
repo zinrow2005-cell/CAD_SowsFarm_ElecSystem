@@ -38,6 +38,10 @@ links.innerHTML=`<div class="v96-section-head"><b>連接關係與迴路</b><span
 <div id="v96Connections" class="v96-connections"></div>`;
 const wrap=make('div','v96-record');wrap.id='v96Record';wrap.append(summary,tabs,basic,photos,links);
 drawer.insertBefore(wrap,routeEditor);
+// Consolidate visual appearance into a single collapsed section inside Basic Info.
+// Keep the existing input IDs so the CAD data model and save handlers remain compatible.
+const appearance=$('v1222Appearance');
+if(appearance){basic.insertBefore(appearance,readDetails);appearance.open=false;}
 const deviceRecordButton=make('button','v82-btn primary','查看設備檔案');deviceRecordButton.type='button';deviceRecordButton.id='v96StaffRecord';deviceRecordButton.hidden=true;$('eqDetails')?.append(deviceRecordButton);
 
 const mapping=[['v96Name','eqName'],['v96Zone','eqZone'],['v96Status','eqStatusSelect'],['v96Note','eqNote']];
@@ -49,6 +53,8 @@ function fillQuick(d){const fields=[['v96Name',d.name],['v96Zone',d.zone||''],['
 function openRecord(roleStaff=false){const d=deviceNow();if(!d)return;
  readOnly=roleStaff||api.getRole()!=='admin';isShowing=true;tab='basic';viewDevice=d.id;advanced.open=false;
  drawer.hidden=false;drawer.classList.add('open');routeEditor.hidden=true;wrap.hidden=false;footer.hidden=readOnly;
+ if(appearance){appearance.open=false;appearance.hidden=readOnly;}
+ const positionDetails=$('v101Locate');if(positionDetails)positionDetails.open=false;
  for(const id of ['eqSaveDevice','eqRemoveDevice'])$(id).hidden=readOnly;
  for(const id of ['eqSaveRoute','eqRemoveRoute'])$(id).hidden=true;
  $('v84DrawerTitle').textContent='設備檔案';$('side')?.classList.remove('open');draw(d);showTab('basic');
@@ -60,7 +66,7 @@ function draw(d){const type=api.getType(d.type);summary.replaceChildren();
  const counts=make('div','v96-badges');const n=(d.photos||[]).length,t=(d.terminals||[]).length;
  counts.append(make('span','',n+' 張照片'),make('span','',t+' 個端子'),make('span','',d.locked?'位置已鎖定':'可調整位置'));
  summary.append(title,status,counts);
- fillQuick(d);quick.hidden=readOnly;advanced.hidden=readOnly;readDetails.hidden=!readOnly;
+ fillQuick(d);quick.hidden=readOnly;advanced.hidden=readOnly;readDetails.hidden=!readOnly;if(appearance)appearance.hidden=readOnly;
  if(readOnly){readDetails.replaceChildren();const rows=[['區域',d.zone||'未設定'],['狀態',statusText],['用途／備註',d.note||'尚無備註'],['圖面座標',`${Number(d.x).toFixed(2)}, ${Number(d.y).toFixed(2)}`]];for(const [label,value] of rows){const row=make('div','v96-read-row');row.append(make('span','',label),make('strong','',value));readDetails.append(row);}}
 }
 function showTab(which){tab=['basic','photos','links'].includes(which)?which:'basic';for(const b of tabs.children){const yes=b.dataset.tab===tab;b.classList.toggle('active',yes);b.setAttribute('aria-selected',String(yes));b.tabIndex=yes?0:-1;}

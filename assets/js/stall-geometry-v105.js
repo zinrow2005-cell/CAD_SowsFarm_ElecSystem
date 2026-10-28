@@ -17,7 +17,7 @@
   if(window.HWStallNavigation?.handlesTap)return; // V11.8.5 handles genuine taps on pointerup; don't double-open.
   clear();active=g;g.classList.add('v105-stall-focus');
   const id=g.getAttribute('data-stall-id');if(window.HWStallNavigation?.showStall){window.HWStallNavigation.showStall(id,g);return;}if(window.HWStallLinks?.handleStallClick){window.HWStallLinks.handleStallClick(id,g);return;}const boar=id==='BOAR-HEAT-01';
-  const title=boar?'公豬巡情欄（1頭）':id.startsWith('G-')?'女豬育成欄（每欄10頭）':id.startsWith('MAT-')?'配種母豬夾欄':'妊娠舍夾欄';
+  const title=boar?'公豬巡情欄（1頭）':id==='G-07'?'女豬育成 G-07（縮小，容量待核）':id.startsWith('G-')?'女豬育成欄（原設計每欄10頭）':id.startsWith('MAT-')?'配種母豬夾欄':'妊娠舍夾欄';
   bar.textContent=title+'　'+id+'　｜點其他位置可關閉';bar.style.display='block';
   clearTimeout(tipTimeout);tipTimeout=setTimeout(clear,7000);
  });

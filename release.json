@@ -1,8 +1,8 @@
 {
   "app": "虎尾母豬場設備配置系統",
-  "version": "11.12.19",
-  "revision": "r11-ios-backup-file-flow",
+  "version": "11.12.23",
+  "revision": "r15-top-center-universal-search",
   "date": "2026-10-28",
   "format": "hwpack-unchanged",
-  "notes": "Fix iPad/iPhone .hwpack save/share flow using native share where available, safe download fallback and in-context feedback; add Google Drive Files-provider workaround guidance. Backup format unchanged."
+  "notes": "Add top-center local search bar with instant suggestions for devices, routes, photo names, markers, terminals and maintenance; reuse existing CAD locator and dossier; no project data schema changes."
 }

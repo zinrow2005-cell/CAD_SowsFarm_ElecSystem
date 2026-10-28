@@ -1,4 +1,4 @@
-/* V11.12.19 iPhone/iPad safe file-share/download fallback for verified .hwpack. */
+/* V11.12.21 iPhone/iPad safe file-share/download fallback for verified .hwpack. */
 (function(){'use strict';
 const hw=window.HWEquipment,media=window.HWPhotoStore,core=window.HWPortableCore;
 if(!hw||!media||!core)return;
