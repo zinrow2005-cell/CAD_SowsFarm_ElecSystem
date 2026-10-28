@@ -1,8 +1,8 @@
 {
   "app": "虎尾母豬場設備配置系統",
-  "version": "11.12.18",
-  "revision": "r10-cleanup-current-ui",
-  "date": "2026-10-27",
+  "version": "11.12.19",
+  "revision": "r11-ios-backup-file-flow",
+  "date": "2026-10-28",
   "format": "hwpack-unchanged",
-  "notes": "Removed obsolete Firebase cloud interface, duplicate mobile shortcut script, unused historical CAD drafts/reports and redundant visibility button; preserved all core CAD, equipment, photo, route, PDF export and portable backup compatibility."
+  "notes": "Fix iPad/iPhone .hwpack save/share flow using native share where available, safe download fallback and in-context feedback; add Google Drive Files-provider workaround guidance. Backup format unchanged."
 }
