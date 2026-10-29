@@ -1,8 +1,8 @@
 {
   "app": "虎尾母豬場設備配置系統",
-  "version": "11.12.23",
-  "revision": "r15-top-center-universal-search",
-  "date": "2026-10-28",
+  "version": "11.12.24",
+  "revision": "r16-cad-walkway-line-search-top",
+  "date": "2026-10-29",
   "format": "hwpack-unchanged",
-  "notes": "Add top-center local search bar with instant suggestions for devices, routes, photo names, markers, terminals and maintenance; reuse existing CAD locator and dossier; no project data schema changes."
+  "notes": "Fix unintended diagonal SVG closing edge between gilt breeding and sow mating walkway while preserving openings and CAD geometry; move top-center search closer to top and avoid tablet quick-toolbar collision. Existing DXF geometry already has no diagonal."
 }
