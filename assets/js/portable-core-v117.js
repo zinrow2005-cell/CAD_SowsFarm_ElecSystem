@@ -273,5 +273,42 @@ async function compareCurrentArchive({archive,project,photos,stallCapacity,stall
  return {ok:!changed.length&&!issues.length,sections,changed,photoIssues:issues,verifiedPhotos:passed,expectedPhotos:archive.validated.images.length,
   checkedAt:new Date().toISOString(),archiveDate:archive.meta.createdAt};
 }
-root.HWPortableCore={version:'11.12.22',cadFingerprint:CAD_SHA256,totals,coverage,detectArchiveFormat,readHeader,exportArchive,inspectArchive,applyArchive,verifyRestored,compareCurrentArchive};
+// V11.12.25: extract only missing photo bytes from a verified .hwpack.
+// No project restore, no localStorage/IndexedDB writes, and no CAD fingerprint
+// gate because photo-only rescue never imports CAD coordinates or settings.
+async function extractPhotosForRecovery({file,password='',wantedIds=[],expectedNames={},onProgress}){
+ const wanted=new Set(wantedIds.filter(id=>typeof id==='string'&&/^[\w-]{3,100}$/.test(id)));
+ if(!wanted.size)return{assets:[],matchedIds:[],nameMismatches:[],archiveFingerprint:''};
+ const parsed=await readHeader(file);
+ const key=parsed.kind==='encrypted'?await passwordKey(password,parsed.salt):null;
+ const metaBytes=await readBlock(file,parsed.entries[0],parsed,key);
+ if(metaBytes.length>MAX_META)throw Error('備份專案索引過大');
+ let meta;try{meta=JSON.parse(td.decode(metaBytes));}catch(_){throw Error('備份的專案索引不是有效 JSON');}
+ if(meta?.format!=='HuweiPortableManifest'||meta.schema!==2||meta.project?.app!=='HuweiEquipment'||!Array.isArray(meta.project?.devices)||!Array.isArray(meta.images)||meta.images.length!==parsed.entries.length-1)throw Error('這不是可核對照片的 .hwpack 專案備份');
+ const savedNames=new Map();
+ for(const d of meta.project.devices)for(const ph of d.photos||[]){
+  if(typeof ph?.id==='string'&&/^[\w-]{3,100}$/.test(ph.id))savedNames.set(ph.id,String(ph.name||''));
+ }
+ const found=new Map(),seen=new Set(),mismatches=[];
+ for(let i=0;i<meta.images.length;i++){
+  const item=meta.images[i];
+  if(!item||item.index!==i+1||!['preview','master'].includes(item.kind)||!['image/jpeg','image/png','image/webp'].includes(item.mime)||!Number.isInteger(item.bytes)||item.bytes<1||item.bytes>MAX_IMAGE||!/^[a-f0-9]{64}$/.test(item.sha256)||typeof item.id!=='string'||!savedNames.has(item.id))throw Error('備份照片清單內容異常');
+  const k=item.id+'|'+item.kind;if(seen.has(k))throw Error('備份照片 ID 重複：'+item.id);seen.add(k);
+  if(!wanted.has(item.id))continue;
+  // Same ID AND original filename must match to avoid attaching an unrelated
+  // snapshot to an existing switch-marker coordinate system.
+  if(savedNames.get(item.id)!==String(expectedNames[item.id]||'')){
+   mismatches.push({id:item.id,backupName:savedNames.get(item.id),currentName:String(expectedNames[item.id]||'')});
+   continue;
+  }
+  progress(onProgress,'核對舊備份照片 '+item.id+' '+item.kind,i+1,meta.images.length);
+  const bytes=await readBlock(file,parsed.entries[i+1],parsed,key);
+  if(bytes.length!==item.bytes||await sha(bytes)!==item.sha256)throw Error('備份照片雜湊驗證未通過：'+item.id);
+  if(!found.has(item.id))found.set(item.id,{id:item.id});
+  found.get(item.id)[item.kind==='preview'?'dataUrl':'originalDataUrl']='data:'+item.mime+';base64,'+b64(bytes);
+ }
+ const assets=[...found.values()].filter(a=>typeof a.dataUrl==='string');
+ return{assets,matchedIds:assets.map(a=>a.id),nameMismatches:mismatches,archiveFingerprint:meta.cadFingerprint||'',createdAt:meta.createdAt||''};
+}
+root.HWPortableCore={version:'11.12.25',cadFingerprint:CAD_SHA256,totals,coverage,detectArchiveFormat,readHeader,exportArchive,inspectArchive,applyArchive,verifyRestored,compareCurrentArchive,extractPhotosForRecovery};
 })(typeof window==='undefined'?globalThis:window);

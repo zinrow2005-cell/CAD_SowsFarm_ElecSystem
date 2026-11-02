@@ -1,8 +1,8 @@
 {
   "app": "虎尾母豬場設備配置系統",
-  "version": "11.12.24",
-  "revision": "r16-cad-walkway-line-search-top",
-  "date": "2026-10-29",
+  "version": "11.12.25",
+  "revision": "r11-photo-rescue-preserve-metadata",
+  "date": "2026-11-02",
   "format": "hwpack-unchanged",
-  "notes": "Fix unintended diagonal SVG closing edge between gilt breeding and sow mating walkway while preserving openings and CAD geometry; move top-center search closer to top and avoid tablet quick-toolbar collision. Existing DXF geometry already has no diagonal."
+  "notes": "Non-destructive photo rescue center, read-only IndexedDB inventory, emergency metadata snapshot, photo-only restore from older .hwpack and single-source image rebind. Does not change CAD or .hwpack format."
 }

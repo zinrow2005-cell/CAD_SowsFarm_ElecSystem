@@ -1,0 +1,194 @@
+{
+  "version": "11.12.17",
+  "source": "User corrected four entrance locations with red incorrect and blue desired circles; A,C north and B,D south. Existing other 4 doors preserved.",
+  "barns": {
+    "A": {
+      "beds": 42,
+      "walkways": [
+        1.0,
+        0.6,
+        1.0,
+        0.6
+      ],
+      "heads": [
+        "N",
+        "S",
+        "N"
+      ],
+      "bedDepthRange": [
+        2.536,
+        2.536
+      ],
+      "perpendicularWidths": [
+        10.808,
+        10.808
+      ]
+    },
+    "B": {
+      "beds": 36,
+      "walkways": [
+        0.6,
+        1.0,
+        0.6,
+        1.0
+      ],
+      "heads": [
+        "S",
+        "N",
+        "S"
+      ],
+      "bedDepthRange": [
+        2.85,
+        2.876
+      ],
+      "perpendicularWidths": [
+        11.75,
+        11.828
+      ]
+    },
+    "C": {
+      "beds": 36,
+      "walkways": [
+        1.0,
+        0.6,
+        1.0,
+        0.6
+      ],
+      "heads": [
+        "N",
+        "S",
+        "N"
+      ],
+      "bedDepthRange": [
+        2.575,
+        2.577
+      ],
+      "perpendicularWidths": [
+        10.925,
+        10.932
+      ]
+    },
+    "D": {
+      "beds": 36,
+      "walkways": [
+        0.6,
+        1.0,
+        0.6,
+        1.0
+      ],
+      "heads": [
+        "S",
+        "N",
+        "S"
+      ],
+      "bedDepthRange": [
+        2.843,
+        2.847
+      ],
+      "perpendicularWidths": [
+        11.729,
+        11.742
+      ]
+    }
+  },
+  "doors": [
+    {
+      "barn": "A",
+      "door": 1,
+      "width_m_schematic": 0.55,
+      "fraction_from_north": 0.065,
+      "center": [
+        32.0033,
+        12.5713
+      ],
+      "aligns_to": "blue-circled north edge access in user markup",
+      "status": "door moved from user markup; schematic offset, not measured field distance or opening width"
+    },
+    {
+      "barn": "A",
+      "door": 2,
+      "width_m_schematic": 0.9,
+      "fraction_from_north": 0.6636,
+      "center": [
+        30.5008,
+        18.8647
+      ],
+      "aligns_to": "middle-south row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "B",
+      "door": 1,
+      "width_m_schematic": 0.9,
+      "fraction_from_north": 0.3362,
+      "center": [
+        28.7327,
+        26.2711
+      ],
+      "aligns_to": "north-middle row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "B",
+      "door": 2,
+      "width_m_schematic": 0.55,
+      "fraction_from_north": 0.95,
+      "center": [
+        27.0459,
+        33.3368
+      ],
+      "aligns_to": "blue-circled south edge access in user markup",
+      "status": "door moved from user markup; schematic offset, not measured field distance or opening width"
+    },
+    {
+      "barn": "C",
+      "door": 1,
+      "width_m_schematic": 0.55,
+      "fraction_from_north": 0.065,
+      "center": [
+        35.3468,
+        13.3188
+      ],
+      "aligns_to": "blue-circled north edge access in user markup",
+      "status": "door moved from user markup; schematic offset, not measured field distance or opening width"
+    },
+    {
+      "barn": "C",
+      "door": 2,
+      "width_m_schematic": 0.9,
+      "fraction_from_north": 0.6636,
+      "center": [
+        33.8282,
+        19.6799
+      ],
+      "aligns_to": "middle-south row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "D",
+      "door": 1,
+      "width_m_schematic": 0.9,
+      "fraction_from_north": 0.3362,
+      "center": [
+        32.058,
+        27.0947
+      ],
+      "aligns_to": "north-middle row aisle",
+      "status": "preliminary; actual opening widths, locations and handing require field check"
+    },
+    {
+      "barn": "D",
+      "door": 2,
+      "width_m_schematic": 0.55,
+      "fraction_from_north": 0.95,
+      "center": [
+        30.3841,
+        34.1065
+      ],
+      "aligns_to": "blue-circled south edge access in user markup",
+      "status": "door moved from user markup; schematic offset, not measured field distance or opening width"
+    }
+  ],
+  "door_status": "8 total doorway openings preserved; 4 moved to marked north/south entrance points, other 4 unchanged. Locations schematic pending measured distances.",
+  "bed_depths": "inferred from CAD outer walls; verify before construction"
+}

@@ -1,0 +1,52 @@
+{
+  "version": "11.12.21",
+  "status": "設計草案｜北門向北側外開（使用者已確認）；通道寬度待實測",
+  "reference": "2026-10-28 使用者紅框（G-07 東側）",
+  "coordinate_unit": "m",
+  "coordinate_system": "SVG CAD viewBox",
+  "pen": "G-07",
+  "original_pen": {
+    "x_min": 24.4429,
+    "x_max": 28.375,
+    "y_north": 40.7708,
+    "y_south": 47.0848,
+    "width_m": 3.9321
+  },
+  "revised_pen": {
+    "x_min": 24.4429,
+    "x_max": 27.175,
+    "y_north": 40.7708,
+    "y_south": 47.0848,
+    "width_m": 2.7321,
+    "verified_capacity": null
+  },
+  "sow_access_lane": {
+    "x_min": 27.175,
+    "x_max": 28.375,
+    "y_north_wall": 40.5508,
+    "y_south_road": 47.0848,
+    "nominal_width_m": 1.2,
+    "gate": {
+      "side": "north",
+      "opening_from_x": 27.175,
+      "opening_to_x": 28.375,
+      "swing": "east hinge, door leaf swings north/outward, away from gilt/sow corridor; user confirmed 2026-10-28",
+      "swing_direction": "north, outward",
+      "hinge": {
+        "x": 28.375,
+        "y": 40.5508
+      },
+      "open_leaf_tip": {
+        "x": 28.375,
+        "y": 39.3508
+      },
+      "user_confirmed_turning_clearance": true
+    },
+    "divider": "continuous metal fence on west side",
+    "south_end": "open to preexisting 1.15m transverse path"
+  },
+  "pen_count_unchanged": 14,
+  "gilt_capacity_reassessment_required": true,
+  "legacy_pen_head_identifiers_unchanged": true,
+  "note": "北端門扇向北外開，轉彎空間已由使用者確認沒有問題；1.20m門洞與通道尺寸仍為未實測草案。"
+}
